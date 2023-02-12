@@ -8,7 +8,7 @@ The main goals for this project are as follows:
 Notes:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
-- Only a few words are built into the base executable.
+- Not many primitives are built into the base executable.
 - The rest is built using those words (see core.f).
 - The VARIABLE space is separated from the CODE space.
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
@@ -64,6 +64,15 @@ loop     (--)              Increment I, jump to DO if I < T
 ```
 
 *** SYSTEM ***
+(exit)   (--n)   n: The byte-code value for EXIT
+(jmp)    (--n)   n: The byte-code value for JMP
+(jmpz)   (--n)   n: The byte-code value for JMPZ
+(jmpnz)  (--n)   n: The byte-code value for JMPNZ
+(call)   (--n)   n: The byte-code value for CALL
+(lit4)   (--n)   n: The byte-code value for LIT4
+(bitop)  (--n)   n: The byte-code value for BITOP
+(retop)  (--n)   n: The byte-code value for RETOP
+(fileop) (--n)   n: The byte-code value for FILEOP
 mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
 vars     (--a)   a: Start address for the VARIABLES area.

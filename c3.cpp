@@ -351,6 +351,15 @@ void init() {
         CComma(EXIT);
         ++op;
     }
+    loadNum("(exit)",   EXIT); 
+    loadNum("(jmp)",    JMP);
+    loadNum("(jmpz)",   JMPZ);
+    loadNum("(jmpnz)",  JMPNZ);
+    loadNum("(call)",   CALL);
+    loadNum("(lit4)",   LIT4);
+    loadNum("(bitop)",  BITOPS);
+    loadNum("(retop)",  RETOPS);
+    loadNum("(fileop)", FILEOPS);
     loadNum("mem", (cell_t)&BYTES(0));
     loadNum("mem-end", (cell_t)&BYTES(MEM_SZ));
     loadNum("vars", (cell_t)&vars[0]);

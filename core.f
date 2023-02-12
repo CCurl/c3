@@ -1,16 +1,5 @@
 : \ 0 >in @ ! ;
 
-: (exit)    1 ; 
-: (jmp)     2 ;
-: (jmpz)    3 ;
-: (jmpnz)   4 ;
-: (call)    5 ;
-: (lit1)    6 ;
-: (lit4)    7 ;
-: (bitop)   8 ;
-: (retop)   9 ;
-: (fileop) 10 ;
-
 : last (last) @ ;
 : here (here) @ ;
 : vhere (vhere) @ ;
@@ -59,8 +48,8 @@
 : r@ [ (retop) c, 12 c, ] ; inline
 : r> [ (retop) c, 13 c, ] ; inline
 : rdrop r> drop ; inline
-: rot >r swap r> swap ;
-: -rot rot rot ;
+: rot  >r swap r> swap ;
+: -rot swap >r swap r> ;
 
 : bl 32 ; inline
 : space bl emit ; inline
@@ -109,10 +98,6 @@ var (len) cell allot
     (call) c, [ (lit4) c, ' count drop drop , ] ,
     (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
 
-: hex     #16 base ! ;
-: decimal #10 base ! ;
-: ? @ . ;
-
 : 0sp 0 (sp) ! ;
 : depth (sp) @ 1- ;
 : .s '(' emit space depth ?dup if
@@ -120,9 +105,14 @@ var (len) cell allot
     then ')' emit ;
 
 : words last begin
-        dup mem-end < 0=  if drop exit then
+        dup mem-end < 0= if drop exit then
         dup 1+ count type tab word-sz +
     again ;
+
+: binary  %10 base ! ;
+: decimal #10 base ! ;
+: hex     $16 base ! ;
+: ? @ . ;
 
 \ temp for testing
 : ms (.) ."  usec " ;
