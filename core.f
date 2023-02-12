@@ -14,7 +14,6 @@
 : last (last) @ ;
 : here (here) @ ;
 : vhere (vhere) @ ;
-: mem-end (mem) mem-sz + ;
 
 : inline 2 last c! ;
 : immediate 1 last c! ;
@@ -63,11 +62,6 @@
 : rot >r swap r> swap ;
 : -rot rot rot ;
 
-: (i) (lsp) @ cells (lstk) + ;
-: i (i) @ ;
-: +i (i) tuck @ + swap ! ;
-: unloop (lsp) @ 3 - (lsp) ! ;
-
 : bl 32 ; inline
 : space bl emit ; inline
 : tab 9 emit ; inline
@@ -78,6 +72,10 @@
 : +!  dup @   + swap !  ; inline
 : ++  dup @  1+ swap !  ; inline
 : c++ dup c@ 1+ swap c! ; inline
+
+: i (i) @ ;
+: +i (i) +! ;
+: unloop (lsp) @ 3 - (lsp) ! ;
 
 : /   /mod nip  ; inline
 : mod /mod swap ; inline

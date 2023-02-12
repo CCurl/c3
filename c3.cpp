@@ -26,7 +26,7 @@ enum {
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, INC, DEC, SUB, 
     LT, EQ, GT, NOT,
-    DO, LOOP,
+    DO, LOOP, INDEX,
     EMIT, TIMER,
     DEFINE, ENDWORD, CREATE, FIND,
     STORE, CSTORE, FETCH, CFETCH
@@ -48,6 +48,7 @@ opcode_t opcodes[] = {
     , { GT,      IS_INLINE,    ">" },       { NOT,     IS_INLINE,    "0=" }
     , { INC,     IS_INLINE,    "1+" },      { DEC,     IS_INLINE,    "1-" }
     , { DO,      IS_INLINE,    "do" },      { LOOP,    IS_INLINE,    "loop" }
+    , { INDEX,   IS_INLINE,    "(i)" }
     , { STORE,   IS_INLINE,    "!" },       { CSTORE,  IS_INLINE,    "c!" }
     , { FETCH,   IS_INLINE,    "@" },       { CFETCH,  IS_INLINE,    "c@" }
     , { 0, 0, 0 }
@@ -262,6 +263,7 @@ next:
     case DEC: --TOS;                                                        NEXT;
     case INC: ++TOS;                                                        NEXT;
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
+    case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
     case DEFINE: getword(0); Create((char*)pop()); state=1;                 NEXT;
     case CREATE: getword(0); Create((char*)pop());                          NEXT;
@@ -349,24 +351,22 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-    loadNum("mem-sz", MEM_SZ);
+    loadNum("mem", (cell_t)&BYTES(0));
+    loadNum("mem-end", (cell_t)&BYTES(MEM_SZ));
+    loadNum("vars", (cell_t)&vars[0]);
+    loadNum("vars-end", (cell_t)&vars[VARS_SZ]);
     loadNum("word-sz", sizeof(dict_t), 1);
-    loadNum("cell", sizeof(cell_t), 1);
-    loadNum("(mem)", (cell_t)&BYTES(0));
-    loadNum("vars-sz", VARS_SZ);
-    loadNum("(vars)", (cell_t)&vars[0]);
     loadNum("(vhere)", (cell_t)&vhere);
-    loadNum("(rsp)", (cell_t)&rsp);
-    loadNum("(lstk)", (cell_t)&lstk[0]);
-    loadNum("(lsp)", (cell_t)&lsp);
     loadNum("(stk)", (cell_t)&stk[0]);
     loadNum("(sp)", (cell_t)&sp);
-    loadNum("(last)", (cell_t)&last);
+    loadNum("(rsp)", (cell_t)&rsp);
+    loadNum("(lsp)", (cell_t)&lsp);
     loadNum("(last)", (cell_t)&last);
     loadNum("(here)", (cell_t)&here);
     loadNum(">in", (cell_t)&in);
     loadNum("state", (cell_t)&state);
     loadNum("base", (cell_t)&base);
+    loadNum("cell", sizeof(cell_t), 1);
 }
 
 #ifdef isPC
