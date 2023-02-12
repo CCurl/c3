@@ -201,22 +201,28 @@ void getInput() {
         if (in != tib) { fclose(input_fp); input_fp = NULL; }
     }
     if (! input_fp) {
-        printString(" ok\n");
+        if (state) { printString("... > "); }
+        else { printString(" ok\n"); }
         in = fgets(tib, sizeof(tib), stdin);
     }
 }
 
 // ( --addr len )
 // ( --0 )
-void getword() {
+int getword(int stopOnNull) {
+    int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
     if (STK_SZ < sp) { PRINT1("over"); sp=0; }
+gl1:
     while (*in && (*in < 33)) { ++in; }
-    if (*in == 0) { RET(0); }
+    if (*in == 0) { 
+        if (stopOnNull) { return 0; }
+        getInput(); goto gl1;
+    }
     PUSH(in);
-    push(0);
-    while (32 < *in) { ++in; ++TOS; }
+    while (32 < *in) { ++in; ++len; }
     *(in++) = 0;
+    return len;
 }
 
 void Run(char *y) {
@@ -257,9 +263,9 @@ next:
     case INC: ++TOS;                                                        NEXT;
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
-    case DEFINE: getword(); if (pop()) { Create((char*)pop()); state=1; }   NEXT;
-    case CREATE: getword(); if (pop()) { Create((char*)pop()); }            NEXT;
-    case FIND: getword(); if (pop()) { find(); } else { push(0); }          NEXT;
+    case DEFINE: getword(0); Create((char*)pop()); state=1;                 NEXT;
+    case CREATE: getword(0); Create((char*)pop());                          NEXT;
+    case FIND: getword(0); find();                                          NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
     case BITOPS: t1 = *(pc++);
         if (t1==11) { NOS &= TOS; DROP1; }               // and
@@ -281,7 +287,7 @@ next:
     }
 }
 
-void ParseWord() {
+int ParseWord() {
     char *w = (char*)TOS;
     isNum();
     if (pop()) {
@@ -289,20 +295,20 @@ void ParseWord() {
             if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
             else { CComma(LIT4); Comma(pop()); }
         }
-        RET(1);
+        return 1;
     }
     PUSH(w);
     find();
     if (pop()) {
         cell_t f = pop();
         char *xt = (char*)pop();
-        if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); RET(1); }
+        if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
         if (f & IS_INLINE) {
             CComma(*(xt++));
             while ((*xt) && (*xt != EXIT)) { CComma(*(xt++)); }
         }
         else { CComma(CALL); Comma((cell_t)xt); }
-        RET(1);
+        return 1;
     }
     PRINT3("[", w, "]??");
     if (state) {
@@ -310,30 +316,22 @@ void ParseWord() {
         state = 0;
     }
     base = 10;
-    RET(0);
+    return 0;
 }
 
-void ParseLine(char *x) {
+void ParseLine(char *x, int stopOnNull) {
     in = x;
+    if (in==0) { in=tib; clearTib; }
     while (state != 999) {
-        getword();
-        if (pop() == 0) break;
+        if (getword(stopOnNull) == 0) { return; }
         ParseWord();
-        if (pop() == 0) return;
     }
-}
-
-void loadLine(const char *x) {
-    in = tib;
-    while (*x) { *(in++) = *(x++); }
-    *in = 0;
-    ParseLine(tib);
 }
 
 void loadNum(const char *name, cell_t addr, int makeInline=0) {
     clearTib;
     sprintf(tib, ": %s %ld ;", name, addr);
-    ParseLine(tib);
+    ParseLine(tib, 1);
     if (makeInline) { last->f = IS_INLINE; }
 }
 
@@ -341,7 +339,6 @@ void init() {
     here = &BYTES(0);
     vhere = &vars[0];
     last = (dict_t*)&BYTES(MEM_SZ);
-    in = tib;
     base = 10;
     sp = rsp = 0;
     opcode_t *op = opcodes;
@@ -381,10 +378,7 @@ int main(int argc, char *argv[]) {
     // for (i=1; i<argc; ++i) { y=argv[i]; RG(r++) = atoi(y); }
     init();
     input_fp = fopen("core.f", "rt");
-    while (state != 999) {
-        getInput();
-        ParseLine(tib);
-    }
+    ParseLine(0, 0);
     return 0;
 }
 #endif

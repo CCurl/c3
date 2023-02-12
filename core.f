@@ -132,7 +132,7 @@ var (len) cell allot
 : bm1 timer swap begin 1- dup while drop elapsed ;
 : bm2 timer swap 0 do loop elapsed ;
 : mil #1000 dup * * ;
-: sz #500 mil ;
+#500 mil const sz
 
 sz bm1 sz bm2
 \ bye
