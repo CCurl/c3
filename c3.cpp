@@ -351,31 +351,31 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-    loadNum("(exit)",   EXIT); 
-    loadNum("(jmp)",    JMP);
-    loadNum("(jmpz)",   JMPZ);
-    loadNum("(jmpnz)",  JMPNZ);
-    loadNum("(call)",   CALL);
-    loadNum("(lit4)",   LIT4);
-    loadNum("(bitop)",  BITOPS);
-    loadNum("(retop)",  RETOPS);
-    loadNum("(fileop)", FILEOPS);
-    loadNum("mem", (cell_t)&BYTES(0));
-    loadNum("mem-end", (cell_t)&BYTES(MEM_SZ));
-    loadNum("vars", (cell_t)&vars[0]);
+    loadNum("(exit)",   EXIT);
+    loadNum("(jmp)",    JMP, 1);
+    loadNum("(jmpz)",   JMPZ, 1);
+    loadNum("(jmpnz)",  JMPNZ, 1);
+    loadNum("(call)",   CALL, 1);
+    loadNum("(lit4)",   LIT4, 1);
+    loadNum("(bitop)",  BITOPS, 1);
+    loadNum("(retop)",  RETOPS, 1);
+    loadNum("(fileop)", FILEOPS, 1);
+    loadNum("mem",      (cell_t)&BYTES(0));
+    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ));
+    loadNum("vars",     (cell_t)&vars[0]);
     loadNum("vars-end", (cell_t)&vars[VARS_SZ]);
-    loadNum("word-sz", sizeof(dict_t), 1);
-    loadNum("(vhere)", (cell_t)&vhere);
-    loadNum("(stk)", (cell_t)&stk[0]);
-    loadNum("(sp)", (cell_t)&sp);
-    loadNum("(rsp)", (cell_t)&rsp);
-    loadNum("(lsp)", (cell_t)&lsp);
-    loadNum("(last)", (cell_t)&last);
-    loadNum("(here)", (cell_t)&here);
-    loadNum(">in", (cell_t)&in);
-    loadNum("state", (cell_t)&state);
-    loadNum("base", (cell_t)&base);
-    loadNum("cell", sizeof(cell_t), 1);
+    loadNum("word-sz",  sizeof(dict_t), 1);
+    loadNum("(vhere)",  (cell_t)&vhere);
+    loadNum("(stk)",    (cell_t)&stk[0]);
+    loadNum("(sp)",     (cell_t)&sp);
+    loadNum("(rsp)",    (cell_t)&rsp);
+    loadNum("(lsp)",    (cell_t)&lsp);
+    loadNum("(last)",   (cell_t)&last);
+    loadNum("(here)",   (cell_t)&here);
+    loadNum(">in",      (cell_t)&in);
+    loadNum("state",    (cell_t)&state);
+    loadNum("base",     (cell_t)&base);
+    loadNum("cell",     sizeof(cell_t), 1);
 }
 
 #ifdef isPC
