@@ -146,6 +146,7 @@
   <ItemGroup>
     <None Include="core.f" />
     <None Include="README.md" />
+    <None Include="test.f" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c3.cpp" />

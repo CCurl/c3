@@ -87,9 +87,7 @@ cell_t state, base;
 char *here, *pc, tib[128], *in;
 dict_t *last;
 
-#ifdef isPC
-FILE *input_fp;
-#endif
+cell_t fileStk[10], fileSp, input_fp;
 
 void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
@@ -198,8 +196,13 @@ void isNum() {
 void getInput() {
     clearTib;
     if (input_fp) {
-        in = fgets(tib, sizeof(tib), input_fp);
-        if (in != tib) { fclose(input_fp); input_fp = NULL; }
+        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
+        if (in != tib) {
+            fclose((FILE*)input_fp);
+            input_fp = NULL;
+            in = tib;
+            if (0 < fileSp) { input_fp = fileStk[fileSp--]; }
+        }
     }
     if (! input_fp) {
         if (state) { printString("... > "); }
@@ -235,7 +238,7 @@ next:
     case STOP:                                                 return;
     case LIT1: push(*(pc++));                                               NEXT;
     case LIT4: push(*(cell_t*)pc); pc += sizeof(cell_t);                    NEXT;
-    case CALL: if (*pc != EXIT) { rstk[++rsp] = (pc+sizeof(cell_t)); }
+    case CALL: y = pc+sizeof(cell_t); if (*y != EXIT) { rstk[++rsp]=y; }
             pc = *(char**)pc;                                               NEXT;
     case EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];                NEXT;
     case JMP: pc = *(char**)pc;                                             NEXT;
@@ -307,10 +310,22 @@ int ParseWord() {
         if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
         if (f & IS_INLINE) {
             CComma(*(xt++));
-            while ((*xt) && (*xt != EXIT)) { CComma(*(xt++)); }
+            while ((*xt) && (*xt != EXIT)) {
+                CComma(*(xt++));
+            }
         }
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
+    }
+    if (strEq(w, (char*)"include", 0)) {
+        getword(0); w = (char*)pop();
+        cell_t fp = (cell_t)fopen(w,"rt");
+        if (fp) {
+            if (input_fp) { fileStk[++fileSp] = input_fp; }
+            input_fp = fp;
+            clearTib;
+            return 1;
+        }
     }
     PRINT3("[", w, "]??");
     if (state) {
@@ -386,7 +401,7 @@ int main(int argc, char *argv[]) {
     // int r='A';
     // for (i=1; i<argc; ++i) { y=argv[i]; RG(r++) = atoi(y); }
     init();
-    input_fp = fopen("core.f", "rt");
+    input_fp = (cell_t)fopen("core.f", "rt");
     ParseLine(0, 0);
     return 0;
 }

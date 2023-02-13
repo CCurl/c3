@@ -1,5 +1,7 @@
 : \ 0 >in @ ! ;
 
+include test.f
+
 : last (last) @ ;
 : here (here) @ ;
 : vhere (vhere) @ ;
@@ -120,7 +122,8 @@ var (len) cell allot
 : bm1 timer swap begin 1- dup while drop elapsed ;
 : bm2 timer swap 0 do loop elapsed ;
 : mil #1000 dup * * ;
-#500 mil const sz
+500 mil const sz
 
 sz bm1 sz bm2
+: back ." -back" ; back
 \ bye
