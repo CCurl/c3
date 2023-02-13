@@ -390,6 +390,7 @@ void init() {
     loadNum("(last)",   (cell_t)&last);
     loadNum("(here)",   (cell_t)&here);
     loadNum(">in",      (cell_t)&in);
+    loadNum("tib",      (cell_t)&tib[0]);
     loadNum("state",    (cell_t)&state);
     loadNum("base",     (cell_t)&base);
 }

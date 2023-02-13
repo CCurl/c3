@@ -20,14 +20,13 @@ Notes:
     - name:    char[NAME_LEN+1] (NULL terminated)
     - xt:      cell_t
 
-## c3 Reference
+## c3 Base system reference
 ```
 NOTE: many words are defined in file 'core.f'
 
 *** MATH ***
 +        (a b--c)          Addition
 -        (a b--c)          Subtraction
-/        (a b--c)          Division
 *        (a b--c)          Multiplication
 /mod     (a b--r q)        q: quotient(a,b), r: modulo(a,b)
 
@@ -40,9 +39,14 @@ over     (a b--a b a)      Copy NOS
 swap     (a b--b a)        Swap TOS and NOS
 
 *** INPUT/OUTPUT ***
-emit     (c--)             Output c as a character.
-key      (--c)             c: Next keyboard char, wait if no char available.
-key?     (--f)             f: FALSE if no char available, else TRUE.
+[0-x]*   (--N)             Input N as a number in the current BASE.
+#[0-9]*  (--N)             Input N as a decimal number.
+$[0-f]*  (--N)             Input N as a hexadecimal number.
+%[0-1]*  (--N)             Input N as a binary number.
+'x'      (--N)             Input N as the ascii value of 'x'.
+emit     (C--)             Output C as a character.
+key      (--C)             C: Next keyboard char, wait if no char available.
+key?     (--F)             F: FALSE if no char available, else TRUE.
 
 *** LOGICAL ***
 =        (a b--f)          Equality.
@@ -51,29 +55,31 @@ key?     (--f)             f: FALSE if no char available, else TRUE.
 0=       (n--f)            Logical NOT.
 
 *** MEMORY ***
-@        (a--n)            n: CELL at a.
-c@       (a--b)            b: BYTE at a.
-!        (n a--)           Store CELL n at a.
-c!       (b a--)           Store BYTE b at a.
+@        (a--n)            n: CELL at address a.
+c@       (a--b)            b: BYTE at address a.
+!        (n a--)           Store CELL n to address a.
+c!       (b a--)           Store BYTE b to address a.
 
 *** WORDS and FLOW CONTROL ***
 : word   (--)              Begin definition of word.
 ;        (--)              End current definition.
-do       (T F--)           Begin DO/LOOP loop
+create x (--)              Creates a definition for the next word.
+do       (T F--)           Begin DO/LOOP loop.
 (i)      (--a)             a: address of the index variable.
-loop     (--)              Increment I, jump to DO if I < T
-' word   (--xt fl f)       Find a word in the dictionary.
+loop     (--)              Increment I, jump to DO if I < T.
+' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
+            NOTE: words like IF/THEN and BEGIN/WHILE are in core.f
 
 *** SYSTEM ***
-(exit)   (--n)   n: The byte-code value for EXIT
-(jmp)    (--n)   n: The byte-code value for JMP
-(jmpz)   (--n)   n: The byte-code value for JMPZ
-(jmpnz)  (--n)   n: The byte-code value for JMPNZ
-(call)   (--n)   n: The byte-code value for CALL
-(lit4)   (--n)   n: The byte-code value for LIT4
-(bitop)  (--n)   n: The byte-code value for BITOP
-(retop)  (--n)   n: The byte-code value for RETOP
-(fileop) (--n)   n: The byte-code value for FILEOP
+(exit)   (--n)   n: The byte-code value for EXIT.
+(jmp)    (--n)   n: The byte-code value for JMP.
+(jmpz)   (--n)   n: The byte-code value for JMPZ.
+(jmpnz)  (--n)   n: The byte-code value for JMPNZ.
+(call)   (--n)   n: The byte-code value for CALL.
+(lit4)   (--n)   n: The byte-code value for LIT4.
+(bitop)  (--n)   n: The byte-code value for BITOP.
+(retop)  (--n)   n: The byte-code value for RETOP.
+(fileop) (--n)   n: The byte-code value for FILEOP.
 mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
 vars     (--a)   a: Start address for the VARIABLES area.
@@ -89,8 +95,10 @@ word-sz  (--n)   n: Size in bytes of a dictionary entry.
 (lsp)    (--a)   a: Address of the loop stack pointer.
 base     (--a)   a: Address of BASE.
 state    (--a)   a: Address of STATE.
+tib      (--a)   a: Address of TIB.
 >in      (--a)   a: Address of >IN.
 cell     (--n)   n: size in bytes of a CELL.
+timer    (--n)   n: return value from clock() function call.
 ```
 
 ## Extending c3
