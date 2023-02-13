@@ -26,7 +26,7 @@ enum {
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, INC, DEC, SUB, 
     LT, EQ, GT, NOT,
-    DO, LOOP,
+    DO, LOOP, INDEX,
     EMIT, TIMER,
     DEFINE, ENDWORD, CREATE, FIND,
     STORE, CSTORE, FETCH, CFETCH
@@ -48,6 +48,7 @@ opcode_t opcodes[] = {
     , { GT,      IS_INLINE,    ">" },       { NOT,     IS_INLINE,    "0=" }
     , { INC,     IS_INLINE,    "1+" },      { DEC,     IS_INLINE,    "1-" }
     , { DO,      IS_INLINE,    "do" },      { LOOP,    IS_INLINE,    "loop" }
+    , { INDEX,   IS_INLINE,    "(i)" }
     , { STORE,   IS_INLINE,    "!" },       { CSTORE,  IS_INLINE,    "c!" }
     , { FETCH,   IS_INLINE,    "@" },       { CFETCH,  IS_INLINE,    "c@" }
     , { 0, 0, 0 }
@@ -86,9 +87,7 @@ cell_t state, base;
 char *here, *pc, tib[128], *in;
 dict_t *last;
 
-#ifdef isPC
-FILE *input_fp;
-#endif
+cell_t fileStk[10], fileSp, input_fp;
 
 void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
@@ -196,27 +195,39 @@ void isNum() {
 
 void getInput() {
     clearTib;
+gI1:
     if (input_fp) {
-        in = fgets(tib, sizeof(tib), input_fp);
-        if (in != tib) { fclose(input_fp); input_fp = NULL; }
+        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
+        if (in != tib) {
+            fclose((FILE*)input_fp);
+            input_fp = NULL;
+            in = tib;
+            if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
+        }
     }
     if (! input_fp) {
-        printString(" ok\n");
+        if (state) { printString("... > "); }
+        else { printString(" ok\n"); }
         in = fgets(tib, sizeof(tib), stdin);
     }
 }
 
 // ( --addr len )
 // ( --0 )
-void getword() {
+int getword(int stopOnNull) {
+    int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
     if (STK_SZ < sp) { PRINT1("over"); sp=0; }
+gW1:
     while (*in && (*in < 33)) { ++in; }
-    if (*in == 0) { RET(0); }
+    if (*in == 0) { 
+        if (stopOnNull) { return 0; }
+        getInput(); goto gW1;
+    }
     PUSH(in);
-    push(0);
-    while (32 < *in) { ++in; ++TOS; }
+    while (32 < *in) { ++in; ++len; }
     *(in++) = 0;
+    return len;
 }
 
 void Run(char *y) {
@@ -225,10 +236,10 @@ void Run(char *y) {
 
 next:
     switch (*(pc++)) {
-    case STOP:                                                 return;
+    case STOP:                                                             return;
     case LIT1: push(*(pc++));                                               NEXT;
     case LIT4: push(*(cell_t*)pc); pc += sizeof(cell_t);                    NEXT;
-    case CALL: if (*pc != EXIT) { rstk[++rsp] = (pc+sizeof(cell_t)); }
+    case CALL: y = pc+sizeof(cell_t); if (*y != EXIT) { rstk[++rsp]=y; }
             pc = *(char**)pc;                                               NEXT;
     case EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];                NEXT;
     case JMP: pc = *(char**)pc;                                             NEXT;
@@ -256,21 +267,22 @@ next:
     case DEC: --TOS;                                                        NEXT;
     case INC: ++TOS;                                                        NEXT;
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
+    case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
-    case DEFINE: getword(); if (pop()) { Create((char*)pop()); state=1; }   NEXT;
-    case CREATE: getword(); if (pop()) { Create((char*)pop()); }            NEXT;
-    case FIND: getword(); if (pop()) { find(); } else { push(0); }          NEXT;
+    case DEFINE: getword(0); Create((char*)pop()); state=1;                 NEXT;
+    case CREATE: getword(0); Create((char*)pop());                          NEXT;
+    case FIND: getword(0); find();                                          NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
     case BITOPS: t1 = *(pc++);
-        if (t1==11) { NOS &= TOS; DROP1; }               // and
-        else if (t1==12) { NOS |= TOS; DROP1; }          // or
-        else if (t1==13) { NOS ^= TOS; DROP1; }          // xor
-        else if (t1==14) { TOS = ~TOS; }                 // com
+        if (t1==11) { NOS &= TOS; DROP1; }                   // and
+        else if (t1==12) { NOS |= TOS; DROP1; }              // or
+        else if (t1==13) { NOS ^= TOS; DROP1; }              // xor
+        else if (t1==14) { TOS = ~TOS; }                     // com
         NEXT;
     case RETOPS: t1 = *(pc++);
-        if (t1==11) { rstk[++rsp] = (char*)pop(); }      // >r
-        else if (t1==12) { PUSH(rstk[rsp]); }            // r@
-        else if (t1==13) { PUSH(rstk[rsp--]); }          // r>
+        if (t1==11) { rstk[++rsp] = (char*)pop(); }          // >r
+        else if (t1==12) { PUSH(rstk[rsp]); }                // r@
+        else if (t1==13) { PUSH(rstk[rsp--]); }              // r>
         NEXT;
     case FILEOPS: t1 = *(pc++);
         if (t1==11) { NOS=(cell_t)fopen((char*)TOS, (char*)NOS); DROP1; }
@@ -281,7 +293,7 @@ next:
     }
 }
 
-void ParseWord() {
+int ParseWord() {
     char *w = (char*)TOS;
     isNum();
     if (pop()) {
@@ -289,20 +301,32 @@ void ParseWord() {
             if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
             else { CComma(LIT4); Comma(pop()); }
         }
-        RET(1);
+        return 1;
     }
     PUSH(w);
     find();
     if (pop()) {
         cell_t f = pop();
         char *xt = (char*)pop();
-        if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); RET(1); }
+        if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
         if (f & IS_INLINE) {
             CComma(*(xt++));
-            while ((*xt) && (*xt != EXIT)) { CComma(*(xt++)); }
+            while ((*xt) && (*xt != EXIT)) {
+                CComma(*(xt++));
+            }
         }
         else { CComma(CALL); Comma((cell_t)xt); }
-        RET(1);
+        return 1;
+    }
+    if (strEq(w, (char*)"include", 0)) {
+        getword(0); w = (char*)pop();
+        cell_t fp = (cell_t)fopen(w,"rt");
+        if (fp) {
+            if (input_fp) { fileStk[++fileSp] = input_fp; }
+            input_fp = fp;
+            clearTib;
+            return 1;
+        }
     }
     PRINT3("[", w, "]??");
     if (state) {
@@ -310,30 +334,22 @@ void ParseWord() {
         state = 0;
     }
     base = 10;
-    RET(0);
+    return 0;
 }
 
-void ParseLine(char *x) {
+void ParseLine(char *x, int stopOnNull) {
     in = x;
+    if (in==0) { in=tib; clearTib; }
     while (state != 999) {
-        getword();
-        if (pop() == 0) break;
+        if (getword(stopOnNull) == 0) { return; }
         ParseWord();
-        if (pop() == 0) return;
     }
-}
-
-void loadLine(const char *x) {
-    in = tib;
-    while (*x) { *(in++) = *(x++); }
-    *in = 0;
-    ParseLine(tib);
 }
 
 void loadNum(const char *name, cell_t addr, int makeInline=0) {
     clearTib;
     sprintf(tib, ": %s %ld ;", name, addr);
-    ParseLine(tib);
+    ParseLine(tib, 1);
     if (makeInline) { last->f = IS_INLINE; }
 }
 
@@ -341,7 +357,6 @@ void init() {
     here = &BYTES(0);
     vhere = &vars[0];
     last = (dict_t*)&BYTES(MEM_SZ);
-    in = tib;
     base = 10;
     sp = rsp = 0;
     opcode_t *op = opcodes;
@@ -352,24 +367,32 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-    loadNum("mem-sz", MEM_SZ);
-    loadNum("word-sz", sizeof(dict_t), 1);
-    loadNum("cell", sizeof(cell_t), 1);
-    loadNum("(mem)", (cell_t)&BYTES(0));
-    loadNum("vars-sz", VARS_SZ);
-    loadNum("(vars)", (cell_t)&vars[0]);
-    loadNum("(vhere)", (cell_t)&vhere);
-    loadNum("(rsp)", (cell_t)&rsp);
-    loadNum("(lstk)", (cell_t)&lstk[0]);
-    loadNum("(lsp)", (cell_t)&lsp);
-    loadNum("(stk)", (cell_t)&stk[0]);
-    loadNum("(sp)", (cell_t)&sp);
-    loadNum("(last)", (cell_t)&last);
-    loadNum("(last)", (cell_t)&last);
-    loadNum("(here)", (cell_t)&here);
-    loadNum(">in", (cell_t)&in);
-    loadNum("state", (cell_t)&state);
-    loadNum("base", (cell_t)&base);
+    loadNum("(exit)",   EXIT,    0);
+    loadNum("(jmp)",    JMP,     1);
+    loadNum("(jmpz)",   JMPZ,    1);
+    loadNum("(jmpnz)",  JMPNZ,   1);
+    loadNum("(call)",   CALL,    1);
+    loadNum("(lit4)",   LIT4,    1);
+    loadNum("(bitop)",  BITOPS,  1);
+    loadNum("(retop)",  RETOPS,  1);
+    loadNum("(fileop)", FILEOPS, 1);
+    loadNum("mem",      (cell_t)&BYTES(0));
+    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ));
+    loadNum("vars",     (cell_t)&vars[0]);
+    loadNum("vars-end", (cell_t)&vars[VARS_SZ]);
+    loadNum("word-sz",  sizeof(dict_t), 1);
+    loadNum("cell",     sizeof(cell_t), 1);
+    loadNum("(vhere)",  (cell_t)&vhere);
+    loadNum("(stk)",    (cell_t)&stk[0]);
+    loadNum("(sp)",     (cell_t)&sp);
+    loadNum("(rsp)",    (cell_t)&rsp);
+    loadNum("(lsp)",    (cell_t)&lsp);
+    loadNum("(last)",   (cell_t)&last);
+    loadNum("(here)",   (cell_t)&here);
+    loadNum(">in",      (cell_t)&in);
+    loadNum("tib",      (cell_t)&tib[0]);
+    loadNum("state",    (cell_t)&state);
+    loadNum("base",     (cell_t)&base);
 }
 
 #ifdef isPC
@@ -380,11 +403,8 @@ int main(int argc, char *argv[]) {
     // int r='A';
     // for (i=1; i<argc; ++i) { y=argv[i]; RG(r++) = atoi(y); }
     init();
-    input_fp = fopen("core.f", "rt");
-    while (state != 999) {
-        getInput();
-        ParseLine(tib);
-    }
+    input_fp = (cell_t)fopen("core.f", "rt");
+    ParseLine(0, 0);
     return 0;
 }
 #endif

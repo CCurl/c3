@@ -144,8 +144,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="core.f" />
+    <None Include="LICENSE" />
+    <None Include="make" />
     <None Include="README.md" />
+    <None Include="tests.f" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c3.cpp" />
