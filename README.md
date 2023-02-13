@@ -3,11 +3,12 @@
 The main goals for this project are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
 - To be able to run on both Windows and Linux (and Macintosh).
-- To be deployable to as many different kinds of development boards as possible, via the Arduino IDE.
+- To be deployable development boards, via the Arduino IDE.
 
 Notes:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
+- The Linux version is 64-bit but can also be 32-bit.
 - Not many primitives are built into the base executable.
 - The rest is built using those words (see core.f).
 - The VARIABLE space is separated from the CODE space.
@@ -21,7 +22,7 @@ Notes:
 
 ## c3 Reference
 ```
-NOTE: most words are defined in file 'core.f'
+NOTE: many words are defined in file 'core.f'
 
 *** MATH ***
 +        (a b--c)          Addition
@@ -59,9 +60,9 @@ c!       (b a--)           Store BYTE b at a.
 : word   (--)              Begin definition of word.
 ;        (--)              End current definition.
 do       (T F--)           Begin DO/LOOP loop
+(i)      (--a)             a: address of the index variable.
 loop     (--)              Increment I, jump to DO if I < T
 ' word   (--xt fl f)       Find a word in the dictionary.
-```
 
 *** SYSTEM ***
 (exit)   (--n)   n: The byte-code value for EXIT
@@ -85,7 +86,7 @@ word-sz  (--n)   n: Size in bytes of a dictionary entry.
 (stk)    (--a)   a: Address of the stack.
 (sp)     (--a)   a: Address of stack pointer.
 (rsp)    (--a)   a: Address of return stack pointer.
-(lsp)    (--a)   a: Address of the index variable for the current loop;
+(lsp)    (--a)   a: Address of the loop stack pointer.
 base     (--a)   a: Address of BASE.
 state    (--a)   a: Address of STATE.
 >in      (--a)   a: Address of >IN.

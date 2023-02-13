@@ -195,13 +195,14 @@ void isNum() {
 
 void getInput() {
     clearTib;
+gI1:
     if (input_fp) {
         in = fgets(tib, sizeof(tib), (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
             input_fp = NULL;
             in = tib;
-            if (0 < fileSp) { input_fp = fileStk[fileSp--]; }
+            if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
         }
     }
     if (! input_fp) {
@@ -217,11 +218,11 @@ int getword(int stopOnNull) {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
     if (STK_SZ < sp) { PRINT1("over"); sp=0; }
-gl1:
+gW1:
     while (*in && (*in < 33)) { ++in; }
     if (*in == 0) { 
         if (stopOnNull) { return 0; }
-        getInput(); goto gl1;
+        getInput(); goto gW1;
     }
     PUSH(in);
     while (32 < *in) { ++in; ++len; }
@@ -235,7 +236,7 @@ void Run(char *y) {
 
 next:
     switch (*(pc++)) {
-    case STOP:                                                 return;
+    case STOP:                                                             return;
     case LIT1: push(*(pc++));                                               NEXT;
     case LIT4: push(*(cell_t*)pc); pc += sizeof(cell_t);                    NEXT;
     case CALL: y = pc+sizeof(cell_t); if (*y != EXIT) { rstk[++rsp]=y; }
@@ -273,15 +274,15 @@ next:
     case FIND: getword(0); find();                                          NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
     case BITOPS: t1 = *(pc++);
-        if (t1==11) { NOS &= TOS; DROP1; }               // and
-        else if (t1==12) { NOS |= TOS; DROP1; }          // or
-        else if (t1==13) { NOS ^= TOS; DROP1; }          // xor
-        else if (t1==14) { TOS = ~TOS; }                 // com
+        if (t1==11) { NOS &= TOS; DROP1; }                   // and
+        else if (t1==12) { NOS |= TOS; DROP1; }              // or
+        else if (t1==13) { NOS ^= TOS; DROP1; }              // xor
+        else if (t1==14) { TOS = ~TOS; }                     // com
         NEXT;
     case RETOPS: t1 = *(pc++);
-        if (t1==11) { rstk[++rsp] = (char*)pop(); }      // >r
-        else if (t1==12) { PUSH(rstk[rsp]); }            // r@
-        else if (t1==13) { PUSH(rstk[rsp--]); }          // r>
+        if (t1==11) { rstk[++rsp] = (char*)pop(); }          // >r
+        else if (t1==12) { PUSH(rstk[rsp]); }                // r@
+        else if (t1==13) { PUSH(rstk[rsp--]); }              // r>
         NEXT;
     case FILEOPS: t1 = *(pc++);
         if (t1==11) { NOS=(cell_t)fopen((char*)TOS, (char*)NOS); DROP1; }

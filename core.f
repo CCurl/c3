@@ -1,7 +1,5 @@
 : \ 0 >in @ ! ;
 
-include test.f
-
 : last (last) @ ;
 : here (here) @ ;
 : vhere (vhere) @ ;
@@ -16,15 +14,17 @@ include test.f
 : c, here c! here 1+     (here) ! ;
 : ,  here !  here cell + (here) ! ;
 
-: const create (lit4) c, , (exit) c, ;
-: var vhere const  ;
 : allot vhere + (vhere) ! ;
 : vc, vhere c! 1 allot ;
 : v,  vhere ! cell allot ;
 
-: if (jmpz) c, here 0 , ; immediate
-: then here swap !      ; immediate
-: exit (exit) c,        ; immediate
+: const create (lit4) c, , (exit) c, ;
+: var vhere const ;
+
+: if  (jmpz) c, here 0 , ; immediate
+: else (jmp) c, here swap 0 , here swap ! ; immediate
+: then here swap ! ; immediate
+: exit (exit) c,   ; immediate
 
 : tuck swap over ; inline
 : nip  swap drop ; inline
@@ -69,7 +69,7 @@ include test.f
 : unloop (lsp) @ 3 - (lsp) ! ;
 
 : /   /mod nip  ; inline
-: mod /mod swap ; inline
+: mod /mod drop ; inline
 
 var (neg) cell allot
 var (len) cell allot
@@ -113,17 +113,21 @@ var (len) cell allot
 
 : binary  %10 base ! ;
 : decimal #10 base ! ;
-: hex     $16 base ! ;
+: hex     $10 base ! ;
 : ? @ . ;
 
-\ temp for testing
-: ms (.) ."  usec " ;
-: elapsed timer swap - ms ;
-: bm1 timer swap begin 1- dup while drop elapsed ;
-: bm2 timer swap 0 do loop elapsed ;
-: mil #1000 dup * * ;
-500 mil const sz
+: rshift 0 do 2 / loop ;
+: lshift 0 do 2 * loop ;
 
-sz bm1 sz bm2
-: back ." -back" ; back
-\ bye
+var (fg) 3 cells allot
+: fg cells (fg) + ;
+: marker here 0 fg ! vhere 1 fg ! last 2 fg ! ;
+: forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
+marker
+
+\ temp for testing
+include tests.f
+: back ." -back" cr ; back
+
+forget
+words
