@@ -73,7 +73,6 @@
 
 var (neg) cell allot
 var (len) cell allot
-: len (len) @ ;
 : #digit '0' + dup '9' > if 7 + then ;
 : <# 0 (neg) c! 0 (len) ! dup 0 < 
     if negate 1 (neg) ! then 0 swap ;         \ ( n1 -- 0 n2 )
