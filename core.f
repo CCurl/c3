@@ -126,10 +126,3 @@ var (fg) 3 cells allot
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
 : forget-1 last (here) ! last @ (last) ! ;
 marker
-
-\ temp for testing
-include tests.f
-: back ." -back" cr ; back
-
-\ forget
-words

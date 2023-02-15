@@ -149,7 +149,7 @@
     <None Include="LICENSE" />
     <None Include="make" />
     <None Include="README.md" />
-    <None Include="tests.f" />
+    <None Include="benches.f" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c3.cpp" />
