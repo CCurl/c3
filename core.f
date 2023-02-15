@@ -4,8 +4,8 @@
 : here (here) @ ;
 : vhere (vhere) @ ;
 
-: inline 2 last c! ;
-: immediate 1 last c! ;
+: inline 2 last cell + c! ;
+: immediate 1 last cell + c! ;
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
 : bye 999 state ! ;
@@ -106,8 +106,8 @@ var (len) cell allot
     then ')' emit ;
 
 : words last begin
-        dup mem-end < 0= if drop exit then
-        dup 1+ count type tab word-sz +
+        dup 0= if drop exit then
+        dup cell + 1+ count type tab @
     again ;
 
 : binary  %10 base ! ;
@@ -122,6 +122,7 @@ var (fg) 3 cells allot
 : fg cells (fg) + ;
 : marker here 0 fg ! vhere 1 fg ! last 2 fg ! ;
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
+: forget-1 last (here) ! last @ (last) ! ;
 marker
 
 \ temp for testing
