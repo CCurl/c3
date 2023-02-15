@@ -1,11 +1,12 @@
-: \ 0 >in @ ! ;
-
 : last (last) @ ;
 : here (here) @ ;
 : vhere (vhere) @ ;
 
-: inline 2 last cell + c! ;
 : immediate 1 last cell + c! ;
+: inline 2 last cell + c! ;
+
+: \ 0 >in @ ! ; immediate
+
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
 : bye 999 state ! ;
@@ -35,10 +36,14 @@
 : until (jmpz)  c, , ; immediate
 : again (jmp)   c, , ; immediate
 
+: +!  tuck @  + swap !  ; inline
+: ++  dup @  1+ swap !  ; inline
+: c++ dup c@ 1+ swap c! ; inline
+
 : ( begin 
-        >in @ c@ >in @ 1+ >in !
-        dup  0= if drop exit then
-        ')' = if drop exit then
+        >in @ c@ >in ++
+        dup 0= if drop exit then
+        ')' = if exit then
     again ; immediate
 
 : and [ (bitop) c, 11 c, ] ; inline
@@ -60,9 +65,6 @@
 
 : negate com 1+ ; inline
 : abs dup 0 < if negate then ;
-: +!  dup @   + swap !  ; inline
-: ++  dup @  1+ swap !  ; inline
-: c++ dup c@ 1+ swap c! ; inline
 
 : i (i) @ ;
 : +i (i) +! ;
@@ -129,5 +131,5 @@ marker
 include tests.f
 : back ." -back" cr ; back
 
-forget
+\ forget
 words
