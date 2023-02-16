@@ -320,7 +320,7 @@ int ParseWord() {
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
     }
-    if (strEq(w, (char*)"include", 0)) {
+    if (strEq(w, (char*)"load", 0)) {
         getword(0); w = (char*)pop();
         cell_t fp = (cell_t)fopen(w,"rt");
         if (fp) {
