@@ -86,26 +86,33 @@ var (len) cell allot
 : (.) <# #S #> #P ;
 : . (.) space ;
 
-: count dup 1+ swap c@ ; inline
-: type 0 do dup c@ emit 1+ loop drop ;
-
-: S" (lit4) c, vhere ,
-    vhere >r 0 vc,
-    begin >in @ c@ >in ++
-        dup 0= over '"' = or
-        if drop 0 vc, rdrop exit then
-        vc, r@ c++
-    again ; immediate
-
-: ." [ (call) c, ' S" drop drop , ]
-    (call) c, [ (lit4) c, ' count drop drop , ] ,
-    (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
-
 : 0sp 0 (sp) ! ;
 : depth (sp) @ 1- ;
 : .s '(' emit space depth ?dup if
         0 do (stk) i 1+ cells + @ . loop 
     then ')' emit ;
+
+: count dup 1+ swap c@ ; inline
+: type 0 do dup c@ emit 1+ loop drop ;
+
+var (s) cell allot
+var (d) cell allot
+: s (s) @ ; : >s (s) ! ; : s+ s (s) ++ ;
+: d (d) @ ; : >d (d) ! ; : d+ d (d) ++ ;
+
+: i" vhere dup >d 0 d+ c!
+    begin >in @ c@ >s >in ++
+        s 0= s '"' = or
+        if 0 d+ c! exit then
+        s d+ c! vhere c++
+    again ;
+
+: s" i" state @ if (lit4) c, , d (vhere) ! then ; immediate
+
+: ." i" state @ 0= if count type exit then
+    (lit4) c, , d (vhere) !
+    (call) c, [ (lit4) c, ' count drop drop , ] ,
+    (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
 
 : words last begin
         dup 0= if drop exit then
@@ -126,3 +133,5 @@ var (fg) 3 cells allot
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
 : forget-1 last (here) ! last @ (last) ! ;
 marker
+." c3 - v0.0.1 - Chris Curl" cr
+here mem - . ." bytes used, " mem-end here - . ." bytes free."
