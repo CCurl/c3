@@ -29,6 +29,7 @@
 
 : tuck swap over ; inline
 : nip  swap drop ; inline
+: 2dup over over ; inline
 : ?dup dup if dup then ;
 
 : begin here         ; immediate
@@ -99,14 +100,14 @@ var (len) cell allot
 
 var (s) cell allot
 var (d) cell allot
-: s (s) @ ; : >s (s) ! ; : s+ s (s) ++ ;
-: d (d) @ ; : >d (d) ! ; : d+ d (d) ++ ;
+: s (s) @ ; : >s (s) ! ; : s++ s (s) ++ ;
+: d (d) @ ; : >d (d) ! ; : d++ d (d) ++ ;
 
-: i" vhere dup >d 0 d+ c!
+: i" vhere dup >d 0 d++ c!
     begin >in @ c@ >s >in ++
         s 0= s '"' = or
-        if 0 d+ c! exit then
-        s d+ c! vhere c++
+        if 0 d++ c! exit then
+        s d++ c! vhere c++
     again ;
 
 : s" i" state @ if (lit4) c, , d (vhere) ! then ; immediate
@@ -135,5 +136,10 @@ var (fg) 3 cells allot
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
 : forget-1 last (here) ! last @ (last) ! ;
 marker
+
+: used here mem - ;    : free mem-end here - ;
+: vused vhere vars - ; : vfree vars-end vhere - ;
 ." c3 - v0.0.1 - Chris Curl" cr
-here mem - . ." bytes used, " mem-end here - . ." bytes free."
+used . ." bytes used, " free . ." bytes free." cr
+vused . ." variable bytes used, " vfree . ." bytes free."
+forget
