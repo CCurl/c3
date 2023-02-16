@@ -7,6 +7,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 extern void printString(const char *s);
@@ -27,7 +28,7 @@ enum {
     ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
     DO, LOOP, INDEX,
-    EMIT, TIMER,
+    EMIT, TIMER, SYSTEM,
     DEFINE, ENDWORD, CREATE, FIND,
     STORE, CSTORE, FETCH, CFETCH
 };
@@ -47,7 +48,7 @@ opcode_t opcodes[] = {
     , { LT,      IS_INLINE,    "<" },       { EQ,      IS_INLINE,    "=" }
     , { GT,      IS_INLINE,    ">" },       { NOT,     IS_INLINE,    "0=" }
     , { DO,      IS_INLINE,    "do" },      { LOOP,    IS_INLINE,    "loop" }
-    , { INDEX,   IS_INLINE,    "(i)" }
+    , { INDEX,   IS_INLINE,    "(i)" },     { SYSTEM,  IS_INLINE,    "system" }
     , { STORE,   IS_INLINE,    "!" },       { CSTORE,  IS_INLINE,    "c!" }
     , { FETCH,   IS_INLINE,    "@" },       { CFETCH,  IS_INLINE,    "c@" }
     , { 0, 0, 0 }
@@ -201,7 +202,7 @@ gI1:
         in = fgets(tib, sizeof(tib), (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
-            input_fp = NULL;
+            input_fp = 0;
             in = tib;
             if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
         }
@@ -282,6 +283,7 @@ next:
     case CREATE: getword(0); Create((char*)pop());                          NEXT;
     case FIND: getword(0); find();                                          NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
+    case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case BITOPS: t1 = *(pc++);
         if (t1==11) { NOS &= TOS; DROP1; }                   // and
         else if (t1==12) { NOS |= TOS; DROP1; }              // or
@@ -355,7 +357,7 @@ void ParseLine(char *x, int stopOnNull) {
     }
 }
 
-void loadNum(const char *name, cell_t addr, int makeInline=0) {
+void loadNum(const char *name, cell_t addr, int makeInline) {
     clearTib;
     sprintf(tib, ": %s %ld ;", name, addr);
     ParseLine(tib, 1);
@@ -394,22 +396,22 @@ void init() {
     loadNum("(decop)",  DECOPS,  1);
     loadNum("(retop)",  RETOPS,  1);
     loadNum("(fileop)", FILEOPS, 1);
-    loadNum("mem",      (cell_t)&BYTES(0));
-    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ));
-    loadNum("vars",     (cell_t)&vars[0]);
-    loadNum("vars-end", (cell_t)&vars[VARS_SZ]);
+    loadNum("mem",      (cell_t)&BYTES(0), 0);
+    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ), 0);
+    loadNum("vars",     (cell_t)&vars[0], 0);
+    loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
     loadNum("cell",     CELL_SZ, 1);
-    loadNum("(vhere)",  (cell_t)&vhere);
-    loadNum("(stk)",    (cell_t)&stk[0]);
-    loadNum("(sp)",     (cell_t)&sp);
-    loadNum("(rsp)",    (cell_t)&rsp);
-    loadNum("(lsp)",    (cell_t)&lsp);
-    loadNum("(last)",   (cell_t)&last);
-    loadNum("(here)",   (cell_t)&here);
-    loadNum(">in",      (cell_t)&in);
-    loadNum("tib",      (cell_t)&tib[0]);
-    loadNum("state",    (cell_t)&state);
-    loadNum("base",     (cell_t)&base);
+    loadNum("(vhere)",  (cell_t)&vhere, 0);
+    loadNum("(stk)",    (cell_t)&stk[0], 0);
+    loadNum("(sp)",     (cell_t)&sp, 0);
+    loadNum("(rsp)",    (cell_t)&rsp, 0);
+    loadNum("(lsp)",    (cell_t)&lsp, 0);
+    loadNum("(last)",   (cell_t)&last, 0);
+    loadNum("(here)",   (cell_t)&here, 0);
+    loadNum(">in",      (cell_t)&in, 0);
+    loadNum("tib",      (cell_t)&tib[0], 0);
+    loadNum("state",    (cell_t)&state, 0);
+    loadNum("base",     (cell_t)&base, 0);
     loadPrim("1+",  INCOPS, 11);
     loadPrim("++",  INCOPS, 12);
     loadPrim("c++", INCOPS, 13);
