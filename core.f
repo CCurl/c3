@@ -137,9 +137,6 @@ var (fg) 3 cells allot
 : forget-1 last (here) ! last @ (last) ! ;
 marker
 
-: used here mem - ;    : free mem-end here - ;
-: vused vhere vars - ; : vfree vars-end vhere - ;
 ." c3 - v0.0.1 - Chris Curl" cr
-used . ." bytes used, " free . ." bytes free." cr
-vused . ." variable bytes used, " vfree . ." bytes free."
-forget
+here mem -   . ." bytes used, "            mem-end here - . ." bytes free." cr
+vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
