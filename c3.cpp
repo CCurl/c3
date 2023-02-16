@@ -21,10 +21,10 @@ extern void printChar(const char c);
 enum {
     STOP = 0,
     EXIT, JMP, JMPZ, JMPNZ,
-    CALL, LIT1, LIT4, 
-    BITOPS, RETOPS, FILEOPS,
+    BITOPS, RETOPS, FILEOPS, INCOPS, DECOPS, 
+    CALL, LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
-    ADD, MULT, SLMOD, INC, DEC, SUB, 
+    ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
     DO, LOOP, INDEX,
     EMIT, TIMER,
@@ -46,7 +46,6 @@ opcode_t opcodes[] = {
     , { MULT,    IS_INLINE,    "*" },       { SLMOD,   IS_INLINE,    "/mod" }
     , { LT,      IS_INLINE,    "<" },       { EQ,      IS_INLINE,    "=" }
     , { GT,      IS_INLINE,    ">" },       { NOT,     IS_INLINE,    "0=" }
-    , { INC,     IS_INLINE,    "1+" },      { DEC,     IS_INLINE,    "1-" }
     , { DO,      IS_INLINE,    "do" },      { LOOP,    IS_INLINE,    "loop" }
     , { INDEX,   IS_INLINE,    "(i)" }
     , { STORE,   IS_INLINE,    "!" },       { CSTORE,  IS_INLINE,    "c!" }
@@ -266,8 +265,16 @@ next:
     case NOT: TOS = (TOS) ? 0: -1;                                          NEXT;
     case EMIT: printChar((char)pop());                                      NEXT;
     case TIMER: push(clock());                                              NEXT;
-    case DEC: --TOS;                                                        NEXT;
-    case INC: ++TOS;                                                        NEXT;
+    case INCOPS: t1 = *(pc++);
+        if (t1==11) { ++TOS; }                                       // 1+
+        else if (t1==12) { y=(char*)pop(); Store(y, Fetch(y)+1); }   // ++
+        else if (t1==13) { y=(char*)pop(); ++(*(y)); }               // c++
+        NEXT;
+    case DECOPS: t1 = *(pc++);
+        if (t1==11) { --TOS; }                                       // 1-
+        else if (t1==12) { y=(char*)pop(); Store(y, Fetch(y)-1); }   // --
+        else if (t1==13) { y=(char*)pop(); --(*(y)); }               // c--
+        NEXT;
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
@@ -355,6 +362,14 @@ void loadNum(const char *name, cell_t addr, int makeInline=0) {
     if (makeInline) { last->f = IS_INLINE; }
 }
 
+void loadPrim(const char *name, int op, int arg) {
+    Create((char *)name);
+    last->f = IS_INLINE;
+    CComma(op);
+    CComma(arg);
+    CComma(EXIT);
+}
+
 void init() {
     here = &BYTES(0);
     vhere = &vars[0];
@@ -376,6 +391,7 @@ void init() {
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
     loadNum("(bitop)",  BITOPS,  1);
+    loadNum("(decop)",  DECOPS,  1);
     loadNum("(retop)",  RETOPS,  1);
     loadNum("(fileop)", FILEOPS, 1);
     loadNum("mem",      (cell_t)&BYTES(0));
@@ -394,6 +410,9 @@ void init() {
     loadNum("tib",      (cell_t)&tib[0]);
     loadNum("state",    (cell_t)&state);
     loadNum("base",     (cell_t)&base);
+    loadPrim("1+",  INCOPS, 11);
+    loadPrim("++",  INCOPS, 12);
+    loadPrim("c++", INCOPS, 13);
 }
 
 #ifdef isPC

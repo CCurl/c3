@@ -12,7 +12,7 @@
 : bye 999 state ! ;
 : cells cell * ; inline
 
-: c, here c! here 1+     (here) ! ;
+: c, here c! (here) ++ ;
 : ,  here !  here cell + (here) ! ;
 
 : allot vhere + (vhere) ! ;
@@ -37,14 +37,10 @@
 : again (jmp)   c, , ; immediate
 
 : +!  tuck @  + swap !  ; inline
-: ++  dup @  1+ swap !  ; inline
-: c++ dup c@ 1+ swap c! ; inline
 
-: ( begin 
-        >in @ c@ >in ++
-        dup 0= if drop exit then
-        ')' = if exit then
-    again ; immediate
+: 1-  [ (decop) c, 11 c, ] ; inline
+: --  [ (decop) c, 12 c, ] ; inline
+: c-- [ (decop) c, 13 c, ] ; inline
 
 : and [ (bitop) c, 11 c, ] ; inline
 : or  [ (bitop) c, 12 c, ] ; inline
@@ -57,6 +53,12 @@
 : rdrop r> drop ; inline
 : rot  >r swap r> swap ;
 : -rot swap >r swap r> ;
+
+: ( begin 
+        >in @ c@ >in ++
+        dup 0= if drop exit then
+        ')' = if exit then
+    again ; immediate
 
 : bl 32 ; inline
 : space bl emit ; inline
