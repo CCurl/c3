@@ -22,13 +22,15 @@ extern void printChar(const char c);
 enum {
     STOP = 0,
     EXIT, JMP, JMPZ, JMPNZ,
-    BITOPS, FILEOPS, INCOPS, DECOPS, 
+    FILEOPS,
     CALL, LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
     DO, LOOP, INDEX,
     RTO, RFETCH, RFROM,
+    INC, INCA, DEC, DECA,
+    COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
     DEFINE, ENDWORD, CREATE, FIND,
     STORE, CSTORE, FETCH, CFETCH
@@ -46,9 +48,12 @@ opcode_t opcodes[] = {
     , { EMIT,   IS_INLINE, "emit" },   { TIMER,   IS_INLINE, "timer" }
     , { ADD,    IS_INLINE, "+" },      { SUB,     IS_INLINE, "-" }
     , { MULT,   IS_INLINE, "*" },      { SLMOD,   IS_INLINE, "/mod" }
-    , { RTO, IS_INLINE, ">r" }, { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
-    , { LT,  IS_INLINE, "<" },  { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
-    , { NOT,     IS_INLINE, "0=" }
+    , { RTO, IS_INLINE, ">r" },  { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
+    , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
+    , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
+    , { COM,    IS_INLINE, "com" },    { NOT,    IS_INLINE, "0=" }
+    , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
+    , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
     , { DO,     IS_INLINE, "do" },     { LOOP,    IS_INLINE, "loop" }
     , { INDEX,  IS_INLINE, "(i)" },    { SYSTEM,  IS_INLINE, "system" }
     , { STORE,  IS_INLINE, "!" },      { CSTORE,  IS_INLINE, "c!" }
@@ -268,16 +273,10 @@ next:
     case NOT: TOS = (TOS) ? 0: -1;                                          NEXT;
     case EMIT: printChar((char)pop());                                      NEXT;
     case TIMER: push(clock());                                              NEXT;
-    case INCOPS: t1 = *(pc++);
-        if (t1==11) { ++TOS; }                                       // 1+
-        else if (t1==12) { y=(char*)pop(); Store(y, Fetch(y)+1); }   // ++
-        else if (t1==13) { y=(char*)pop(); ++(*(y)); }               // c++
-        NEXT;
-    case DECOPS: t1 = *(pc++);
-        if (t1==11) { --TOS; }                                       // 1-
-        else if (t1==12) { y=(char*)pop(); Store(y, Fetch(y)-1); }   // --
-        else if (t1==13) { y=(char*)pop(); --(*(y)); }               // c--
-        NEXT;
+    case INC: ++TOS;                                                        NEXT;
+    case INCA: y=(char*)pop(); Store(y, Fetch(y)+1);                        NEXT;
+    case DEC: --TOS;                                                        NEXT;
+    case DECA: y=(char*)pop(); Store(y, Fetch(y)-1);                        NEXT;
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
@@ -286,12 +285,10 @@ next:
     case FIND: getword(0); find();                                          NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
     case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
-    case BITOPS: t1 = *(pc++);
-        if (t1==11) { NOS &= TOS; DROP1; }                   // and
-        else if (t1==12) { NOS |= TOS; DROP1; }              // or
-        else if (t1==13) { NOS ^= TOS; DROP1; }              // xor
-        else if (t1==14) { TOS = ~TOS; }                     // com
-        NEXT;
+    case AND: NOS &= TOS; DROP1;                                            NEXT;
+    case OR:  NOS |= TOS; DROP1;                                            NEXT;
+    case XOR: NOS ^= TOS; DROP1;                                            NEXT;
+    case COM: TOS = ~TOS;                                                   NEXT;
     case RTO:    rstk[++rsp] = (char*)pop();           NEXT; // >r
     case RFETCH: PUSH(rstk[rsp]);                      NEXT; // r@
     case RFROM:  PUSH(rstk[rsp--]);                    NEXT; // r>
@@ -387,8 +384,6 @@ void init() {
     loadNum("(jmpnz)",  JMPNZ,   1);
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
-    loadNum("(bitop)",  BITOPS,  1);
-    loadNum("(decop)",  DECOPS,  1);
     loadNum("(fileop)", FILEOPS, 1);
     loadNum("mem",      (cell_t)&BYTES(0), 0);
     loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ), 0);
@@ -406,9 +401,6 @@ void init() {
     loadNum("tib",      (cell_t)&tib[0], 0);
     loadNum("state",    (cell_t)&state, 0);
     loadNum("base",     (cell_t)&base, 0);
-    loadPrim("1+",  INCOPS, 11);
-    loadPrim("++",  INCOPS, 12);
-    loadPrim("c++", INCOPS, 13);
 }
 
 #ifdef isPC

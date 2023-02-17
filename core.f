@@ -16,7 +16,7 @@
 : ,  here !  here cell + (here) ! ;
 
 : allot vhere + (vhere) ! ;
-: vc, vhere c! 1 allot ;
+: vc, vhere c! (vhere) ++ ;
 : v,  vhere ! cell allot ;
 
 : const create (lit4) c, , (exit) c, ;
@@ -37,16 +37,10 @@
 : until (jmpz)  c, , ; immediate
 : again (jmp)   c, , ; immediate
 
-: +!  tuck @  + swap !  ; inline
-
-: 1-  [ (decop) c, 11 c, ] ; inline
-: --  [ (decop) c, 12 c, ] ; inline
-: c-- [ (decop) c, 13 c, ] ; inline
-
-: and [ (bitop) c, 11 c, ] ; inline
-: or  [ (bitop) c, 12 c, ] ; inline
-: xor [ (bitop) c, 13 c, ] ; inline
-: com [ (bitop) c, 14 c, ] ; inline
+: +! tuck @ + swap ! ; inline
+: c++ dup @ 1+ swap ! ;
+: c-- dup @ 1- swap ! ;
+: 2* dup + ; inline
 
 : fopen  [ (fileop) c, 11 c, ] ; inline
 : fclose [ (fileop) c, 12 c, ] ; inline
@@ -62,10 +56,10 @@
         ')' = if exit then
     again ; immediate
 
-: bl 32 ; inline
+: bl #32 ; inline
 : space bl emit ; inline
-: tab 9 emit ; inline
-: cr 13 emit 10 emit ; inline
+: tab #9 emit ; inline
+: cr #13 emit #10 emit ; inline
 
 : negate com 1+ ; inline
 : abs dup 0 < if negate then ;
@@ -78,15 +72,12 @@
 : mod /mod drop ; inline
 
 var (neg) cell allot
-var (len) cell allot
 : #digit '0' + dup '9' > if 7 + then ;
-: <# 0 (neg) c! 0 (len) ! dup 0 < 
-    if negate 1 (neg) ! then 0 swap ;         \ ( n1 -- 0 n2 )
-: # base @ /mod swap #digit swap (len) ++ ;   \ ( u1 -- c u2 )
-: #S begin # dup while ;                      \ ( u1 -- u2 )
-: #> ;
-: #- drop (neg) @ if '-' emit then ;
-: #P #- begin emit dup while drop ;           \ ( 0 ... n 0 -- )
+: <# 0 swap dup 0 < (neg) ! abs ;       \ ( n1 -- 0 n2 )
+: # base @ /mod swap #digit swap ;      \ ( u1 -- c u2 )
+: #S begin # dup while ;                \ ( u1 -- u2 )
+: #> drop (neg) @ if '-' then ;
+: #P begin emit dup while drop ;        \ ( 0 ... n 0 -- )
 : (.) <# #S #> #P ;
 : . (.) space ;
 
@@ -129,7 +120,7 @@ var (d) cell allot
 : ? @ . ;
 
 : rshift 0 do 2 / loop ;
-: lshift 0 do 2 * loop ;
+: lshift 0 do 2* loop ;
 
 var (fg) 3 cells allot
 : fg cells (fg) + ;
