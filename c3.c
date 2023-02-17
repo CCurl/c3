@@ -81,8 +81,6 @@ opcode_t opcodes[] = {
 #define L1           lstk[lsp-1]
 #define L2           lstk[lsp-2]
 
-#define BYTES(x)      mem[x]
-
 typedef long cell_t;
 typedef unsigned char byte;
 typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
@@ -145,7 +143,7 @@ void find() {
     char *nm = (char*)pop();
     int len = strLen(nm);
     dict_t *dp = last;
-    dict_t *stop = (dict_t*)&BYTES(0);
+    dict_t *stop = (dict_t*)&mem[0];
     while (dp) {
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
             PUSH(getXT(dp));
@@ -363,7 +361,7 @@ void loadPrim(const char *name, int op, int arg) {
 }
 
 void init() {
-    here = &BYTES(0);
+    here = &mem[0];
     vhere = &vars[0];
     last = (dict_t*)0;
     base = 10;
@@ -382,8 +380,8 @@ void init() {
     loadNum("(jmpnz)",  JMPNZ,   1);
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
-    loadNum("mem",      (cell_t)&BYTES(0), 0);
-    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ), 0);
+    loadNum("mem",      (cell_t)&mem[0], 0);
+    loadNum("mem-end",  (cell_t)&mem[MEM_SZ], 0);
     loadNum("vars",     (cell_t)&vars[0], 0);
     loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
     loadNum("cell",     CELL_SZ, 1);
