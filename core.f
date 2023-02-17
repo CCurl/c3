@@ -48,9 +48,10 @@
 : xor [ (bitop) c, 13 c, ] ; inline
 : com [ (bitop) c, 14 c, ] ; inline
 
-: >r [ (retop) c, 11 c, ] ; inline
-: r@ [ (retop) c, 12 c, ] ; inline
-: r> [ (retop) c, 13 c, ] ; inline
+: fopen  [ (fileop) c, 11 c, ] ; inline
+: fclose [ (fileop) c, 12 c, ] ; inline
+: load   [ (fileop) c, 13 c, ] ; inline
+
 : rdrop r> drop ; inline
 : rot  >r swap r> swap ;
 : -rot swap >r swap r> ;

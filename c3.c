@@ -22,12 +22,13 @@ extern void printChar(const char c);
 enum {
     STOP = 0,
     EXIT, JMP, JMPZ, JMPNZ,
-    BITOPS, RETOPS, FILEOPS, INCOPS, DECOPS, 
+    BITOPS, FILEOPS, INCOPS, DECOPS, 
     CALL, LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
     DO, LOOP, INDEX,
+    RTO, RFETCH, RFROM,
     EMIT, TIMER, SYSTEM,
     DEFINE, ENDWORD, CREATE, FIND,
     STORE, CSTORE, FETCH, CFETCH
@@ -38,19 +39,20 @@ enum {
 
 typedef struct { int op; int flg; const char *name; } opcode_t;
 opcode_t opcodes[] = { 
-    { DEFINE,    IS_INLINE,    ":" },       { ENDWORD, IS_IMMEDIATE, ";" }
-    , { CREATE,  IS_INLINE,    "create" },  { FIND,    IS_INLINE,    "'" }
-    , { DUP,     IS_INLINE,    "dup" },     { SWAP,    IS_INLINE,    "swap" }
-    , { OVER,    IS_INLINE,    "over" },    { DROP,    IS_INLINE,    "drop" }
-    , { EMIT,    IS_INLINE,    "emit" },    { TIMER,   IS_INLINE,    "timer" }
-    , { ADD,     IS_INLINE,    "+" },       { SUB,     IS_INLINE,    "-" }
-    , { MULT,    IS_INLINE,    "*" },       { SLMOD,   IS_INLINE,    "/mod" }
-    , { LT,      IS_INLINE,    "<" },       { EQ,      IS_INLINE,    "=" }
-    , { GT,      IS_INLINE,    ">" },       { NOT,     IS_INLINE,    "0=" }
-    , { DO,      IS_INLINE,    "do" },      { LOOP,    IS_INLINE,    "loop" }
-    , { INDEX,   IS_INLINE,    "(i)" },     { SYSTEM,  IS_INLINE,    "system" }
-    , { STORE,   IS_INLINE,    "!" },       { CSTORE,  IS_INLINE,    "c!" }
-    , { FETCH,   IS_INLINE,    "@" },       { CFETCH,  IS_INLINE,    "c@" }
+    { DEFINE,   IS_INLINE, ":" },      { ENDWORD, IS_IMMEDIATE, ";" }
+    , { CREATE, IS_INLINE, "create" }, { FIND,    IS_INLINE, "'" }
+    , { DUP,    IS_INLINE, "dup" },    { SWAP,    IS_INLINE, "swap" }
+    , { OVER,   IS_INLINE, "over" },   { DROP,    IS_INLINE, "drop" }
+    , { EMIT,   IS_INLINE, "emit" },   { TIMER,   IS_INLINE, "timer" }
+    , { ADD,    IS_INLINE, "+" },      { SUB,     IS_INLINE, "-" }
+    , { MULT,   IS_INLINE, "*" },      { SLMOD,   IS_INLINE, "/mod" }
+    , { RTO, IS_INLINE, ">r" }, { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
+    , { LT,  IS_INLINE, "<" },  { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
+    , { NOT,     IS_INLINE, "0=" }
+    , { DO,     IS_INLINE, "do" },     { LOOP,    IS_INLINE, "loop" }
+    , { INDEX,  IS_INLINE, "(i)" },    { SYSTEM,  IS_INLINE, "system" }
+    , { STORE,  IS_INLINE, "!" },      { CSTORE,  IS_INLINE, "c!" }
+    , { FETCH,  IS_INLINE, "@" },      { CFETCH,  IS_INLINE, "c@" }
     , { 0, 0, 0 }
 };
 
@@ -290,15 +292,18 @@ next:
         else if (t1==13) { NOS ^= TOS; DROP1; }              // xor
         else if (t1==14) { TOS = ~TOS; }                     // com
         NEXT;
-    case RETOPS: t1 = *(pc++);
-        if (t1==11) { rstk[++rsp] = (char*)pop(); }          // >r
-        else if (t1==12) { PUSH(rstk[rsp]); }                // r@
-        else if (t1==13) { PUSH(rstk[rsp--]); }              // r>
-        NEXT;
+    case RTO:    rstk[++rsp] = (char*)pop();           NEXT; // >r
+    case RFETCH: PUSH(rstk[rsp]);                      NEXT; // r@
+    case RFROM:  PUSH(rstk[rsp--]);                    NEXT; // r>
     case FILEOPS: t1 = *(pc++);
-        if (t1==11) { NOS=(cell_t)fopen((char*)TOS, (char*)NOS); DROP1; }
+        if (t1==11) { NOS=(cell_t)fopen((char*)(TOS+1), (char*)NOS+1); DROP1; }
         else if (t1==12) { fclose((FILE*)pop()); }
-        else if (t1==13) { PUSH(65); PUSH(1); }
+        else if (t1==13) {                                   // load
+            y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
+            if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
+            if (t1) { input_fp = t1; clearTib; }
+            else { PRINT1("-noFile-"); }
+        }
         NEXT;
     default: printf("-[%d]?-",(int)*(pc-1));  break;
     }
@@ -328,16 +333,6 @@ int ParseWord() {
         }
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
-    }
-    if (strEq(w, (char*)"load", 0)) {
-        getword(0); w = (char*)pop();
-        cell_t fp = (cell_t)fopen(w,"rt");
-        if (fp) {
-            if (input_fp) { fileStk[++fileSp] = input_fp; }
-            input_fp = fp;
-            clearTib;
-            return 1;
-        }
     }
     PRINT3("[", w, "]??");
     if (state) {
@@ -394,7 +389,6 @@ void init() {
     loadNum("(lit4)",   LIT4,    1);
     loadNum("(bitop)",  BITOPS,  1);
     loadNum("(decop)",  DECOPS,  1);
-    loadNum("(retop)",  RETOPS,  1);
     loadNum("(fileop)", FILEOPS, 1);
     loadNum("mem",      (cell_t)&BYTES(0), 0);
     loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ), 0);
