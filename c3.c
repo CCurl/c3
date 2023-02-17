@@ -22,7 +22,7 @@ extern void printChar(const char c);
 enum {
     STOP = 0,
     EXIT, JMP, JMPZ, JMPNZ,
-    FILEOPS,
+    STORE, CSTORE, FETCH, CFETCH,
     CALL, LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, 
@@ -33,7 +33,7 @@ enum {
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
     DEFINE, ENDWORD, CREATE, FIND,
-    STORE, CSTORE, FETCH, CFETCH
+    FOPEN, FCLOSE, FLOAD,
 };
 
 #define IS_IMMEDIATE  1
@@ -51,7 +51,9 @@ opcode_t opcodes[] = {
     , { RTO, IS_INLINE, ">r" },  { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
     , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
-    , { COM,    IS_INLINE, "com" },    { NOT,    IS_INLINE, "0=" }
+    , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
+    , { FLOAD,  IS_INLINE, "load" }
+    , { COM,    IS_INLINE, "com" },    { NOT,     IS_INLINE, "0=" }
     , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
     , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
     , { DO,     IS_INLINE, "do" },     { LOOP,    IS_INLINE, "loop" }
@@ -289,19 +291,15 @@ next:
     case OR:  NOS |= TOS; DROP1;                                            NEXT;
     case XOR: NOS ^= TOS; DROP1;                                            NEXT;
     case COM: TOS = ~TOS;                                                   NEXT;
-    case RTO:    rstk[++rsp] = (char*)pop();           NEXT; // >r
-    case RFETCH: PUSH(rstk[rsp]);                      NEXT; // r@
-    case RFROM:  PUSH(rstk[rsp--]);                    NEXT; // r>
-    case FILEOPS: t1 = *(pc++);
-        if (t1==11) { NOS=(cell_t)fopen((char*)(TOS+1), (char*)NOS+1); DROP1; }
-        else if (t1==12) { fclose((FILE*)pop()); }
-        else if (t1==13) {                                   // load
-            y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
+    case RTO:    rstk[++rsp] = (char*)pop();                                NEXT; // >r
+    case RFETCH: PUSH(rstk[rsp]);                                           NEXT; // r@
+    case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
+    case FOPEN:  NOS=(cell_t)fopen((char*)(TOS+1), (char*)NOS+1); DROP1;    NEXT;
+    case FCLOSE: fclose((FILE*)pop());                                      NEXT;
+    case FLOAD:  y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
-            else { PRINT1("-noFile-"); }
-        }
-        NEXT;
+            else { PRINT1("-noFile-"); }                                    NEXT;
     default: printf("-[%d]?-",(int)*(pc-1));  break;
     }
 }
@@ -384,7 +382,6 @@ void init() {
     loadNum("(jmpnz)",  JMPNZ,   1);
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
-    loadNum("(fileop)", FILEOPS, 1);
     loadNum("mem",      (cell_t)&BYTES(0), 0);
     loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ), 0);
     loadNum("vars",     (cell_t)&vars[0], 0);

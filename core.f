@@ -42,10 +42,6 @@
 : c-- dup @ 1- swap ! ;
 : 2* dup + ; inline
 
-: fopen  [ (fileop) c, 11 c, ] ; inline
-: fclose [ (fileop) c, 12 c, ] ; inline
-: load   [ (fileop) c, 13 c, ] ; inline
-
 : rdrop r> drop ; inline
 : rot  >r swap r> swap ;
 : -rot swap >r swap r> ;
