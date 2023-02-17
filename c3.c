@@ -7,6 +7,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 extern void printString(const char *s);
@@ -16,18 +17,18 @@ extern void printChar(const char c);
 #define VARS_SZ        256000
 #define STK_SZ             64
 #define LSTK_SZ            30
-#define NAME_LEN            9
+#define CELL_SZ         sizeof(cell_t)
 
 enum {
     STOP = 0,
     EXIT, JMP, JMPZ, JMPNZ,
-    CALL, LIT1, LIT4, 
-    BITOPS, RETOPS, FILEOPS,
+    BITOPS, RETOPS, FILEOPS, INCOPS, DECOPS, 
+    CALL, LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
-    ADD, MULT, SLMOD, INC, DEC, SUB, 
+    ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
     DO, LOOP, INDEX,
-    EMIT, TIMER,
+    EMIT, TIMER, SYSTEM,
     DEFINE, ENDWORD, CREATE, FIND,
     STORE, CSTORE, FETCH, CFETCH
 };
@@ -46,9 +47,8 @@ opcode_t opcodes[] = {
     , { MULT,    IS_INLINE,    "*" },       { SLMOD,   IS_INLINE,    "/mod" }
     , { LT,      IS_INLINE,    "<" },       { EQ,      IS_INLINE,    "=" }
     , { GT,      IS_INLINE,    ">" },       { NOT,     IS_INLINE,    "0=" }
-    , { INC,     IS_INLINE,    "1+" },      { DEC,     IS_INLINE,    "1-" }
     , { DO,      IS_INLINE,    "do" },      { LOOP,    IS_INLINE,    "loop" }
-    , { INDEX,   IS_INLINE,    "(i)" }
+    , { INDEX,   IS_INLINE,    "(i)" },     { SYSTEM,  IS_INLINE,    "system" }
     , { STORE,   IS_INLINE,    "!" },       { CSTORE,  IS_INLINE,    "c!" }
     , { FETCH,   IS_INLINE,    "@" },       { CFETCH,  IS_INLINE,    "c@" }
     , { 0, 0, 0 }
@@ -76,7 +76,7 @@ opcode_t opcodes[] = {
 
 typedef long cell_t;
 typedef unsigned char byte;
-typedef struct { char f; char len; char name[NAME_LEN+1]; char *xt; } dict_t;
+typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
 
 cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
@@ -93,7 +93,7 @@ void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
 
 void CComma(cell_t x) { *(here++) = (char)x; }
-void Comma(cell_t x) { *(cell_t*)here = x; here += sizeof(cell_t); }
+void Comma(cell_t x) { *(cell_t*)here = x; here += CELL_SZ; }
 
 void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(char *loc) { return *(cell_t*)loc; }
@@ -116,16 +116,18 @@ int strEq(char *d, char *s, int caseSensitive) {
 
 void Create(char *w) {
     int l = strLen(w);
-    --last;
-    if (NAME_LEN < l) {
-        PRINT2("-trunc:[", w);
-        l=NAME_LEN; w[l]=0;
-        PRINT3("->", w, "]-");
-    }
+    dict_t *cur = last;
+    last = (dict_t*)here;
     strCpy(last->name, w);
     last->len = l;
-    last->xt = here;
+    last->prev = (char*)cur;
     last->f = 0;
+    here += (CELL_SZ) + 3 + last->len;
+}
+
+char *getXT(dict_t *dp) {
+    char *x = (char*)dp;
+    return x += dp->len + 3 + CELL_SZ;
 }
 
 // ( nm--xt flags 1 )
@@ -133,15 +135,15 @@ void Create(char *w) {
 void find() {
     char *nm = (char*)pop();
     int len = strLen(nm);
-    dict_t *x = last;
-    dict_t *end = (dict_t*)&BYTES(MEM_SZ);
-    while (x < end) {
-        if ((len==x->len) && strEq(nm, x->name, 0)) {
-            PUSH(x->xt);
-            push(x->f);
+    dict_t *dp = last;
+    dict_t *stop = (dict_t*)&BYTES(0);
+    while (dp) {
+        if ((len==dp->len) && strEq(nm, dp->name, 0)) {
+            PUSH(getXT(dp));
+            push(dp->f);
             RET(1);
         }
-        ++x;
+        dp = (dict_t*)(dp)->prev;
     }
     push(0);
 }
@@ -200,7 +202,7 @@ gI1:
         in = fgets(tib, sizeof(tib), (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
-            input_fp = NULL;
+            input_fp = 0;
             in = tib;
             if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
         }
@@ -238,14 +240,14 @@ next:
     switch (*(pc++)) {
     case STOP:                                                             return;
     case LIT1: push(*(pc++));                                               NEXT;
-    case LIT4: push(*(cell_t*)pc); pc += sizeof(cell_t);                    NEXT;
-    case CALL: y = pc+sizeof(cell_t); if (*y != EXIT) { rstk[++rsp]=y; }
+    case LIT4: push(*(cell_t*)pc); pc += CELL_SZ;                           NEXT;
+    case CALL: y = pc+CELL_SZ; if (*y != EXIT) { rstk[++rsp]=y; }
             pc = *(char**)pc;                                               NEXT;
     case EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];                NEXT;
     case JMP: pc = *(char**)pc;                                             NEXT;
     case JMPZ: if (pop()==0) { pc = *(char**)pc; }
-             else { pc += sizeof(cell_t); }                                 NEXT;
-    case JMPNZ: if (pop()) { pc=*(char**)pc; } else { pc+=sizeof(cell_t); } NEXT;
+             else { pc += CELL_SZ; }                                        NEXT;
+    case JMPNZ: if (pop()) { pc=*(char**)pc; } else { pc+=CELL_SZ; }        NEXT;
     case STORE: t1=pop(); t2=pop(); Store((char*)t1, t2);                   NEXT;
     case CSTORE: *(char*)TOS = (char)NOS; DROP2;                            NEXT;
     case FETCH: TOS = Fetch((char*)TOS);                                    NEXT;
@@ -264,8 +266,16 @@ next:
     case NOT: TOS = (TOS) ? 0: -1;                                          NEXT;
     case EMIT: printChar((char)pop());                                      NEXT;
     case TIMER: push(clock());                                              NEXT;
-    case DEC: --TOS;                                                        NEXT;
-    case INC: ++TOS;                                                        NEXT;
+    case INCOPS: t1 = *(pc++);
+        if (t1==11) { ++TOS; }                                       // 1+
+        else if (t1==12) { y=(char*)pop(); Store(y, Fetch(y)+1); }   // ++
+        else if (t1==13) { y=(char*)pop(); ++(*(y)); }               // c++
+        NEXT;
+    case DECOPS: t1 = *(pc++);
+        if (t1==11) { --TOS; }                                       // 1-
+        else if (t1==12) { y=(char*)pop(); Store(y, Fetch(y)-1); }   // --
+        else if (t1==13) { y=(char*)pop(); --(*(y)); }               // c--
+        NEXT;
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
@@ -273,6 +283,7 @@ next:
     case CREATE: getword(0); Create((char*)pop());                          NEXT;
     case FIND: getword(0); find();                                          NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
+    case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case BITOPS: t1 = *(pc++);
         if (t1==11) { NOS &= TOS; DROP1; }                   // and
         else if (t1==12) { NOS |= TOS; DROP1; }              // or
@@ -318,7 +329,7 @@ int ParseWord() {
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
     }
-    if (strEq(w, (char*)"include", 0)) {
+    if (strEq(w, (char*)"load", 0)) {
         getword(0); w = (char*)pop();
         cell_t fp = (cell_t)fopen(w,"rt");
         if (fp) {
@@ -346,17 +357,25 @@ void ParseLine(char *x, int stopOnNull) {
     }
 }
 
-void loadNum(const char *name, cell_t addr, int makeInline=0) {
+void loadNum(const char *name, cell_t addr, int makeInline) {
     clearTib;
     sprintf(tib, ": %s %ld ;", name, addr);
     ParseLine(tib, 1);
     if (makeInline) { last->f = IS_INLINE; }
 }
 
+void loadPrim(const char *name, int op, int arg) {
+    Create((char *)name);
+    last->f = IS_INLINE;
+    CComma(op);
+    CComma(arg);
+    CComma(EXIT);
+}
+
 void init() {
     here = &BYTES(0);
     vhere = &vars[0];
-    last = (dict_t*)&BYTES(MEM_SZ);
+    last = (dict_t*)0;
     base = 10;
     sp = rsp = 0;
     opcode_t *op = opcodes;
@@ -374,25 +393,28 @@ void init() {
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
     loadNum("(bitop)",  BITOPS,  1);
+    loadNum("(decop)",  DECOPS,  1);
     loadNum("(retop)",  RETOPS,  1);
     loadNum("(fileop)", FILEOPS, 1);
-    loadNum("mem",      (cell_t)&BYTES(0));
-    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ));
-    loadNum("vars",     (cell_t)&vars[0]);
-    loadNum("vars-end", (cell_t)&vars[VARS_SZ]);
-    loadNum("word-sz",  sizeof(dict_t), 1);
-    loadNum("cell",     sizeof(cell_t), 1);
-    loadNum("(vhere)",  (cell_t)&vhere);
-    loadNum("(stk)",    (cell_t)&stk[0]);
-    loadNum("(sp)",     (cell_t)&sp);
-    loadNum("(rsp)",    (cell_t)&rsp);
-    loadNum("(lsp)",    (cell_t)&lsp);
-    loadNum("(last)",   (cell_t)&last);
-    loadNum("(here)",   (cell_t)&here);
-    loadNum(">in",      (cell_t)&in);
-    loadNum("tib",      (cell_t)&tib[0]);
-    loadNum("state",    (cell_t)&state);
-    loadNum("base",     (cell_t)&base);
+    loadNum("mem",      (cell_t)&BYTES(0), 0);
+    loadNum("mem-end",  (cell_t)&BYTES(MEM_SZ), 0);
+    loadNum("vars",     (cell_t)&vars[0], 0);
+    loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
+    loadNum("cell",     CELL_SZ, 1);
+    loadNum("(vhere)",  (cell_t)&vhere, 0);
+    loadNum("(stk)",    (cell_t)&stk[0], 0);
+    loadNum("(sp)",     (cell_t)&sp, 0);
+    loadNum("(rsp)",    (cell_t)&rsp, 0);
+    loadNum("(lsp)",    (cell_t)&lsp, 0);
+    loadNum("(last)",   (cell_t)&last, 0);
+    loadNum("(here)",   (cell_t)&here, 0);
+    loadNum(">in",      (cell_t)&in, 0);
+    loadNum("tib",      (cell_t)&tib[0], 0);
+    loadNum("state",    (cell_t)&state, 0);
+    loadNum("base",     (cell_t)&base, 0);
+    loadPrim("1+",  INCOPS, 11);
+    loadPrim("++",  INCOPS, 12);
+    loadPrim("c++", INCOPS, 13);
 }
 
 #ifdef isPC

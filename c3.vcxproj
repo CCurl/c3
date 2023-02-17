@@ -149,10 +149,10 @@
     <None Include="LICENSE" />
     <None Include="make" />
     <None Include="README.md" />
-    <None Include="tests.f" />
+    <None Include="benches.f" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="c3.cpp" />
+    <ClCompile Include="c3.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

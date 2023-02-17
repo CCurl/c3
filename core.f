@@ -1,17 +1,18 @@
-: \ 0 >in @ ! ;
-
 : last (last) @ ;
 : here (here) @ ;
 : vhere (vhere) @ ;
 
-: inline 2 last c! ;
-: immediate 1 last c! ;
+: immediate 1 last cell + c! ;
+: inline 2 last cell + c! ;
+
+: \ 0 >in @ ! ; immediate
+
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
 : bye 999 state ! ;
 : cells cell * ; inline
 
-: c, here c! here 1+     (here) ! ;
+: c, here c! (here) ++ ;
 : ,  here !  here cell + (here) ! ;
 
 : allot vhere + (vhere) ! ;
@@ -28,6 +29,7 @@
 
 : tuck swap over ; inline
 : nip  swap drop ; inline
+: 2dup over over ; inline
 : ?dup dup if dup then ;
 
 : begin here         ; immediate
@@ -35,11 +37,11 @@
 : until (jmpz)  c, , ; immediate
 : again (jmp)   c, , ; immediate
 
-: ( begin 
-        >in @ c@ >in @ 1+ >in !
-        dup  0= if drop exit then
-        ')' = if drop exit then
-    again ; immediate
+: +!  tuck @  + swap !  ; inline
+
+: 1-  [ (decop) c, 11 c, ] ; inline
+: --  [ (decop) c, 12 c, ] ; inline
+: c-- [ (decop) c, 13 c, ] ; inline
 
 : and [ (bitop) c, 11 c, ] ; inline
 : or  [ (bitop) c, 12 c, ] ; inline
@@ -53,6 +55,12 @@
 : rot  >r swap r> swap ;
 : -rot swap >r swap r> ;
 
+: ( begin 
+        >in @ c@ >in ++
+        dup 0= if drop exit then
+        ')' = if exit then
+    again ; immediate
+
 : bl 32 ; inline
 : space bl emit ; inline
 : tab 9 emit ; inline
@@ -60,9 +68,6 @@
 
 : negate com 1+ ; inline
 : abs dup 0 < if negate then ;
-: +!  dup @   + swap !  ; inline
-: ++  dup @  1+ swap !  ; inline
-: c++ dup c@ 1+ swap c! ; inline
 
 : i (i) @ ;
 : +i (i) +! ;
@@ -84,30 +89,37 @@ var (len) cell allot
 : (.) <# #S #> #P ;
 : . (.) space ;
 
-: count dup 1+ swap c@ ; inline
-: type 0 do dup c@ emit 1+ loop drop ;
-
-: S" (lit4) c, vhere ,
-    vhere >r 0 vc,
-    begin >in @ c@ >in ++
-        dup 0= over '"' = or
-        if drop 0 vc, rdrop exit then
-        vc, r@ c++
-    again ; immediate
-
-: ." [ (call) c, ' S" drop drop , ]
-    (call) c, [ (lit4) c, ' count drop drop , ] ,
-    (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
-
 : 0sp 0 (sp) ! ;
 : depth (sp) @ 1- ;
 : .s '(' emit space depth ?dup if
         0 do (stk) i 1+ cells + @ . loop 
     then ')' emit ;
 
+: count dup 1+ swap c@ ; inline
+: type 0 do dup c@ emit 1+ loop drop ;
+
+var (s) cell allot
+var (d) cell allot
+: s (s) @ ; : >s (s) ! ; : s++ s (s) ++ ;
+: d (d) @ ; : >d (d) ! ; : d++ d (d) ++ ;
+
+: i" vhere dup >d 0 d++ c!
+    begin >in @ c@ >s >in ++
+        s 0= s '"' = or
+        if 0 d++ c! exit then
+        s d++ c! vhere c++
+    again ;
+
+: s" i" state @ if (lit4) c, , d (vhere) ! then ; immediate
+
+: ." i" state @ 0= if count type exit then
+    (lit4) c, , d (vhere) !
+    (call) c, [ (lit4) c, ' count drop drop , ] ,
+    (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
+
 : words last begin
-        dup mem-end < 0= if drop exit then
-        dup 1+ count type tab word-sz +
+        dup 0= if drop exit then
+        dup cell + 1+ count type tab @
     again ;
 
 : binary  %10 base ! ;
@@ -122,11 +134,9 @@ var (fg) 3 cells allot
 : fg cells (fg) + ;
 : marker here 0 fg ! vhere 1 fg ! last 2 fg ! ;
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
+: forget-1 last (here) ! last @ (last) ! ;
 marker
 
-\ temp for testing
-include tests.f
-: back ." -back" cr ; back
-
-forget
-words
+." c3 - v0.0.1 - Chris Curl" cr
+here mem -   . ." bytes used, "            mem-end here - . ." bytes free." cr
+vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."

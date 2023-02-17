@@ -1,2 +1,2 @@
 #/bin/sh
-clang -m64 -O3 -o pg -D isPC pg.cpp
+clang -m64 -O3 -o c3 -D isPC c3.cpp
