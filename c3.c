@@ -33,7 +33,7 @@ enum {
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
     DEFINE, ENDWORD, CREATE, FIND,
-    FOPEN, FCLOSE, FLOAD,
+    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE
 };
 
 #define IS_IMMEDIATE  1
@@ -52,7 +52,8 @@ opcode_t opcodes[] = {
     , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
     , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
-    , { FLOAD,  IS_INLINE, "load" }
+    , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
+    , { FLOAD,  IS_INLINE, "load" },
     , { COM,    IS_INLINE, "com" },    { NOT,     IS_INLINE, "0=" }
     , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
     , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
@@ -294,6 +295,8 @@ next:
     case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
     case FOPEN:  NOS=(cell_t)fopen((char*)(TOS+1), (char*)NOS+1); DROP1;    NEXT;
     case FCLOSE: fclose((FILE*)pop());                                      NEXT;
+    case FREAD:  PRINT1("-fread-");                                         NEXT;
+    case FWRITE: PRINT1("-fwrite-");                                        NEXT;
     case FLOAD:  y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
