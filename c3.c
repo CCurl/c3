@@ -53,7 +53,7 @@ opcode_t opcodes[] = {
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
     , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
     , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
-    , { FLOAD,  IS_INLINE, "load" },
+    , { FLOAD,  IS_INLINE, "load" }
     , { COM,    IS_INLINE, "com" },    { NOT,     IS_INLINE, "0=" }
     , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
     , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
