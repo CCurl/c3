@@ -304,6 +304,7 @@ next:
 
 int ParseWord() {
     char *w = (char*)TOS;
+    // PRINT3("-",w,"-");
     isNum();
     if (pop()) {
         if (state) {
