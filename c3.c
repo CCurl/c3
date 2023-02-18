@@ -295,8 +295,10 @@ next:
     case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
     case FOPEN:  NOS=(cell_t)fopen((char*)(TOS+1), (char*)NOS+1); DROP1;    NEXT;
     case FCLOSE: fclose((FILE*)pop());                                      NEXT;
-    case FREAD:  PRINT1("-fread-");                                         NEXT;
-    case FWRITE: PRINT1("-fwrite-");                                        NEXT;
+    case FREAD: t2=pop(); t1=pop(); y=(char*)TOS;
+        TOS=fread(y, 1, t1, (FILE*)t2);                                     NEXT;
+    case FWRITE: t2=pop(); t1=pop(); y=(char*)TOS;
+        TOS=fwrite(y, 1, t1, (FILE*)t2);                                    NEXT;
     case FLOAD:  y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
