@@ -21,6 +21,7 @@
 
 : const create (lit4) c, , (exit) c, ;
 : var vhere const ;
+: (var) here 1- cell - const ;
 
 : if  (jmpz) c, here 0 , ; immediate
 : else (jmp) c, here swap 0 , here swap ! ; immediate
@@ -86,13 +87,13 @@ var (neg) cell allot
 : count dup 1+ swap c@ ; inline
 : type 0 do dup c@ emit 1+ loop drop ;
 
-var (s) cell allot
-var (d) cell allot
-: s (s) @ ; : >s (s) ! ; : s++ s (s) ++ ;
-: d (d) @ ; : >d (d) ! ; : d++ d (d) ++ ;
+var s (var) (s)
+var d (var) (d)
+: >s (s) ! ; : s++ s (s) ++ ;
+: >d (d) ! ; : d++ d (d) ++ ;
 
 : i" vhere dup >d 0 d++ c!
-    begin >in @ c@ >s >in ++
+    begin >in @ c@ dup >s if >in ++ then
         s 0= s '"' = or
         if 0 d++ c! exit then
         s d++ c! vhere c++

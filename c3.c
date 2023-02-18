@@ -330,7 +330,8 @@ int ParseWord() {
     }
     PRINT3("[", w, "]??");
     if (state) {
-        ++last;
+        here = (char*)last;
+        last = (dict_t*)last->prev;
         state = 0;
     }
     base = 10;
