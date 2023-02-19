@@ -87,10 +87,8 @@ var (neg) cell allot
 : count dup 1+ swap c@ ; inline
 : type 0 do dup c@ emit 1+ loop drop ;
 
-var s (var) (s)
-var d (var) (d)
-: >s (s) ! ; : s++ s (s) ++ ;
-: >d (d) ! ; : d++ d (d) ++ ;
+var s (var) (s) : >s (s) ! ; : s++ s (s) ++ ;
+var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
 
 : i" vhere dup >d 0 d++ c!
     begin >in @ c@ dup >s if >in ++ then
@@ -118,6 +116,9 @@ var d (var) (d)
 
 : rshift 0 do 2 / loop ;
 : lshift 0 do 2* loop ;
+
+: fopen-rt s" rt" fopen ;
+: fopen-wt s" wt" fopen ;
 
 var (fg) 3 cells allot
 : fg cells (fg) + ;
