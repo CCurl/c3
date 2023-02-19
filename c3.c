@@ -293,7 +293,7 @@ next:
     case RTO:    rstk[++rsp] = (char*)pop();                                NEXT; // >r
     case RFETCH: PUSH(rstk[rsp]);                                           NEXT; // r@
     case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
-    case FOPEN:  NOS=(cell_t)fopen((char*)(TOS+1), (char*)NOS+1); DROP1;    NEXT;
+    case FOPEN:  NOS=(cell_t)fopen((char*)(NOS+1), (char*)TOS+1); DROP1;    NEXT;
     case FCLOSE: fclose((FILE*)pop());                                      NEXT;
     case FREAD: t2=pop(); t1=pop(); y=(char*)TOS;
         TOS=fread(y, 1, t1, (FILE*)t2);                                     NEXT;
