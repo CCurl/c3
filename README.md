@@ -48,6 +48,12 @@ emit     (C--)             Output C as a character.
 key      (--C)             C: Next keyboard char, wait if no char available.
 key?     (--F)             F: FALSE if no char available, else TRUE.
 
+*** FILES ***
+fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
+fclose   (--fh)            fh: file-handle.
+fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
+fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
+
 *** LOGICAL ***
 =        (a b--f)          Equality.
 <        (a b--f)          Less-than.
@@ -68,7 +74,8 @@ do       (T F--)           Begin DO/LOOP loop.
 (i)      (--a)             a: address of the index variable.
 loop     (--)              Increment I, jump to DO if I < T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
-            NOTE: words like IF/THEN and BEGIN/WHILE are in core.f
+            NOTE: Words like IF/THEN and BEGIN/WHILE are not in the base c3.
+                  They are defined in core.f
 
 *** SYSTEM ***
 (exit)   (--n)   n: The byte-code value for EXIT.
@@ -77,14 +84,10 @@ loop     (--)              Increment I, jump to DO if I < T.
 (jmpnz)  (--n)   n: The byte-code value for JMPNZ.
 (call)   (--n)   n: The byte-code value for CALL.
 (lit4)   (--n)   n: The byte-code value for LIT4.
-(bitop)  (--n)   n: The byte-code value for BITOP.
-(retop)  (--n)   n: The byte-code value for RETOP.
-(fileop) (--n)   n: The byte-code value for FILEOP.
 mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
 vars     (--a)   a: Start address for the VARIABLES area.
 vars-end (--a)   a: End address for the VARIABLES area.
-word-sz  (--n)   n: Size in bytes of a dictionary entry.
 (vhere)  (--a)   a: Address of VHERE.
 (here)   (--a)   a: Address of HERE.
 (last)   (--a)   a: Address of LAST.
