@@ -3,7 +3,7 @@
 The main goals for this project are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
 - To be able to run on both Windows and Linux (and Macintosh).
-- To be deployable development boards, via the Arduino IDE.
+- To be deployable to development boards via the Arduino IDE.
 
 Notes:
 - This is NOT an ANSI-standard Forth system.
@@ -13,16 +13,16 @@ Notes:
 - The rest is built using those words (see core.f).
 - The VARIABLE space is separated from the CODE space.
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
-- The maximum length of a word-name is configurable. (#define NAME_LEN 9)
 - A dictionary entry looks like this:
+    - next:    cell_t
     - flags:   byte
-    - length:  byte
-    - name:    char[NAME_LEN+1] (NULL terminated)
-    - xt:      cell_t
+    - len:     byte
+    - name:    char[len+1] (NULL terminated)
+    - code:    bytes
 
 ## c3 Base system reference
 ```
-NOTE: many words are defined in file 'core.f'
+NOTE: many of the core words are defined in file 'core.f'
 
 *** MATH ***
 +        (a b--c)          Addition
@@ -48,6 +48,12 @@ emit     (C--)             Output C as a character.
 key      (--C)             C: Next keyboard char, wait if no char available.
 key?     (--F)             F: FALSE if no char available, else TRUE.
 
+*** FILES ***
+fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
+fclose   (--fh)            fh: file-handle.
+fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
+fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
+
 *** LOGICAL ***
 =        (a b--f)          Equality.
 <        (a b--f)          Less-than.
@@ -63,12 +69,13 @@ c!       (b a--)           Store BYTE b to address a.
 *** WORDS and FLOW CONTROL ***
 : word   (--)              Begin definition of word.
 ;        (--)              End current definition.
-create x (--)              Creates a definition for the next word.
+create x (--)              Creates a definition for x word.
 do       (T F--)           Begin DO/LOOP loop.
 (i)      (--a)             a: address of the index variable.
 loop     (--)              Increment I, jump to DO if I < T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
-            NOTE: words like IF/THEN and BEGIN/WHILE are in core.f
+            NOTE: Words like IF/THEN and BEGIN/WHILE are not in the base c3.
+                  They are defined in core.f
 
 *** SYSTEM ***
 (exit)   (--n)   n: The byte-code value for EXIT.
@@ -77,14 +84,10 @@ loop     (--)              Increment I, jump to DO if I < T.
 (jmpnz)  (--n)   n: The byte-code value for JMPNZ.
 (call)   (--n)   n: The byte-code value for CALL.
 (lit4)   (--n)   n: The byte-code value for LIT4.
-(bitop)  (--n)   n: The byte-code value for BITOP.
-(retop)  (--n)   n: The byte-code value for RETOP.
-(fileop) (--n)   n: The byte-code value for FILEOP.
 mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
 vars     (--a)   a: Start address for the VARIABLES area.
 vars-end (--a)   a: End address for the VARIABLES area.
-word-sz  (--n)   n: Size in bytes of a dictionary entry.
 (vhere)  (--a)   a: Address of VHERE.
 (here)   (--a)   a: Address of HERE.
 (last)   (--a)   a: Address of LAST.

@@ -1,70 +1,58 @@
-: last (last) @ ;
 : here (here) @ ;
-: vhere (vhere) @ ;
+: c, here c! (here) ++ ;
+: , here ! here cell + (here) ! ;
 
+: last (last) @ ;
 : immediate 1 last cell + c! ;
 : inline 2 last cell + c! ;
 
 : \ 0 >in @ ! ; immediate
-
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
 : bye 999 state ! ;
-: cells cell * ; inline
 
-: c, here c! (here) ++ ;
-: ,  here !  here cell + (here) ! ;
-
-: allot vhere + (vhere) ! ;
-: vc, vhere c! 1 allot ;
-: v,  vhere ! cell allot ;
-
+: vhere (vhere) @ ;
 : const create (lit4) c, , (exit) c, ;
 : var vhere const ;
+: (var) here 1- cell - const ;
+: cells cell * ; inline
+: allot vhere + (vhere) ! ;
+: vc, vhere c! (vhere) ++ ;
+: v,  vhere ! cell allot ;
 
 : if  (jmpz) c, here 0 , ; immediate
 : else (jmp) c, here swap 0 , here swap ! ; immediate
 : then here swap ! ; immediate
 : exit (exit) c,   ; immediate
 
-: tuck swap over ; inline
-: nip  swap drop ; inline
-: 2dup over over ; inline
-: ?dup dup if dup then ;
-
 : begin here         ; immediate
 : while (jmpnz) c, , ; immediate
 : until (jmpz)  c, , ; immediate
 : again (jmp)   c, , ; immediate
 
-: +!  tuck @  + swap !  ; inline
+: tuck swap over ; inline
+: nip  swap drop ; inline
+: 2dup over over ; inline
+: ?dup dup if dup then ;
 
-: 1-  [ (decop) c, 11 c, ] ; inline
-: --  [ (decop) c, 12 c, ] ; inline
-: c-- [ (decop) c, 13 c, ] ; inline
+: +! tuck @ + swap ! ; inline
+: c++ dup @ 1+ swap ! ;
+: c-- dup @ 1- swap ! ;
+: 2* dup + ; inline
 
-: and [ (bitop) c, 11 c, ] ; inline
-: or  [ (bitop) c, 12 c, ] ; inline
-: xor [ (bitop) c, 13 c, ] ; inline
-: com [ (bitop) c, 14 c, ] ; inline
-
-: >r [ (retop) c, 11 c, ] ; inline
-: r@ [ (retop) c, 12 c, ] ; inline
-: r> [ (retop) c, 13 c, ] ; inline
 : rdrop r> drop ; inline
 : rot  >r swap r> swap ;
 : -rot swap >r swap r> ;
 
 : ( begin 
-        >in @ c@ >in ++
-        dup 0= if drop exit then
-        ')' = if exit then
+        >in @ c@ dup 0= if drop exit then
+        >in ++ ')' = if exit then
     again ; immediate
 
-: bl 32 ; inline
+: bl #32 ; inline
 : space bl emit ; inline
-: tab 9 emit ; inline
-: cr 13 emit 10 emit ; inline
+: tab #9 emit ; inline
+: cr #13 emit #10 emit ; inline
 
 : negate com 1+ ; inline
 : abs dup 0 < if negate then ;
@@ -77,15 +65,12 @@
 : mod /mod drop ; inline
 
 var (neg) cell allot
-var (len) cell allot
 : #digit '0' + dup '9' > if 7 + then ;
-: <# 0 (neg) c! 0 (len) ! dup 0 < 
-    if negate 1 (neg) ! then 0 swap ;         \ ( n1 -- 0 n2 )
-: # base @ /mod swap #digit swap (len) ++ ;   \ ( u1 -- c u2 )
-: #S begin # dup while ;                      \ ( u1 -- u2 )
-: #> ;
-: #- drop (neg) @ if '-' emit then ;
-: #P #- begin emit dup while drop ;           \ ( 0 ... n 0 -- )
+: <# 0 swap dup 0 < (neg) ! abs ;       \ ( n1 -- 0 n2 )
+: # base @ /mod swap #digit swap ;      \ ( u1 -- c u2 )
+: #S begin # dup while ;                \ ( u1 -- u2 )
+: #> drop (neg) @ if '-' then ;
+: #P begin emit dup while drop ;        \ ( 0 ... n 0 -- )
 : (.) <# #S #> #P ;
 : . (.) space ;
 
@@ -96,15 +81,13 @@ var (len) cell allot
     then ')' emit ;
 
 : count dup 1+ swap c@ ; inline
-: type 0 do dup c@ emit 1+ loop drop ;
+: type ?dup if 0 do dup c@ emit 1+ loop then drop ;
 
-var (s) cell allot
-var (d) cell allot
-: s (s) @ ; : >s (s) ! ; : s++ s (s) ++ ;
-: d (d) @ ; : >d (d) ! ; : d++ d (d) ++ ;
+var s (var) (s) : >s (s) ! ; : s++ s (s) ++ ;
+var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
 
 : i" vhere dup >d 0 d++ c!
-    begin >in @ c@ >s >in ++
+    begin >in @ c@ dup >s if >in ++ then
         s 0= s '"' = or
         if 0 d++ c! exit then
         s d++ c! vhere c++
@@ -128,7 +111,10 @@ var (d) cell allot
 : ? @ . ;
 
 : rshift 0 do 2 / loop ;
-: lshift 0 do 2 * loop ;
+: lshift 0 do 2* loop ;
+
+: fopen-rt s" rt" fopen ;
+: fopen-wt s" wt" fopen ;
 
 var (fg) 3 cells allot
 : fg cells (fg) + ;
