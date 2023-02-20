@@ -3,7 +3,7 @@
 The main goals for this project are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
 - To be able to run on both Windows and Linux (and Macintosh).
-- To be deployable development boards, via the Arduino IDE.
+- To be deployable to development boards via the Arduino IDE.
 
 Notes:
 - This is NOT an ANSI-standard Forth system.
@@ -13,16 +13,16 @@ Notes:
 - The rest is built using those words (see core.f).
 - The VARIABLE space is separated from the CODE space.
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
-- The maximum length of a word-name is configurable. (#define NAME_LEN 9)
 - A dictionary entry looks like this:
+    - next:    cell_t
     - flags:   byte
-    - length:  byte
-    - name:    char[NAME_LEN+1] (NULL terminated)
-    - xt:      cell_t
+    - len:     byte
+    - name:    char[len+1] (NULL terminated)
+    - code:    bytes
 
 ## c3 Base system reference
 ```
-NOTE: many words are defined in file 'core.f'
+NOTE: many of the core words are defined in file 'core.f'
 
 *** MATH ***
 +        (a b--c)          Addition
@@ -69,7 +69,7 @@ c!       (b a--)           Store BYTE b to address a.
 *** WORDS and FLOW CONTROL ***
 : word   (--)              Begin definition of word.
 ;        (--)              End current definition.
-create x (--)              Creates a definition for the next word.
+create x (--)              Creates a definition for x word.
 do       (T F--)           Begin DO/LOOP loop.
 (i)      (--a)             a: address of the index variable.
 loop     (--)              Increment I, jump to DO if I < T.
