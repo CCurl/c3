@@ -10,6 +10,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+typedef long cell_t;
+typedef unsigned long ucell_t;
+typedef unsigned char byte;
+typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+
 extern void printString(const char *s);
 extern void printChar(const char c);
 
@@ -17,7 +22,6 @@ extern void printChar(const char c);
 #define VARS_SZ        256000
 #define STK_SZ             64
 #define LSTK_SZ            30
-#define CELL_SZ         sizeof(cell_t)
 
 enum {
     STOP = 0,
@@ -64,27 +68,24 @@ opcode_t opcodes[] = {
     , { 0, 0, 0 }
 };
 
-#define TOS (stk[sp])
-#define NOS (stk[sp-1])
-#define PUSH(x) push((cell_t)(x))
-#define DROP1 sp--
-#define DROP2 sp-=2
-#define RET(x) push(x); return;
-#define NEXT goto next
+#define TOS           (stk[sp])
+#define NOS           (stk[sp-1])
+#define PUSH(x)       push((cell_t)(x))
+#define DROP1         sp--
+#define DROP2         sp-=2
+#define RET(x)        push(x); return;
+#define NEXT          goto next
 
-#define BTW(a,b,c) ((b<=a) && (a<=c))
-#define clearTib fill(tib, 0, sizeof(tib))
+#define BTW(a,b,c)    ((b<=a) && (a<=c))
+#define CELL_SZ       sizeof(cell_t)
+#define clearTib      fill(tib, 0, sizeof(tib))
 #define PRINT1(a)     printString(a)
 #define PRINT2(a,b)   PRINT1(a); PRINT1(b)
 #define PRINT3(a,b,c) PRINT2(a,b); PRINT1(c)
 
-#define L0           lstk[lsp]
-#define L1           lstk[lsp-1]
-#define L2           lstk[lsp-2]
-
-typedef long cell_t;
-typedef unsigned char byte;
-typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+#define L0            lstk[lsp]
+#define L1            lstk[lsp-1]
+#define L2            lstk[lsp-2]
 
 cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
@@ -120,6 +121,23 @@ int strEq(char *d, char *s, int caseSensitive) {
         s++; d++;
     }
     return -1;
+}
+
+char *iToA(ucell_t N, int base) {
+    static char ret[CELL_SZ+1];
+    char *x = &ret[CELL_SZ];
+    *(x) = 0;
+    if (N == 0) { *(--x) = '0'; return x; }
+    int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
+    N = (neg) ? (~N)+1 : N;
+    while (N) {
+        int r = N%base;
+        r = (r>9) ? r+7 : r;
+        *(--x) = r+'0';
+        N /= base;
+    }
+    if (neg) { *(--x)='-'; }
+    return x;
 }
 
 void Create(char *w) {
@@ -303,7 +321,7 @@ next:
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
             else { PRINT1("-noFile-"); }                                    NEXT;
-    default: printf("-[%d]?-",(int)*(pc-1));  break;
+    default: PRINT3("-[",iToA((cell_t)(pc-1),10),"]?-");  break;
     }
 }
 
@@ -352,9 +370,11 @@ void ParseLine(char *x, int stopOnNull) {
     }
 }
 
+#define SC(x) strCat(tib, x)
 void loadNum(const char *name, cell_t addr, int makeInline) {
     clearTib;
-    sprintf(tib, ": %s %ld ;", name, addr);
+    strCpy(tib, ": ");
+    SC(name); SC(" "); SC(iToA(addr, 10)); SC(" "); SC(";");
     ParseLine(tib, 1);
     if (makeInline) { last->f = IS_INLINE; }
 }
