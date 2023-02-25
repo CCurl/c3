@@ -10,10 +10,20 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef _MSC_VER
+#include <conio.h>
+int qKey() { return _kbhit(); }
+int key() { return _getch(); }
+#else
+int qKey() { return 0; }
+int key() { return 0; }
+#endif
+
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
 typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
 extern void printChar(const char c);
@@ -36,6 +46,7 @@ enum {
     INC, INCA, DEC, DECA,
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
+    KEY, QKEY,
     DEFINE, ENDWORD, CREATE, FIND,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE
 };
@@ -43,7 +54,6 @@ enum {
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 
-typedef struct { int op; int flg; const char *name; } opcode_t;
 opcode_t opcodes[] = { 
     { DEFINE,   IS_INLINE, ":" },      { ENDWORD, IS_IMMEDIATE, ";" }
     , { CREATE, IS_INLINE, "create" }, { FIND,    IS_INLINE, "'" }
@@ -55,6 +65,7 @@ opcode_t opcodes[] = {
     , { RTO, IS_INLINE, ">r" },  { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
     , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
+    , { KEY,    IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
     , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
     , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
     , { FLOAD,  IS_INLINE, "load" }
@@ -240,8 +251,7 @@ gI1:
     }
 }
 
-// ( --addr len )
-// ( --0 )
+// ( --addr len | 0 )
 int getword(int stopOnNull) {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
@@ -321,7 +331,9 @@ next:
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
             else { PRINT1("-noFile-"); }                                    NEXT;
-    default: PRINT3("-[",iToA((cell_t)(pc-1),10),"]?-");  break;
+    case QKEY: push(qKey());                                                NEXT;
+    case KEY: push(key());                                                  NEXT;
+    default: PRINT3("-[", iToA((cell_t)(pc-1),10), "]?-");                  break;
     }
 }
 
