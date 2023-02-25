@@ -66,11 +66,11 @@
 
 var (neg) cell allot
 : #digit '0' + dup '9' > if 7 + then ;
-: <# 0 swap dup 0 < (neg) ! abs ;       \ ( n1 -- 0 n2 )
-: # base @ /mod swap #digit swap ;      \ ( u1 -- c u2 )
-: #S begin # dup while ;                \ ( u1 -- u2 )
+: <# 0 swap dup 0 < (neg) ! abs ;    \ ( n1 -- 0 n2 )
+: # base @ /mod swap #digit swap ;   \ ( u1 -- c u2 )
+: #S begin # dup while ;             \ ( u1 -- u2 )
 : #> drop (neg) @ if '-' then ;
-: #P begin emit dup while drop ;        \ ( 0 ... n 0 -- )
+: #P begin emit dup while drop ;     \ ( 0 ... n 0 -- )
 : (.) <# #S #> #P ;
 : . (.) space ;
 
@@ -80,22 +80,22 @@ var (neg) cell allot
         0 do (stk) i 1+ cells + @ . loop 
     then ')' emit ;
 
-: count dup 1+ swap c@ ; inline
-: type ?dup if 0 do dup c@ emit 1+ loop then drop ;
+: count ( str--a n ) dup 1+ swap c@ ; inline
+: type  ( a n-- ) ?dup if 0 do dup c@ emit 1+ loop then drop ;
 
 var s (var) (s) : >s (s) ! ; : s++ s (s) ++ ;
 var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
 
-: i" vhere dup >d 0 d++ c!
+: i" ( --str ) vhere dup >d 0 d++ c!
     begin >in @ c@ dup >s if >in ++ then
         s 0= s '"' = or
         if 0 d++ c! exit then
         s d++ c! vhere c++
     again ;
 
-: s" i" state @ if (lit4) c, , d (vhere) ! then ; immediate
+: s" ( --str ) i" state @ if (lit4) c, , d (vhere) ! then ; immediate
 
-: ." i" state @ 0= if count type exit then
+: ." ( -- ) i" state @ 0= if count type exit then
     (lit4) c, , d (vhere) !
     (call) c, [ (lit4) c, ' count drop drop , ] ,
     (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
@@ -110,8 +110,8 @@ var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
 : hex     $10 base ! ;
 : ? @ . ;
 
-: rshift 0 do 2 / loop ;
-: lshift 0 do 2* loop ;
+: rshift ( n1 s--n2 ) 0 do 2 / loop ;
+: lshift ( n1 s--n2 ) 0 do 2* loop ;
 
 : fopen-rt s" rt" fopen ;
 : fopen-wt s" wt" fopen ;
