@@ -135,8 +135,8 @@ int strEq(char *d, char *s, int caseSensitive) {
 }
 
 char *iToA(ucell_t N, int base) {
-    static char ret[CELL_SZ+1];
-    char *x = &ret[CELL_SZ];
+    static char ret[33];
+    char *x = &ret[32];
     *(x) = 0;
     if (N == 0) { *(--x) = '0'; return x; }
     int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
@@ -167,8 +167,7 @@ char *getXT(dict_t *dp) {
     return x += dp->len + 3 + CELL_SZ;
 }
 
-// ( nm--xt flags 1 )
-// ( nm--0 )
+// ( nm--xt flags 1 | 0 )
 void find() {
     char *nm = (char*)pop();
     int len = strLen(nm);
@@ -185,8 +184,7 @@ void find() {
     push(0);
 }
 
-// ( --n 1 )
-// ( --0 )
+// ( --n 1 | 0 )
 void isDecimal(const char *wd) {
     cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
     if (isNeg && (*(++wd) == 0)) { RET(0); }
@@ -207,8 +205,7 @@ void isDecimal(const char *wd) {
     // RET(1);
 }
 
-// ( nm--n 1 )
-// ( nm--0 )
+// ( nm--n 1 | 0 )
 void isNum() {
     char *wd = (char*)pop();
     if ((wd[0] == '\'') && (wd[2] == '\'') && (wd[3] == 0)) { push(wd[1]); RET(1); }
@@ -339,7 +336,7 @@ next:
 
 int ParseWord() {
     char *w = (char*)TOS;
-    // PRINT3("-",w,"-");
+    // PRINT3("-",w,"-\n");
     isNum();
     if (pop()) {
         if (state) {
@@ -376,6 +373,7 @@ int ParseWord() {
 void ParseLine(char *x, int stopOnNull) {
     in = x;
     if (in==0) { in=tib; clearTib; }
+    // PRINT2(in,"\n");
     while (state != 999) {
         if (getword(stopOnNull) == 0) { return; }
         ParseWord();
