@@ -138,15 +138,13 @@ char *iToA(ucell_t N, int base) {
     static char ret[33];
     char *x = &ret[32];
     *(x) = 0;
-    if (N == 0) { *(--x) = '0'; return x; }
     int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
-    N = (neg) ? (~N)+1 : N;
-    while (N) {
-        int r = N%base;
-        r = (r>9) ? r+7 : r;
-        *(--x) = r+'0';
+    if (neg) N = (~N) + 1;
+    do {
+        int r = (N % base) + '0';
+        *(--x) = ('9'<r) ? r+7 : r;
         N /= base;
-    }
+    } while (N);
     if (neg) { *(--x)='-'; }
     return x;
 }
