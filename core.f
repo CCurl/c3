@@ -15,6 +15,8 @@
 : const create (lit4) c, , (exit) c, ;
 : var vhere const ;
 : (var) here 1- cell - const ;
+: does> r> (jmp) c, , ;
+
 : cells cell * ; inline
 : allot vhere + (vhere) ! ;
 : vc, vhere c! (vhere) ++ ;
@@ -100,9 +102,10 @@ var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
     (call) c, [ (lit4) c, ' count drop drop , ] ,
     (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
 
+: .word dup cell + 1+ count type ;
 : words last begin
         dup 0= if drop exit then
-        dup cell + 1+ count type tab @
+        .word tab @
     again ;
 
 : binary  %10 base ! ;
