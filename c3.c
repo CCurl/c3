@@ -10,6 +10,21 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef _MSC_VER
+#include <conio.h>
+int qKey() { return _kbhit(); }
+int key() { return _getch(); }
+#else
+int qKey() { return 0; }
+int key() { return 0; }
+#endif
+
+typedef long cell_t;
+typedef unsigned long ucell_t;
+typedef unsigned char byte;
+typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+typedef struct { int op; int flg; const char *name; } opcode_t;
+
 extern void printString(const char *s);
 extern void printChar(const char c);
 
@@ -17,7 +32,6 @@ extern void printChar(const char c);
 #define VARS_SZ        256000
 #define STK_SZ             64
 #define LSTK_SZ            30
-#define CELL_SZ         sizeof(cell_t)
 
 enum {
     STOP = 0,
@@ -32,6 +46,7 @@ enum {
     INC, INCA, DEC, DECA,
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
+    KEY, QKEY,
     DEFINE, ENDWORD, CREATE, FIND,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE
 };
@@ -39,7 +54,6 @@ enum {
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 
-typedef struct { int op; int flg; const char *name; } opcode_t;
 opcode_t opcodes[] = { 
     { DEFINE,   IS_INLINE, ":" },      { ENDWORD, IS_IMMEDIATE, ";" }
     , { CREATE, IS_INLINE, "create" }, { FIND,    IS_INLINE, "'" }
@@ -51,6 +65,7 @@ opcode_t opcodes[] = {
     , { RTO, IS_INLINE, ">r" },  { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
     , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
+    , { KEY,    IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
     , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
     , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
     , { FLOAD,  IS_INLINE, "load" }
@@ -64,27 +79,24 @@ opcode_t opcodes[] = {
     , { 0, 0, 0 }
 };
 
-#define TOS (stk[sp])
-#define NOS (stk[sp-1])
-#define PUSH(x) push((cell_t)(x))
-#define DROP1 sp--
-#define DROP2 sp-=2
-#define RET(x) push(x); return;
-#define NEXT goto next
+#define TOS           (stk[sp])
+#define NOS           (stk[sp-1])
+#define PUSH(x)       push((cell_t)(x))
+#define DROP1         sp--
+#define DROP2         sp-=2
+#define RET(x)        push(x); return;
+#define NEXT          goto next
 
-#define BTW(a,b,c) ((b<=a) && (a<=c))
-#define clearTib fill(tib, 0, sizeof(tib))
+#define BTW(a,b,c)    ((b<=a) && (a<=c))
+#define CELL_SZ       sizeof(cell_t)
+#define clearTib      fill(tib, 0, sizeof(tib))
 #define PRINT1(a)     printString(a)
 #define PRINT2(a,b)   PRINT1(a); PRINT1(b)
 #define PRINT3(a,b,c) PRINT2(a,b); PRINT1(c)
 
-#define L0           lstk[lsp]
-#define L1           lstk[lsp-1]
-#define L2           lstk[lsp-2]
-
-typedef long cell_t;
-typedef unsigned char byte;
-typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+#define L0            lstk[lsp]
+#define L1            lstk[lsp-1]
+#define L2            lstk[lsp-2]
 
 cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
@@ -122,6 +134,21 @@ int strEq(char *d, char *s, int caseSensitive) {
     return -1;
 }
 
+char *iToA(ucell_t N, int base) {
+    static char ret[33];
+    char *x = &ret[32];
+    *(x) = 0;
+    int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
+    if (neg) N = (~N) + 1;
+    do {
+        int r = (N % base) + '0';
+        *(--x) = ('9'<r) ? r+7 : r;
+        N /= base;
+    } while (N);
+    if (neg) { *(--x)='-'; }
+    return x;
+}
+
 void Create(char *w) {
     int l = strLen(w);
     dict_t *cur = last;
@@ -138,8 +165,7 @@ char *getXT(dict_t *dp) {
     return x += dp->len + 3 + CELL_SZ;
 }
 
-// ( nm--xt flags 1 )
-// ( nm--0 )
+// ( nm--xt flags 1 | 0 )
 void find() {
     char *nm = (char*)pop();
     int len = strLen(nm);
@@ -156,8 +182,7 @@ void find() {
     push(0);
 }
 
-// ( --n 1 )
-// ( --0 )
+// ( --n 1 | 0 )
 void isDecimal(const char *wd) {
     cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
     if (isNeg && (*(++wd) == 0)) { RET(0); }
@@ -178,8 +203,7 @@ void isDecimal(const char *wd) {
     // RET(1);
 }
 
-// ( nm--n 1 )
-// ( nm--0 )
+// ( nm--n 1 | 0 )
 void isNum() {
     char *wd = (char*)pop();
     if ((wd[0] == '\'') && (wd[2] == '\'') && (wd[3] == 0)) { push(wd[1]); RET(1); }
@@ -222,8 +246,7 @@ gI1:
     }
 }
 
-// ( --addr len )
-// ( --0 )
+// ( --addr len | 0 )
 int getword(int stopOnNull) {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
@@ -303,13 +326,15 @@ next:
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
             else { PRINT1("-noFile-"); }                                    NEXT;
-    default: printf("-[%d]?-",(int)*(pc-1));  break;
+    case QKEY: push(qKey());                                                NEXT;
+    case KEY: push(key());                                                  NEXT;
+    default: PRINT3("-[", iToA((cell_t)(pc-1),10), "]?-");                  break;
     }
 }
 
 int ParseWord() {
     char *w = (char*)TOS;
-    // PRINT3("-",w,"-");
+    // PRINT3("-",w,"-\n");
     isNum();
     if (pop()) {
         if (state) {
@@ -346,15 +371,18 @@ int ParseWord() {
 void ParseLine(char *x, int stopOnNull) {
     in = x;
     if (in==0) { in=tib; clearTib; }
+    // PRINT2(in,"\n");
     while (state != 999) {
         if (getword(stopOnNull) == 0) { return; }
         ParseWord();
     }
 }
 
+#define SC(x) strCat(tib, x)
 void loadNum(const char *name, cell_t addr, int makeInline) {
     clearTib;
-    sprintf(tib, ": %s %ld ;", name, addr);
+    strCpy(tib, ": ");
+    SC(name); SC(" "); SC(iToA(addr, 10)); SC(" "); SC(";");
     ParseLine(tib, 1);
     if (makeInline) { last->f = IS_INLINE; }
 }

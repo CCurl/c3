@@ -47,6 +47,8 @@ $[0-f]*  (--N)             Input N as a hexadecimal number.
 emit     (C--)             Output C as a character.
 key      (--C)             C: Next keyboard char, wait if no char available.
 key?     (--F)             F: FALSE if no char available, else TRUE.
+                NOTE: key and ?key are currently only implemented for WINDOWS.
+                      They are not yet implemented under LINUX, 
 
 *** FILES ***
 fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
