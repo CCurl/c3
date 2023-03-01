@@ -118,6 +118,7 @@ var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
 
 : fopen-rt s" rt" fopen ;
 : fopen-wt s" wt" fopen ;
+: ->stdout 0 (output_fp) ! ;
 
 var (fg) 3 cells allot
 : fg cells (fg) + ;

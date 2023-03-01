@@ -107,7 +107,7 @@ cell_t state, base;
 char *here, *pc, tib[128], *in;
 dict_t *last;
 
-cell_t fileStk[10], fileSp, input_fp;
+cell_t fileStk[10], fileSp, input_fp, output_fp;
 
 void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
@@ -227,36 +227,13 @@ void isNum() {
     RET(1);
 }
 
-void getInput() {
-    clearTib;
-gI1:
-    if (input_fp) {
-        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
-        if (in != tib) {
-            fclose((FILE*)input_fp);
-            input_fp = 0;
-            in = tib;
-            if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
-        }
-    }
-    if (! input_fp) {
-        if (state) { printString("... > "); }
-        else { printString(" ok\n"); }
-        in = fgets(tib, sizeof(tib), stdin);
-    }
-}
-
 // ( --addr len | 0 )
-int getword(int stopOnNull) {
+int getword() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
     if (STK_SZ < sp) { PRINT1("over"); sp=0; }
-gW1:
     while (*in && (*in < 33)) { ++in; }
-    if (*in == 0) { 
-        if (stopOnNull) { return 0; }
-        getInput(); goto gW1;
-    }
+    if (*in == 0) { return 0; }
     PUSH(in);
     while (32 < *in) { ++in; ++len; }
     *(in++) = 0;
@@ -368,12 +345,12 @@ int ParseWord() {
     return 0;
 }
 
-void ParseLine(char *x, int stopOnNull) {
+void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; clearTib; }
     // PRINT2(in,"\n");
     while (state != 999) {
-        if (getword(stopOnNull) == 0) { return; }
+        if (getword() == 0) { return; }
         ParseWord();
     }
 }
@@ -383,7 +360,7 @@ void loadNum(const char *name, cell_t addr, int makeInline) {
     clearTib;
     strCpy(tib, ": ");
     SC(name); SC(" "); SC(iToA(addr, 10)); SC(" "); SC(";");
-    ParseLine(tib, 1);
+    ParseLine(tib);
     if (makeInline) { last->f = IS_INLINE; }
 }
 
@@ -409,6 +386,10 @@ void init() {
         CComma(EXIT);
         ++op;
     }
+#ifdef isPC
+    loadNum("(output_fp)",    (cell_t)&output_fp, 0);
+    loadNum("(input_fp)",     (cell_t)&input_fp, 0);
+#endif
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);
@@ -434,15 +415,45 @@ void init() {
 }
 
 #ifdef isPC
-void printChar(const char c) { putchar(c); }
-void printString(const char* s) { fputs(s, stdout); }
+void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
+void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
+
+void getInput() {
+    clearTib;
+gI1:
+    if (input_fp) {
+        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
+        if (in != tib) {
+            fclose((FILE*)input_fp);
+            input_fp = 0;
+            in = tib;
+            if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
+        }
+    }
+    if (! input_fp) {
+        cell_t tmp = output_fp;
+        output_fp = 0;
+        if (state) { printString("... > "); }
+        else { printString(" ok\n"); }
+        in = fgets(tib, sizeof(tib), stdin);
+        output_fp = tmp;
+    }
+}
+
+void loop() {
+    while (state != 999) {
+        getInput();
+        ParseLine(tib);
+    }
+}
 
 int main(int argc, char *argv[]) {
     // int r='A';
     // for (i=1; i<argc; ++i) { y=argv[i]; RG(r++) = atoi(y); }
     init();
     input_fp = (cell_t)fopen("core.f", "rt");
-    ParseLine(0, 0);
+    output_fp = 0;
+    loop();
     return 0;
 }
 #endif
