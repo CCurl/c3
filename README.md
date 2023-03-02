@@ -54,9 +54,8 @@ fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
 fclose   (--fh)            fh: file-handle.
 fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
 fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
-(output-fp) (--a)          a: address of the file output pointer (PC only).
-                NOTE: this affects the target for EMIT
-->stdout (--)              Resets the output_file to stdout (PC only).
+(input-fp)  (--a)          a: address of the input-file pointer (PC only; used by "load").
+(output-fp) (--a)          a: address of the output-file pointer (PC only; redirects EMIT).
 
 *** LOGICAL ***
 =        (a b--f)          Equality.
@@ -92,17 +91,18 @@ mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
 vars     (--a)   a: Start address for the VARIABLES area.
 vars-end (--a)   a: End address for the VARIABLES area.
-(vhere)  (--a)   a: Address of VHERE.
-(here)   (--a)   a: Address of HERE.
-(last)   (--a)   a: Address of LAST.
-(vhere)  (--a)   a: Address of VHERE.
+(vhere)  (--a)   a: Address of the VHERE variable.
+(here)   (--a)   a: Address of the HERE variable.
+(last)   (--a)   a: Address of the LAST variable.
+(vhere)  (--a)   a: Address of the VHERE variable.
 (stk)    (--a)   a: Address of the stack.
-(sp)     (--a)   a: Address of stack pointer.
-(rsp)    (--a)   a: Address of return stack pointer.
+(sp)     (--a)   a: Address of the stack pointer.
+(rsp)    (--a)   a: Address of the return stack pointer.
 (lsp)    (--a)   a: Address of the loop stack pointer.
-base     (--a)   a: Address of BASE.
-state    (--a)   a: Address of STATE.
-tib      (--a)   a: Address of TIB.
+word-sz  (--n)   n: The size in bytes of a dictionary entry.
+base     (--a)   a: Address of the BASE variable.
+state    (--a)   a: Address of the STATE variable.
+tib      (--a)   a: Address of TIB (text input buffer).
 >in      (--a)   a: Address of >IN.
 cell     (--n)   n: size in bytes of a CELL.
 timer    (--n)   n: return value from clock() function call.
