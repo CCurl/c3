@@ -58,6 +58,8 @@
 
 : negate com 1+ ; inline
 : abs dup 0 < if negate then ;
+: min over over > if swap then drop ;
+: max over over < if swap then drop ;
 
 : i (i) @ ;
 : +i (i) +! ;
