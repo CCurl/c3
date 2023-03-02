@@ -55,6 +55,9 @@ fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
 fclose   (--fh)            fh: file-handle.
 fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
 fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
+(output-fp) (--a)          a: address of the file output pointer (PC only).
+                NOTE: this affects the target for EMIT
+->stdout (--)              Resets the output_file to stdout (PC only).
 
 *** LOGICAL ***
 =        (a b--f)          Equality.

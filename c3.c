@@ -22,14 +22,15 @@ int key() { return 0; }
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
-typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+typedef struct { char *xt; char f; char len; char name[14]; } dict_t;
 typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
 extern void printChar(const char c);
 
-#define MEM_SZ          64000
-#define VARS_SZ        256000
+#define KILO             1024
+#define MEM_SZ            128*KILO
+#define VARS_SZ           512*KILO
 #define STK_SZ             64
 #define LSTK_SZ            30
 
@@ -151,33 +152,28 @@ char *iToA(ucell_t N, int base) {
 
 void Create(char *w) {
     int l = strLen(w);
-    dict_t *cur = last;
-    last = (dict_t*)here;
+    --last;
     strCpy(last->name, w);
     last->len = l;
-    last->prev = (char*)cur;
+    last->xt = here;
     last->f = 0;
-    here += (CELL_SZ) + 3 + last->len;
-}
-
-char *getXT(dict_t *dp) {
-    char *x = (char*)dp;
-    return x += dp->len + 3 + CELL_SZ;
 }
 
 // ( nm--xt flags 1 | 0 )
 void find() {
     char *nm = (char*)pop();
     int len = strLen(nm);
+    // PRINT3("-LF-(",nm,"):");
     dict_t *dp = last;
     dict_t *stop = (dict_t*)&mem[0];
-    while (dp) {
+    while (dp < (dict_t*)&mem[MEM_SZ]) {
+        // PRINT3("-LF-(",nm,"):");
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
-            PUSH(getXT(dp));
+            PUSH(dp->xt);
             push(dp->f);
             RET(1);
         }
-        dp = (dict_t*)(dp)->prev;
+        ++dp;
     }
     push(0);
 }
@@ -227,7 +223,7 @@ void isNum() {
     RET(1);
 }
 
-// ( --addr len | 0 )
+// ( --addr | <null> )
 int getword() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
@@ -281,9 +277,9 @@ next:
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
-    case DEFINE: getword(0); Create((char*)pop()); state=1;                 NEXT;
-    case CREATE: getword(0); Create((char*)pop());                          NEXT;
-    case FIND: getword(0); find();                                          NEXT;
+    case DEFINE: getword(); Create((char*)pop()); state=1;                  NEXT;
+    case CREATE: getword(); Create((char*)pop());                           NEXT;
+    case FIND: getword(); find();                                           NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
     case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case AND: NOS &= TOS; DROP1;                                            NEXT;
@@ -338,7 +334,7 @@ int ParseWord() {
     PRINT3("[", w, "]??");
     if (state) {
         here = (char*)last;
-        last = (dict_t*)last->prev;
+        ++last;
         state = 0;
     }
     base = 10;
@@ -375,7 +371,8 @@ void loadPrim(const char *name, int op, int arg) {
 void init() {
     here = &mem[0];
     vhere = &vars[0];
-    last = (dict_t*)0;
+    last = (dict_t*)&mem[MEM_SZ];
+
     base = 10;
     sp = rsp = 0;
     opcode_t *op = opcodes;
@@ -401,6 +398,7 @@ void init() {
     loadNum("vars",     (cell_t)&vars[0], 0);
     loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
     loadNum("cell",     CELL_SZ, 1);
+    loadNum("word-sz",  (cell_t)sizeof(dict_t), 1);
     loadNum("(vhere)",  (cell_t)&vhere, 0);
     loadNum("(stk)",    (cell_t)&stk[0], 0);
     loadNum("(sp)",     (cell_t)&sp, 0);

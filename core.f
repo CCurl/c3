@@ -15,7 +15,7 @@
 : const create (lit4) c, , (exit) c, ;
 : var vhere const ;
 : (var) here 1- cell - const ;
-: does> r> (jmp) c, , ;
+: does> r> last ! ;
 
 : cells cell * ; inline
 : allot vhere + (vhere) ! ;
@@ -104,8 +104,10 @@ var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
 
 : .word dup cell + 1+ count type ;
 : words last begin
-        dup 0= if drop exit then
-        .word tab @
+        dup mem-end < if 
+            .word tab word-sz +
+        else drop exit
+        then
     again ;
 
 : binary  %10 base ! ;
@@ -128,5 +130,5 @@ var (fg) 3 cells allot
 marker
 
 ." c3 - v0.0.1 - Chris Curl" cr
-here mem -   . ." bytes used, "            mem-end here - . ." bytes free." cr
+here mem -   . ." code bytes used, " last here - . ." bytes free." cr
 vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
