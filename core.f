@@ -126,7 +126,7 @@ var (fg) 3 cells allot
 : fg cells (fg) + ;
 : marker here 0 fg ! vhere 1 fg ! last 2 fg ! ;
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
-: forget-1 last (here) ! last @ (last) ! ;
+: forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
 
 ." c3 - v0.0.1 - Chris Curl" cr

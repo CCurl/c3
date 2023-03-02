@@ -166,6 +166,7 @@ char *iToA(ucell_t N, int base) {
 void Create(char *w) {
     int l = strLen(w);
     --last;
+    if (13 < l) { l=13; w[l]=0; }
     strCpy(last->name, w);
     last->len = l;
     last->xt = here;

@@ -14,11 +14,10 @@ Notes:
 - The VARIABLE space is separated from the CODE space.
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
 - A dictionary entry looks like this:
-    - next:    cell_t
+    - xt:      cell_t
     - flags:   byte
     - len:     byte
-    - name:    char[len+1] (NULL terminated)
-    - code:    bytes
+    - name:    char[14] (NULL terminated)
 
 ## c3 Base system reference
 ```
