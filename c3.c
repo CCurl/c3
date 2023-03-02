@@ -10,13 +10,27 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define KILO             1024
+#define MEM_SZ            128*KILO
+#define VARS_SZ           512*KILO
+#define STK_SZ             64
+#define LSTK_SZ            30
+
 #ifdef _MSC_VER
-#include <conio.h>
-int qKey() { return _kbhit(); }
-int key() { return _getch(); }
+    #include <conio.h>
+    int qKey() { return _kbhit(); }
+    int key() { return _getch(); }
+#elif IS_LINUX
+    int qKey() { return 0; }
+    int key() { return 0; }
 #else
-int qKey() { return 0; }
-int key() { return 0; }
+    // Dev board
+    extern int qKey();
+    extern int key();
+    #define MEM_SZ             64*KILO
+    #define VARS_SZ            96*KILO
+    #define STK_SZ             32
+    #define LSTK_SZ            30
 #endif
 
 typedef long cell_t;
@@ -28,7 +42,6 @@ typedef struct { int op; int flg; const char *name; } opcode_t;
 extern void printString(const char *s);
 extern void printChar(const char c);
 
-#define KILO             1024
 #define MEM_SZ            128*KILO
 #define VARS_SZ           512*KILO
 #define STK_SZ             64
@@ -136,8 +149,8 @@ int strEq(char *d, char *s, int caseSensitive) {
 }
 
 char *iToA(ucell_t N, int base) {
-    static char ret[33];
-    char *x = &ret[32];
+    static char ret[CELL_SZ*8];
+    char *x = &ret[CELL_SZ*8-1];
     *(x) = 0;
     int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
     if (neg) N = (~N) + 1;
