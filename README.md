@@ -13,6 +13,7 @@ Notes:
 - The rest is built using those words (see core.f).
 - The VARIABLE space is separated from the CODE space.
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
+- Strings are both counted and null-terminated.
 - A dictionary entry looks like this:
     - xt:      cell_t
     - flags:   byte
@@ -38,14 +39,15 @@ over     (a b--a b a)      Copy NOS
 swap     (a b--b a)        Swap TOS and NOS
 
 *** INPUT/OUTPUT ***
-[0-x]*   (--N)             Input N as a number in the current BASE.
-#[0-9]*  (--N)             Input N as a decimal number.
-$[0-f]*  (--N)             Input N as a hexadecimal number.
-%[0-1]*  (--N)             Input N as a binary number.
-'x'      (--N)             Input N as the ascii value of 'x'.
-emit     (C--)             Output C as a character.
-key      (--C)             C: Next keyboard char, wait if no char available.
-key?     (--F)             F: FALSE if no char available, else TRUE.
+[0-x]*    (--N)            Input N as a number in the current BASE.
+#[0-9]*   (--N)            Input N as a decimal number.
+$[0-f]*   (--N)            Input N as a hexadecimal number.
+%[0-1]*   (--N)            Input N as a binary number.
+'x'       (--N)            Input N as the ascii value of 'x'.
+emit      (C--)            Output C as a character.
+next-word (--A L)          A: the next word from the input stream, L: length.
+key       (--C)            C: Next keyboard char, wait if no char available.
+key?      (--F)            F: FALSE if no char available, else TRUE.
                 NOTE: key and ?key are currently only implemented for WINDOWS.
                       They are not yet implemented under LINUX, 
 
@@ -54,8 +56,9 @@ fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
 fclose   (--fh)            fh: file-handle.
 fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
 fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
-(input-fp)  (--a)          a: address of the input-file pointer (PC only; used by "load").
+(input-fp)  (--a)          a: address of the input-file pointer (PC only; used by "(load)").
 (output-fp) (--a)          a: address of the output-file pointer (PC only; redirects EMIT).
+(load)   (str--)           str: a counted string/filename to load
 
 *** LOGICAL ***
 =        (a b--f)          Equality.

@@ -124,8 +124,11 @@ var d  (var) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
 : rshift ( n1 s--n2 ) 0 do 2 / loop ;
 : lshift ( n1 s--n2 ) 0 do 2* loop ;
 
-: fopen-rt s" rt" fopen ;
-: fopen-wt s" wt" fopen ;
+: load next-word drop 1- (load) ;
+: fopen-r s" rb" fopen ;
+: fopen-w s" wb" fopen ;
+: fopen-a s" ab" fopen ;
+: fopen-rw s" r+b" fopen ;
 : ->stdout 0 (output_fp) ! ;
 
 var (fg) 3 cells allot
@@ -135,6 +138,6 @@ var (fg) 3 cells allot
 : forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
 
-." c3 - v0.0.1 - Chris Curl" cr
+." c3 - v0.0.2 - Chris Curl" cr
 here mem -   . ." code bytes used, " last here - . ." bytes free." cr
 vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."

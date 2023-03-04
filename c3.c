@@ -55,7 +55,7 @@ enum {
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
     KEY, QKEY,
-    DEFINE, ENDWORD, CREATE, FIND,
+    DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE
 };
 
@@ -76,7 +76,7 @@ opcode_t opcodes[] = {
     , { KEY,    IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
     , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
     , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
-    , { FLOAD,  IS_INLINE, "load" }
+    , { FLOAD,  IS_INLINE, "(load)" }, { WORD,    IS_INLINE, "next-word" }
     , { COM,    IS_INLINE, "com" },    { NOT,     IS_INLINE, "0=" }
     , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
     , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
@@ -284,6 +284,7 @@ next:
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
+    case WORD: t1=getword(); push(t1);                                      NEXT;
     case DEFINE: getword(); Create((char*)pop()); state=1;                  NEXT;
     case CREATE: getword(); Create((char*)pop());                           NEXT;
     case FIND: getword(); find();                                           NEXT;
