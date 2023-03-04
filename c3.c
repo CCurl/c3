@@ -10,9 +10,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define KILO             1024
-#define MEM_SZ            128*KILO
-#define VARS_SZ           512*KILO
+#define MEM_SZ            128*1024
+#define VARS_SZ           512*1024
 #define STK_SZ             64
 #define LSTK_SZ            30
 
@@ -41,11 +40,6 @@ typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
 extern void printChar(const char c);
-
-#define MEM_SZ            128*KILO
-#define VARS_SZ           512*KILO
-#define STK_SZ             64
-#define LSTK_SZ            30
 
 enum {
     STOP = 0,
@@ -115,13 +109,12 @@ opcode_t opcodes[] = {
 cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
+cell_t fileStk[10], fileSp, input_fp, output_fp;
+cell_t state, base;
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
-cell_t state, base;
 char *here, *pc, tib[128], *in;
 dict_t *last;
-
-cell_t fileStk[10], fileSp, input_fp, output_fp;
 
 void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
@@ -338,9 +331,7 @@ int ParseWord() {
         if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
         if (f & IS_INLINE) {
             CComma(*(xt++));
-            while ((*xt) && (*xt != EXIT)) {
-                CComma(*(xt++));
-            }
+            while ((*xt) && (*xt != EXIT)) { CComma(*(xt++)); }
         }
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
@@ -358,10 +349,10 @@ int ParseWord() {
 void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; clearTib; }
-    // PRINT2(in,"\n");
+    // PRINT3("-", in, "-");
     while (state != 999) {
         if (getword() == 0) { return; }
-        ParseWord();
+        if (ParseWord() == 0) { return; }
     }
 }
 
@@ -386,7 +377,6 @@ void init() {
     here = &mem[0];
     vhere = &vars[0];
     last = (dict_t*)&mem[MEM_SZ];
-
     base = 10;
     sp = rsp = 0;
     opcode_t *op = opcodes;
@@ -432,40 +422,31 @@ void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout
 
 void getInput() {
     clearTib;
-gI1:
     if (input_fp) {
         in = fgets(tib, sizeof(tib), (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
-            input_fp = 0;
-            in = tib;
-            if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
+            input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
         }
     }
     if (! input_fp) {
         cell_t tmp = output_fp;
         output_fp = 0;
-        if (state) { printString("... > "); }
-        else { printString(" ok\n"); }
+        printString((state) ? "... > " : " ok\n");
         in = fgets(tib, sizeof(tib), stdin);
         output_fp = tmp;
     }
+    in = tib;
 }
 
-void loop() {
+int main(int argc, char *argv[]) {
+    init();
+    input_fp = (cell_t)fopen("core.f", "rt");
+    output_fp = 0;
     while (state != 999) {
         getInput();
         ParseLine(tib);
     }
-}
-
-int main(int argc, char *argv[]) {
-    // int r='A';
-    // for (i=1; i<argc; ++i) { y=argv[i]; RG(r++) = atoi(y); }
-    init();
-    input_fp = (cell_t)fopen("core.f", "rt");
-    output_fp = 0;
-    loop();
     return 0;
 }
 #endif

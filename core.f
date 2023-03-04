@@ -16,6 +16,8 @@
 : var vhere const ;
 : (var) here 1- cell - const ;
 : does> r> last ! ;
+: :noname here 1 state ! ;
+: exec >r ;
 
 : cells cell * ; inline
 : allot vhere + (vhere) ! ;
@@ -41,6 +43,8 @@
 : c++ dup @ 1+ swap ! ;
 : c-- dup @ 1- swap ! ;
 : 2* dup + ; inline
+: <= > 0= ; inline
+: >= < 0= ; inline
 
 : rdrop r> drop ; inline
 : rot  >r swap r> swap ;
@@ -56,10 +60,10 @@
 : tab #9 emit ; inline
 : cr #13 emit #10 emit ; inline
 
-: negate com 1+ ; inline
-: abs dup 0 < if negate then ;
-: min over over > if swap then drop ;
-: max over over < if swap then drop ;
+: negate  com 1+ ; inline
+: abs  dup 0 < if negate then ;
+: min  over over > if swap then drop ;
+: max  over over < if swap then drop ;
 
 : i (i) @ ;
 : +i (i) +! ;
@@ -87,8 +91,8 @@ var (neg) cell allot
 : count ( str--a n ) dup 1+ swap c@ ; inline
 : type  ( a n-- ) ?dup if 0 do dup c@ emit 1+ loop then drop ;
 
-var s (var) (s) : >s (s) ! ; : s++ s (s) ++ ;
-var d (var) (d) : >d (d) ! ; : d++ d (d) ++ ;
+var s  (var) (s)  : >s (s) ! ;  : s++ s (s) ++ ;
+var d  (var) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
 
 : i" ( --str ) vhere dup >d 0 d++ c!
     begin >in @ c@ dup >s if >in ++ then
