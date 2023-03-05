@@ -10,28 +10,36 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define MEM_SZ            128*1024
+#define VARS_SZ           512*1024
+#define STK_SZ             64
+#define LSTK_SZ            30
+
 #ifdef _MSC_VER
-#include <conio.h>
-int qKey() { return _kbhit(); }
-int key() { return _getch(); }
+    #include <conio.h>
+    int qKey() { return _kbhit(); }
+    int key() { return _getch(); }
+#elif IS_LINUX
+    int qKey() { return 0; }
+    int key() { return 0; }
 #else
-int qKey() { return 0; }
-int key() { return 0; }
+    // Dev board
+    extern int qKey();
+    extern int key();
+    #define MEM_SZ             64*1024
+    #define VARS_SZ            96*1024
+    #define STK_SZ             32
+    #define LSTK_SZ            30
 #endif
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
-typedef struct { char *prev; char f; char len; char name[32]; } dict_t;
+typedef struct { char *xt; char f; char len; char name[14]; } dict_t;
 typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
 extern void printChar(const char c);
-
-#define MEM_SZ          64000
-#define VARS_SZ        256000
-#define STK_SZ             64
-#define LSTK_SZ            30
 
 enum {
     STOP = 0,
@@ -47,8 +55,9 @@ enum {
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
     KEY, QKEY,
-    DEFINE, ENDWORD, CREATE, FIND,
-    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE
+    DEFINE, ENDWORD, CREATE, FIND, WORD,
+    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
+    REG_I, REG_D, REG_R, REG_S
 };
 
 #define IS_IMMEDIATE  1
@@ -68,7 +77,7 @@ opcode_t opcodes[] = {
     , { KEY,    IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
     , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
     , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
-    , { FLOAD,  IS_INLINE, "load" }
+    , { FLOAD,  IS_INLINE, "(load)" }, { WORD,    IS_INLINE, "next-word" }
     , { COM,    IS_INLINE, "com" },    { NOT,     IS_INLINE, "0=" }
     , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
     , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
@@ -101,13 +110,12 @@ opcode_t opcodes[] = {
 cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
+cell_t fileStk[10], fileSp, input_fp, output_fp;
+cell_t state, base, reg[10];
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
-cell_t state, base;
 char *here, *pc, tib[128], *in;
-dict_t *last;
-
-cell_t fileStk[10], fileSp, input_fp;
+dict_t tempWords[10], *last;
 
 void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
@@ -135,8 +143,8 @@ int strEq(char *d, char *s, int caseSensitive) {
 }
 
 char *iToA(ucell_t N, int base) {
-    static char ret[33];
-    char *x = &ret[32];
+    static char ret[CELL_SZ*8];
+    char *x = &ret[CELL_SZ*8-1];
     *(x) = 0;
     int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
     if (neg) N = (~N) + 1;
@@ -149,35 +157,50 @@ char *iToA(ucell_t N, int base) {
     return x;
 }
 
-void Create(char *w) {
-    int l = strLen(w);
-    dict_t *cur = last;
-    last = (dict_t*)here;
-    strCpy(last->name, w);
-    last->len = l;
-    last->prev = (char*)cur;
-    last->f = 0;
-    here += (CELL_SZ) + 3 + last->len;
+int isTempWord(char *w) {
+    if ((w[0]=='T') && BTW(w[1],'0','9') && (w[2]==0)){ return 1; }
+    return 0;
 }
 
-char *getXT(dict_t *dp) {
-    char *x = (char*)dp;
-    return x += dp->len + 3 + CELL_SZ;
+int isRegOp(char *w) {
+    if ((w[0]=='r') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_R; }
+    if ((w[0]=='s') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_S; }
+    if ((w[0]=='i') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_I; }
+    if ((w[0]=='d') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_D; }
+    return 0;
+}
+
+void Create(char *w) {
+    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = here; return; }
+    int l = strLen(w);
+    --last;
+    if (13 < l) { l=13; w[l]=0; }
+    strCpy(last->name, w);
+    last->len = l;
+    last->xt = here;
+    last->f = 0;
 }
 
 // ( nm--xt flags 1 | 0 )
 void find() {
     char *nm = (char*)pop();
+    if (isTempWord(nm)) {
+        PUSH(tempWords[nm[1]-'0'].xt);
+        push(0);
+        RET(1);
+    }
     int len = strLen(nm);
+    // PRINT3("-LF-(",nm,"):");
     dict_t *dp = last;
     dict_t *stop = (dict_t*)&mem[0];
-    while (dp) {
+    while (dp < (dict_t*)&mem[MEM_SZ]) {
+        // PRINT3("-LF-(",nm,"):");
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
-            PUSH(getXT(dp));
+            PUSH(dp->xt);
             push(dp->f);
             RET(1);
         }
-        dp = (dict_t*)(dp)->prev;
+        ++dp;
     }
     push(0);
 }
@@ -227,36 +250,13 @@ void isNum() {
     RET(1);
 }
 
-void getInput() {
-    clearTib;
-gI1:
-    if (input_fp) {
-        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
-        if (in != tib) {
-            fclose((FILE*)input_fp);
-            input_fp = 0;
-            in = tib;
-            if (0 < fileSp) { input_fp = fileStk[fileSp--]; goto gI1; }
-        }
-    }
-    if (! input_fp) {
-        if (state) { printString("... > "); }
-        else { printString(" ok\n"); }
-        in = fgets(tib, sizeof(tib), stdin);
-    }
-}
-
-// ( --addr len | 0 )
-int getword(int stopOnNull) {
+// ( --addr | <null> )
+int getword() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0;}
     if (STK_SZ < sp) { PRINT1("over"); sp=0; }
-gW1:
     while (*in && (*in < 33)) { ++in; }
-    if (*in == 0) { 
-        if (stopOnNull) { return 0; }
-        getInput(); goto gW1;
-    }
+    if (*in == 0) { return 0; }
     PUSH(in);
     while (32 < *in) { ++in; ++len; }
     *(in++) = 0;
@@ -304,9 +304,10 @@ next:
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
-    case DEFINE: getword(0); Create((char*)pop()); state=1;                 NEXT;
-    case CREATE: getword(0); Create((char*)pop());                          NEXT;
-    case FIND: getword(0); find();                                          NEXT;
+    case WORD: t1=getword(); push(t1);                                      NEXT;
+    case DEFINE: getword(); Create((char*)pop()); state=1;                  NEXT;
+    case CREATE: getword(); Create((char*)pop());                           NEXT;
+    case FIND: getword(); find();                                           NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
     case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case AND: NOS &= TOS; DROP1;                                            NEXT;
@@ -328,13 +329,27 @@ next:
             else { PRINT1("-noFile-"); }                                    NEXT;
     case QKEY: push(qKey());                                                NEXT;
     case KEY: push(key());                                                  NEXT;
-    default: PRINT3("-[", iToA((cell_t)(pc-1),10), "]?-");                  break;
+    case REG_D: --reg[*(pc++)];                                             NEXT;
+    case REG_I: ++reg[*(pc++)];                                             NEXT;
+    case REG_R: push(reg[*(pc++)]);                                         NEXT;
+    case REG_S: reg[*(pc++)] = pop();                                       NEXT;
+    default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-");                 break;
     }
 }
 
 int ParseWord() {
     char *w = (char*)TOS;
-    // PRINT3("-",w,"-\n");
+    int t = isRegOp(w);
+    if (t) {
+        DROP1;
+        if (state) { CComma(t); CComma(w[1]-'0'); }
+        else {
+            char x[4];
+            x[0]=t; x[1]=w[1]-'0'; x[2]=EXIT;
+            Run(x);
+        }
+        return 1;
+    }
     isNum();
     if (pop()) {
         if (state) {
@@ -351,9 +366,7 @@ int ParseWord() {
         if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
         if (f & IS_INLINE) {
             CComma(*(xt++));
-            while ((*xt) && (*xt != EXIT)) {
-                CComma(*(xt++));
-            }
+            while ((*xt) && (*xt != EXIT)) { CComma(*(xt++)); }
         }
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
@@ -361,20 +374,20 @@ int ParseWord() {
     PRINT3("[", w, "]??");
     if (state) {
         here = (char*)last;
-        last = (dict_t*)last->prev;
+        ++last;
         state = 0;
     }
     base = 10;
     return 0;
 }
 
-void ParseLine(char *x, int stopOnNull) {
+void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; clearTib; }
-    // PRINT2(in,"\n");
+    // PRINT3("-", in, "-");
     while (state != 999) {
-        if (getword(stopOnNull) == 0) { return; }
-        ParseWord();
+        if (getword() == 0) { return; }
+        if (ParseWord() == 0) { return; }
     }
 }
 
@@ -383,7 +396,7 @@ void loadNum(const char *name, cell_t addr, int makeInline) {
     clearTib;
     strCpy(tib, ": ");
     SC(name); SC(" "); SC(iToA(addr, 10)); SC(" "); SC(";");
-    ParseLine(tib, 1);
+    ParseLine(tib);
     if (makeInline) { last->f = IS_INLINE; }
 }
 
@@ -398,7 +411,7 @@ void loadPrim(const char *name, int op, int arg) {
 void init() {
     here = &mem[0];
     vhere = &vars[0];
-    last = (dict_t*)0;
+    last = (dict_t*)&mem[MEM_SZ];
     base = 10;
     sp = rsp = 0;
     opcode_t *op = opcodes;
@@ -409,6 +422,10 @@ void init() {
         CComma(EXIT);
         ++op;
     }
+#ifdef isPC
+    loadNum("(output_fp)",    (cell_t)&output_fp, 0);
+    loadNum("(input_fp)",     (cell_t)&input_fp, 0);
+#endif
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);
@@ -418,8 +435,10 @@ void init() {
     loadNum("mem",      (cell_t)&mem[0], 0);
     loadNum("mem-end",  (cell_t)&mem[MEM_SZ], 0);
     loadNum("vars",     (cell_t)&vars[0], 0);
+    loadNum("regs",     (cell_t)&reg[0], 0);
     loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
     loadNum("cell",     CELL_SZ, 1);
+    loadNum("word-sz",  (cell_t)sizeof(dict_t), 1);
     loadNum("(vhere)",  (cell_t)&vhere, 0);
     loadNum("(stk)",    (cell_t)&stk[0], 0);
     loadNum("(sp)",     (cell_t)&sp, 0);
@@ -434,15 +453,36 @@ void init() {
 }
 
 #ifdef isPC
-void printChar(const char c) { putchar(c); }
-void printString(const char* s) { fputs(s, stdout); }
+void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
+void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
+
+void getInput() {
+    clearTib;
+    if (input_fp) {
+        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
+        if (in != tib) {
+            fclose((FILE*)input_fp);
+            input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
+        }
+    }
+    if (! input_fp) {
+        cell_t tmp = output_fp;
+        output_fp = 0;
+        printString((state) ? "... > " : " ok\n");
+        in = fgets(tib, sizeof(tib), stdin);
+        output_fp = tmp;
+    }
+    in = tib;
+}
 
 int main(int argc, char *argv[]) {
-    // int r='A';
-    // for (i=1; i<argc; ++i) { y=argv[i]; RG(r++) = atoi(y); }
     init();
     input_fp = (cell_t)fopen("core.f", "rt");
-    ParseLine(0, 0);
+    output_fp = 0;
+    while (state != 999) {
+        getInput();
+        ParseLine(tib);
+    }
     return 0;
 }
 #endif
