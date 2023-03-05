@@ -26,8 +26,8 @@
     // Dev board
     extern int qKey();
     extern int key();
-    #define MEM_SZ             64*KILO
-    #define VARS_SZ            96*KILO
+    #define MEM_SZ             64*1024
+    #define VARS_SZ            96*1024
     #define STK_SZ             32
     #define LSTK_SZ            30
 #endif
@@ -56,7 +56,8 @@ enum {
     EMIT, TIMER, SYSTEM,
     KEY, QKEY,
     DEFINE, ENDWORD, CREATE, FIND, WORD,
-    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE
+    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
+    REG_I, REG_D, REG_R, REG_S
 };
 
 #define IS_IMMEDIATE  1
@@ -110,11 +111,11 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base;
+cell_t state, base, reg[10];
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
 char *here, *pc, tib[128], *in;
-dict_t *last;
+dict_t tempWords[10], *last;
 
 void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 cell_t pop() { return stk[sp--]; }
@@ -156,7 +157,21 @@ char *iToA(ucell_t N, int base) {
     return x;
 }
 
+int isTempWord(char *w) {
+    if ((w[0]=='T') && BTW(w[1],'0','9') && (w[2]==0)){ return 1; }
+    return 0;
+}
+
+int isRegOp(char *w) {
+    if ((w[0]=='r') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_R; }
+    if ((w[0]=='s') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_S; }
+    if ((w[0]=='i') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_I; }
+    if ((w[0]=='d') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_D; }
+    return 0;
+}
+
 void Create(char *w) {
+    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = here; return; }
     int l = strLen(w);
     --last;
     if (13 < l) { l=13; w[l]=0; }
@@ -169,6 +184,11 @@ void Create(char *w) {
 // ( nm--xt flags 1 | 0 )
 void find() {
     char *nm = (char*)pop();
+    if (isTempWord(nm)) {
+        PUSH(tempWords[nm[1]-'0'].xt);
+        push(0);
+        RET(1);
+    }
     int len = strLen(nm);
     // PRINT3("-LF-(",nm,"):");
     dict_t *dp = last;
@@ -309,13 +329,27 @@ next:
             else { PRINT1("-noFile-"); }                                    NEXT;
     case QKEY: push(qKey());                                                NEXT;
     case KEY: push(key());                                                  NEXT;
-    default: PRINT3("-[", iToA((cell_t)(pc-1),10), "]?-");                  break;
+    case REG_D: --reg[*(pc++)];                                             NEXT;
+    case REG_I: ++reg[*(pc++)];                                             NEXT;
+    case REG_R: push(reg[*(pc++)]);                                         NEXT;
+    case REG_S: reg[*(pc++)] = pop();                                       NEXT;
+    default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-");                 break;
     }
 }
 
 int ParseWord() {
     char *w = (char*)TOS;
-    // PRINT3("-",w,"-\n");
+    int t = isRegOp(w);
+    if (t) {
+        DROP1;
+        if (state) { CComma(t); CComma(w[1]-'0'); }
+        else {
+            char x[4];
+            x[0]=t; x[1]=w[1]-'0'; x[2]=EXIT;
+            Run(x);
+        }
+        return 1;
+    }
     isNum();
     if (pop()) {
         if (state) {
@@ -401,6 +435,7 @@ void init() {
     loadNum("mem",      (cell_t)&mem[0], 0);
     loadNum("mem-end",  (cell_t)&mem[MEM_SZ], 0);
     loadNum("vars",     (cell_t)&vars[0], 0);
+    loadNum("regs",     (cell_t)&reg[0], 0);
     loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
     loadNum("cell",     CELL_SZ, 1);
     loadNum("word-sz",  (cell_t)sizeof(dict_t), 1);

@@ -9,6 +9,8 @@ Notes:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
 - The Linux version is 64-bit but can also be 32-bit.
+- c3 provides 10 registers, r0 thru r9.
+- c3 provides 10 temporary words, T0 thru T9.
 - Not many primitives are built into the base executable.
 - The rest is built using those words (see core.f).
 - The VARIABLE space is separated from the CODE space.
@@ -19,6 +21,20 @@ Notes:
     - flags:   byte
     - len:     byte
     - name:    char[14] (NULL terminated)
+
+## Registers
+- c3 provides 10 registers, r0 thru r9.
+- There are 4 register operations: rX, sX, iX, dX.
+- r4 pushes the contents of register 4.
+- s4 sets the contents of register 4 from TOS.
+- i4 increments the contents of register 4.
+- d4 decrements the contents of register 4.
+
+## Temporary words
+- c3 provides 10 temporary words, T0 thru T9.
+- A temporary word can be redefined as often as desired.
+- Creating a temporary word does not add an entry to the dictionary.
+- A temporary word cannot be IMMEDIATE.
 
 ## c3 Base system reference
 ```
@@ -73,7 +89,8 @@ c@       (a--b)            b: BYTE at address a.
 c!       (b a--)           Store BYTE b to address a.
 
 *** WORDS and FLOW CONTROL ***
-: word   (--)              Begin definition of word.
+: word   (--)              Begin definition of word. 
+: T[0-9] (--)              Begin definition of a temporary word.
 ;        (--)              End current definition.
 create x (--)              Creates a definition for x word.
 do       (T F--)           Begin DO/LOOP loop.
@@ -82,6 +99,12 @@ loop     (--)              Increment I, jump to DO if I < T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
             NOTE: Words like IF/THEN and BEGIN/WHILE are not in the base c3.
                   They are defined in core.f
+
+*** REGISTERS ***
+rX       (--n)             n: the value of register #X (X: [0-9]).
+sX       (n--)             n: new value for register #X (X: [0-9]).
+iX       (--)              Increment register #X (X: [0-9]).
+dX       (--)              Decrement register #X (X: [0-9]).
 
 *** SYSTEM ***
 (exit)   (--n)   n: The byte-code value for EXIT.
@@ -94,6 +117,7 @@ mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
 vars     (--a)   a: Start address for the VARIABLES area.
 vars-end (--a)   a: End address for the VARIABLES area.
+regs     (--a)   a: Start address for the REGISTERS (10 CELLs).
 (vhere)  (--a)   a: Address of the VHERE variable.
 (here)   (--a)   a: Address of the HERE variable.
 (last)   (--a)   a: Address of the LAST variable.
