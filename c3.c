@@ -415,33 +415,32 @@ void init() {
         ++op;
     }
     loadNum("version",  3,       1);
-    loadNum("(output_fp)",    (cell_t)&output_fp, 0);
-    loadNum("(output_fp)",    (cell_t)&output_fp, 0);
-    loadNum("(input_fp)",     (cell_t)&input_fp, 0);
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);
     loadNum("(jmpnz)",  JMPNZ,   1);
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
+    loadNum("(output_fp)", (cell_t)&output_fp, 0);
+    loadNum("(input_fp)",  (cell_t)&input_fp, 0);
     loadNum("mem",      (cell_t)&mem[0], 0);
     loadNum("mem-end",  (cell_t)&mem[MEM_SZ], 0);
     loadNum("vars",     (cell_t)&vars[0], 0);
     loadNum("regs",     (cell_t)&reg[0], 0);
     loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
-    loadNum("cell",     CELL_SZ, 1);
-    loadNum("word-sz",  (cell_t)sizeof(dict_t), 1);
     loadNum("(vhere)",  (cell_t)&vhere, 0);
+    loadNum(">in",      (cell_t)&in, 0);
+    loadNum("tib",      (cell_t)&tib[0], 0);
+    loadNum("word-sz",  (cell_t)sizeof(dict_t), 1);
     loadNum("(stk)",    (cell_t)&stk[0], 0);
     loadNum("(sp)",     (cell_t)&sp, 0);
     loadNum("(rsp)",    (cell_t)&rsp, 0);
     loadNum("(lsp)",    (cell_t)&lsp, 0);
     loadNum("(last)",   (cell_t)&last, 0);
     loadNum("(here)",   (cell_t)&here, 0);
-    loadNum(">in",      (cell_t)&in, 0);
-    loadNum("tib",      (cell_t)&tib[0], 0);
     loadNum("state",    (cell_t)&state, 0);
     loadNum("base",     (cell_t)&base, 0);
+    loadNum("cell",     CELL_SZ, 1);
 }
 
 #ifdef isPC
