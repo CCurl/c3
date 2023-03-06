@@ -400,14 +400,6 @@ void loadNum(const char *name, cell_t addr, int makeInline) {
     if (makeInline) { last->f = IS_INLINE; }
 }
 
-void loadPrim(const char *name, int op, int arg) {
-    Create((char *)name);
-    last->f = IS_INLINE;
-    CComma(op);
-    CComma(arg);
-    CComma(EXIT);
-}
-
 void init() {
     here = &mem[0];
     vhere = &vars[0];
@@ -422,10 +414,10 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-#ifdef isPC
+    loadNum("version",  3,       1);
+    loadNum("(output_fp)",    (cell_t)&output_fp, 0);
     loadNum("(output_fp)",    (cell_t)&output_fp, 0);
     loadNum("(input_fp)",     (cell_t)&input_fp, 0);
-#endif
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);

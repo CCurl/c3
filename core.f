@@ -137,7 +137,9 @@ var (fg) 3 cells allot
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
 : forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
+: .ver version 100 /mod (.) '.' emit . ;
 
-." c3 - v0.0.2 - Chris Curl" cr
+." c3 - v" .ver ." - Chris Curl" cr
 here mem -   . ." code bytes used, " last here - . ." bytes free." cr
 vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
+forget
