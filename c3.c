@@ -100,8 +100,7 @@ opcode_t opcodes[] = {
 #define CELL_SZ       sizeof(cell_t)
 #define clearTib      fill(tib, 0, sizeof(tib))
 #define PRINT1(a)     printString(a)
-#define PRINT2(a,b)   PRINT1(a); PRINT1(b)
-#define PRINT3(a,b,c) PRINT2(a,b); PRINT1(c)
+#define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
@@ -190,11 +189,11 @@ void find() {
         RET(1);
     }
     int len = strLen(nm);
-    // PRINT3("-LF-(",nm,"):");
+    // PRINT3("-LF-(",nm,"):")
     dict_t *dp = last;
     dict_t *stop = (dict_t*)&mem[0];
     while (dp < (dict_t*)&mem[MEM_SZ]) {
-        // PRINT3("-LF-(",nm,"):");
+        // PRINT3("-LF-(",nm,"):")
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
             PUSH(dp->xt);
             push(dp->f);
@@ -333,7 +332,7 @@ next:
     case REG_I: ++reg[*(pc++)];                                             NEXT;
     case REG_R: push(reg[*(pc++)]);                                         NEXT;
     case REG_S: reg[*(pc++)] = pop();                                       NEXT;
-    default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-");                 break;
+    default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")                  break;
     }
 }
 
@@ -371,7 +370,7 @@ int ParseWord() {
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
     }
-    PRINT3("[", w, "]??");
+    PRINT3("[", w, "]??")
     if (state) {
         here = (char*)last;
         ++last;
@@ -384,7 +383,7 @@ int ParseWord() {
 void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; clearTib; }
-    // PRINT3("-", in, "-");
+    // PRINT3("-", in, "-")
     while (state != 999) {
         if (getword() == 0) { return; }
         if (ParseWord() == 0) { return; }
