@@ -1,4 +1,4 @@
-# c3 - A minimal Forth written in C.
+# c3 - A minimal Forth-like VM written in C.
 
 The main goals for this project are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
