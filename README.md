@@ -23,17 +23,21 @@ Notes:
     - name:    char[14] (NULL terminated)
 
 ## Registers
-- c3 provides 10 "virtual registers"", r0 thru r9.
-- There are 4 register operations: rX, sX, iX, dX.
-- r4 pushes the contents of register 4.
-- s4 sets the contents of register 4 from TOS.
-- i4 increments the contents of register 4.
-- d4 decrements the contents of register 4.
+- c3 provides 10 "virtual registers", r0 thru r9.
+- There are 6 register operations: +regs, rX, sX, iX, dX, -regs.
+- +regs   saves the current registers.
+- r4      pushes the contents of register 4.
+- s4      sets the contents of register 4 from TOS.
+- i4      increments the contents of register 4.
+- d4      decrements the contents of register 4.
+- +regs   restores the last saved 10 new registers.
 
 ## Temporary words
 - c3 provides 10 temporary words, T0 thru T9.
+- They are intended to be helpful in factoring code.
+- Defining a temporary word does not add an entry to the dictionary.
 - A temporary word can be redefined as often as desired.
-- Creating a temporary word does not add an entry to the dictionary.
+- When redefined, previous references to the word are unchanged.
 - A temporary word cannot be IMMEDIATE.
 
 ## c3 Base system reference
@@ -45,6 +49,8 @@ NOTE: many of the core words are defined in file 'core.f'
 -        (a b--c)          Subtraction
 *        (a b--c)          Multiplication
 /mod     (a b--r q)        q: quotient(a,b), r: modulo(a,b)
+++       (A--)             Increment CELL at A
+--       (A--)             Decrement CELL at A
 
 *** STACK ***
 1+       (a--b)            Increment TOS
@@ -96,11 +102,14 @@ create x (--)              Creates a definition for x word.
 do       (T F--)           Begin DO/LOOP loop.
 (i)      (--a)             a: address of the index variable.
 loop     (--)              Increment I, jump to DO if I < T.
+-loop    (--)              Decrement I, jump to DO if I > T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
             NOTE: Words like IF/THEN and BEGIN/WHILE are not in the base c3.
                   They are defined in core.f
 
 *** REGISTERS ***
++regs    (--)              Save the current registers.
+-regs    (--)              Restore the last saved registers.
 rX       (--n)             n: the value of register #X (X: [0-9]).
 sX       (n--)             n: new value for register #X (X: [0-9]).
 iX       (--)              Increment register #X (X: [0-9]).

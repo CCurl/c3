@@ -49,7 +49,7 @@ enum {
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
-    DO, LOOP, INDEX,
+    DO, LOOP, LOOP2, INDEX,
     RTO, RFETCH, RFROM,
     INC, INCA, DEC, DECA,
     COM, AND, OR, XOR,
@@ -83,7 +83,7 @@ opcode_t opcodes[] = {
     , { COM,     IS_INLINE, "com" },    { NOT,      IS_INLINE, "0=" }
     , { INC,     IS_INLINE, "1+" },     { INCA,     IS_INLINE, "++" }
     , { DEC,     IS_INLINE, "1-" },     { DECA,     IS_INLINE, "--" }
-    , { DO,      IS_INLINE, "do" },     { LOOP,     IS_INLINE, "loop" }
+    , { DO, IS_INLINE, "do" }, { LOOP, IS_INLINE, "loop" }, { LOOP2, IS_INLINE, "-loop" }
     , { INDEX,   IS_INLINE, "(i)" },    { SYSTEM,   IS_INLINE, "system" }
     , { STORE,   IS_INLINE, "!" },      { CSTORE,   IS_INLINE, "c!" }
     , { FETCH,   IS_INLINE, "@" },      { CFETCH,   IS_INLINE, "c@" }
@@ -306,6 +306,7 @@ next:
     case DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();                     NEXT;
     case INDEX: PUSH(&L0);                                                  NEXT;
     case LOOP: if (++L0<L1) { pc=(char*)L2; } else { lsp-=3; };             NEXT;
+    case LOOP2: if (--L0>L1) { pc=(char*)L2; } else { lsp-=3; };            NEXT;
     case WORD: t1=getword(); push(t1);                                      NEXT;
     case DEFINE: getword(); Create((char*)pop()); state=1;                  NEXT;
     case CREATE: getword(); Create((char*)pop());                           NEXT;
