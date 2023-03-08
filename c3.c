@@ -419,7 +419,7 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-    loadNum("version",  3,       1);
+    loadNum("version",  4,       1);
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);
