@@ -57,34 +57,37 @@ enum {
     KEY, QKEY,
     DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
-    REG_I, REG_D, REG_R, REG_S
+    REG_I, REG_D, REG_R, REG_S, REG_NEW, REG_FREE
 };
 
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
+#define STOP_LOAD    99
+#define ALL_DONE    999
 
 opcode_t opcodes[] = { 
     { DEFINE,   IS_INLINE, ":" },      { ENDWORD, IS_IMMEDIATE, ";" }
-    , { CREATE, IS_INLINE, "create" }, { FIND,    IS_INLINE, "'" }
-    , { DUP,    IS_INLINE, "dup" },    { SWAP,    IS_INLINE, "swap" }
-    , { OVER,   IS_INLINE, "over" },   { DROP,    IS_INLINE, "drop" }
-    , { EMIT,   IS_INLINE, "emit" },   { TIMER,   IS_INLINE, "timer" }
-    , { ADD,    IS_INLINE, "+" },      { SUB,     IS_INLINE, "-" }
-    , { MULT,   IS_INLINE, "*" },      { SLMOD,   IS_INLINE, "/mod" }
+    , { CREATE, IS_INLINE, "create" }, { FIND,     IS_INLINE, "'" }
+    , { DUP,    IS_INLINE, "dup" },    { SWAP,     IS_INLINE, "swap" }
+    , { OVER,   IS_INLINE, "over" },   { DROP,     IS_INLINE, "drop" }
+    , { EMIT,   IS_INLINE, "emit" },   { TIMER,    IS_INLINE, "timer" }
+    , { ADD,    IS_INLINE, "+" },      { SUB,      IS_INLINE, "-" }
+    , { MULT,   IS_INLINE, "*" },      { SLMOD,    IS_INLINE, "/mod" }
     , { RTO, IS_INLINE, ">r" },  { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
     , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
-    , { KEY,    IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
-    , { FOPEN,  IS_INLINE, "fopen" },  { FCLOSE,  IS_INLINE, "fclose" }
-    , { FREAD,  IS_INLINE, "fread" },  { FWRITE,  IS_INLINE, "fwrite" }
-    , { FLOAD,  IS_INLINE, "(load)" }, { WORD,    IS_INLINE, "next-word" }
-    , { COM,    IS_INLINE, "com" },    { NOT,     IS_INLINE, "0=" }
-    , { INC,    IS_INLINE, "1+" },     { INCA,    IS_INLINE, "++" }
-    , { DEC,    IS_INLINE, "1-" },     { DECA,    IS_INLINE, "--" }
-    , { DO,     IS_INLINE, "do" },     { LOOP,    IS_INLINE, "loop" }
-    , { INDEX,  IS_INLINE, "(i)" },    { SYSTEM,  IS_INLINE, "system" }
-    , { STORE,  IS_INLINE, "!" },      { CSTORE,  IS_INLINE, "c!" }
-    , { FETCH,  IS_INLINE, "@" },      { CFETCH,  IS_INLINE, "c@" }
+    , { KEY,     IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
+    , { FOPEN,   IS_INLINE, "fopen" },  { FCLOSE,   IS_INLINE, "fclose" }
+    , { FREAD,   IS_INLINE, "fread" },  { FWRITE,   IS_INLINE, "fwrite" }
+    , { FLOAD,   IS_INLINE, "(load)" }, { WORD,     IS_INLINE, "next-word" }
+    , { COM,     IS_INLINE, "com" },    { NOT,      IS_INLINE, "0=" }
+    , { INC,     IS_INLINE, "1+" },     { INCA,     IS_INLINE, "++" }
+    , { DEC,     IS_INLINE, "1-" },     { DECA,     IS_INLINE, "--" }
+    , { DO,      IS_INLINE, "do" },     { LOOP,     IS_INLINE, "loop" }
+    , { INDEX,   IS_INLINE, "(i)" },    { SYSTEM,   IS_INLINE, "system" }
+    , { STORE,   IS_INLINE, "!" },      { CSTORE,   IS_INLINE, "c!" }
+    , { FETCH,   IS_INLINE, "@" },      { CFETCH,   IS_INLINE, "c@" }
+    , { REG_NEW, IS_INLINE, "+regs" },  { REG_FREE, IS_INLINE, "-regs" }
     , { 0, 0, 0 }
 };
 
@@ -110,7 +113,7 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[10];
+cell_t state, base, reg[100], reg_base;
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
 char *here, *pc, tib[128], *in;
@@ -328,10 +331,12 @@ next:
             else { PRINT1("-noFile-"); }                                    NEXT;
     case QKEY: push(qKey());                                                NEXT;
     case KEY: push(key());                                                  NEXT;
-    case REG_D: --reg[*(pc++)];                                             NEXT;
-    case REG_I: ++reg[*(pc++)];                                             NEXT;
-    case REG_R: push(reg[*(pc++)]);                                         NEXT;
-    case REG_S: reg[*(pc++)] = pop();                                       NEXT;
+    case REG_D: --reg[*(pc++)+reg_base];                                    NEXT;
+    case REG_I: ++reg[*(pc++)+reg_base];                                    NEXT;
+    case REG_R: push(reg[*(pc++)+reg_base]);                                NEXT;
+    case REG_S: reg[*(pc++)+reg_base] = pop();                              NEXT;
+    case REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;                     NEXT;
+    case REG_FREE: reg_base -= (0 < reg_base) ? 10 : 0;                     NEXT;
     default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")                  break;
     }
 }
@@ -384,7 +389,7 @@ void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; clearTib; }
     // PRINT3("-", in, "-")
-    while (state != 999) {
+    while (state != ALL_DONE) {
         if (getword() == 0) { return; }
         if (ParseWord() == 0) { return; }
     }
@@ -404,7 +409,7 @@ void init() {
     vhere = &vars[0];
     last = (dict_t*)&mem[MEM_SZ];
     base = 10;
-    sp = rsp = 0;
+    sp = rsp = reg_base = 0;
     opcode_t *op = opcodes;
     while (op->op) {
         Create((char*)op->name);
@@ -448,6 +453,11 @@ void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout
 
 void getInput() {
     clearTib;
+    if ((state == STOP_LOAD) && input_fp) {
+        fclose((FILE*)input_fp);
+        input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
+        state = 0;
+    }
     if (input_fp) {
         in = fgets(tib, sizeof(tib), (FILE*)input_fp);
         if (in != tib) {
@@ -469,7 +479,7 @@ int main(int argc, char *argv[]) {
     init();
     input_fp = (cell_t)fopen("core.f", "rt");
     output_fp = 0;
-    while (state != 999) {
+    while (state != ALL_DONE) {
         getInput();
         ParseLine(tib);
     }

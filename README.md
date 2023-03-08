@@ -9,7 +9,7 @@ Notes:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
 - The Linux version is 64-bit but can also be 32-bit.
-- c3 provides 10 registers, r0 thru r9.
+- c3 provides 10 "virtual registers"", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
 - Not many primitives are built into the base executable.
 - The rest is built using those words (see core.f).
@@ -23,7 +23,7 @@ Notes:
     - name:    char[14] (NULL terminated)
 
 ## Registers
-- c3 provides 10 registers, r0 thru r9.
+- c3 provides 10 "virtual registers"", r0 thru r9.
 - There are 4 register operations: rX, sX, iX, dX.
 - r4 pushes the contents of register 4.
 - s4 sets the contents of register 4 from TOS.
