@@ -25,6 +25,7 @@ var num cell allot
 : bm3 cr ." Bench: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
 
+99 state ! \ Abort/stop the load
 250 mil bm1
 250 mil bm2
 2 mil bm3
