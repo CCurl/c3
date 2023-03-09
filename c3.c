@@ -34,7 +34,6 @@
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
-typedef unsigned char byte;
 typedef struct { char *xt; char f; char len; char name[14]; } dict_t;
 typedef struct { int op; int flg; const char *name; } opcode_t;
 
@@ -96,7 +95,6 @@ opcode_t opcodes[] = {
 #define PUSH(x)       push((cell_t)(x))
 #define DROP1         sp--
 #define DROP2         sp-=2
-#define RET(x)        push(x); return;
 #define NEXT          goto next
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
@@ -113,7 +111,7 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[100], reg_base;
+cell_t state, base, reg[100], reg_base, t1, t2;
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
 char *here, *pc, tib[128], *in;
@@ -164,11 +162,12 @@ int isTempWord(char *w) {
     return 0;
 }
 
-int isRegOp(char *w) {
-    if ((w[0]=='r') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_R; }
-    if ((w[0]=='s') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_S; }
-    if ((w[0]=='i') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_I; }
-    if ((w[0]=='d') && BTW(w[1],'0','9') && (w[2]==0)){ return REG_D; }
+char isRegOp(char *w) {
+    if ((strLen(w) != 2) || !BTW(w[1],'0','9')) { return 0; }
+    if (w[0]=='r') { return REG_R; }
+    if (w[0]=='s') { return REG_S; }
+    if (w[0]=='i') { return REG_I; }
+    if (w[0]=='d') { return REG_D; }
     return 0;
 }
 
@@ -188,8 +187,7 @@ void find() {
     char *nm = (char*)pop();
     if (isTempWord(nm)) {
         PUSH(tempWords[nm[1]-'0'].xt);
-        push(0);
-        RET(1);
+        push(0); push(1); return;
     }
     int len = strLen(nm);
     // PRINT3("-LF-(",nm,"):")
@@ -200,44 +198,33 @@ void find() {
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
             PUSH(dp->xt);
             push(dp->f);
-            RET(1);
+            push(1); return;
         }
         ++dp;
     }
     push(0);
 }
 
-// ( --n 1 | 0 )
-void isDecimal(const char *wd) {
+// ( --n? )
+int isDecimal(const char *wd) {
     cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
-    if (isNeg && (*(++wd) == 0)) { RET(0); }
+    if (isNeg && (*(++wd) == 0)) { return 0; }
     while (BTW(*wd, '0', '9')) { x = (x * 10) + (*(wd++) - '0'); }
-    if (*wd) { RET(0); }
+    if (*wd) { return 0; }
     push(isNeg ? -x : x);
-    RET(1);
-    // For Floating point support
-    // if (*wd && (*wd != '.')) { RET(0); }
-    // if (*wd == 0) { push(isNeg ? -x : x); RET(1); }
-    // // Must be a '.', make it a float
-    // ++wd;
-    // float fx = (float)x, d = 10;
-    // while (BTW(*wd, '0', '9')) { fx += (*(wd++) - '0') / d; d *= 10; }
-    // if (*wd) { RET(0); }
-    // push(0);
-    // // FTOS = isNeg ? -fx : fx;
-    // RET(1);
+    return 1;
 }
 
-// ( nm--n 1 | 0 )
-void isNum() {
+// ( nm--n? )
+int isNum() {
     char *wd = (char*)pop();
-    if ((wd[0] == '\'') && (wd[2] == '\'') && (wd[3] == 0)) { push(wd[1]); RET(1); }
+    if ((wd[0] == '\'') && (wd[2] == '\'') && (wd[3] == 0)) { push(wd[1]); return 1; }
     int b = base, lastCh = '9';
     if (*wd == '#') { b = 10;  ++wd; }
     if (*wd == '$') { b = 16;  ++wd; }
     if (*wd == '%') { b = 2;  ++wd; lastCh = '1'; }
-    if (*wd == 0) { RET(0); }
-    if (b == 10) { isDecimal(wd); return; }
+    if (*wd == 0) { return 0; }
+    if (b == 10) { return isDecimal(wd); }
     if (b < 10) { lastCh = '0' + b - 1; }
     cell_t x = 0;
     while (*wd) {
@@ -245,11 +232,11 @@ void isNum() {
         if (BTW(c, '0', lastCh)) { t = c - '0'; }
         if ((b == 16) && (BTW(c, 'A', 'F'))) { t = c - 'A' + 10; }
         if ((b == 16) && (BTW(c, 'a', 'f'))) { t = c - 'a' + 10; }
-        if (t < 0) { RET(0); }
+        if (t < 0) { return 0; }
         x = (x * b) + t;
     }
     push(x);
-    RET(1);
+    return 1;
 }
 
 // ( --addr | <null> )
@@ -266,7 +253,6 @@ int getword() {
 }
 
 void Run(char *y) {
-    cell_t t1, t2;
     pc = y;
 
 next:
@@ -343,28 +329,26 @@ next:
 }
 
 int ParseWord() {
-    char *w = (char*)TOS;
-    int t = isRegOp(w);
+    char *w = (char*)pop(), t = isRegOp(w);
     if (t) {
-        DROP1;
         if (state) { CComma(t); CComma(w[1]-'0'); }
         else {
-            char x[4];
-            x[0]=t; x[1]=w[1]-'0'; x[2]=EXIT;
-            Run(x);
+            tib[120]=t; tib[121]=w[1]-'0'; tib[122]=EXIT;
+            Run(&tib[120]);
         }
         return 1;
     }
-    isNum();
-    if (pop()) {
+
+    PUSH(w);
+    if (isNum()) {
         if (state) {
             if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
             else { CComma(LIT4); Comma(pop()); }
         }
         return 1;
     }
-    PUSH(w);
-    find();
+
+    PUSH(w); find();
     if (pop()) {
         cell_t f = pop();
         char *xt = (char*)pop();
@@ -376,6 +360,7 @@ int ParseWord() {
         else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
     }
+
     PRINT3("[", w, "]??")
     if (state) {
         here = (char*)last;
