@@ -12,7 +12,7 @@ Notes:
 - c3 provides 10 "virtual registers"", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
 - Not many primitives are built into the base executable.
-- The rest is built using those words (see core.f).
+- The rest is built using those primitives (see core.f).
 - The VARIABLE space is separated from the CODE space.
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
 - Strings are both counted and null-terminated.
@@ -34,11 +34,18 @@ Notes:
 
 ## Temporary words
 - c3 provides 10 temporary words, T0 thru T9.
-- They are intended to be helpful in factoring code.
 - Defining a temporary word does not add an entry to the dictionary.
+- Temporary words are intended to be helpful in factoring code.
 - A temporary word can be redefined as often as desired.
-- When redefined, previous references to the word are unchanged.
-- A temporary word cannot be IMMEDIATE.
+- When redefined, code references to the previous definition are unchanged.
+- A temporary word cannot be INLINE or IMMEDIATE.
+
+An example usage of temporary words:
+```
+   \ The Babylon square root algorithm
+   : T0 ( n--sqrt ) dup 4 / begin >r dup r@ / r@ + 2 / dup r> - while nip ;
+   : sqrt ( n--0|sqrt ) dup 0 > if T0 else drop 0 then ;
+```
 
 ## c3 Base system reference
 ```
