@@ -32,6 +32,13 @@ Notes:
 - d4      decrements the contents of register 4.
 - +regs   restores the last saved 10 new registers.
 
+An example usage of registers:
+```
+   : btw  ( n l h--f )  +regs s3 s2 s1  r2 r1 <   r1 r3 <  and -regs ;
+   : btwi ( n l h--f )  +regs s3 s2 s1  r2 r1 <=  r1 r3 <= and -regs ;
+```
+
+
 ## Temporary words
 - c3 provides 10 temporary words, T0 thru T9.
 - Defining a temporary word does not add an entry to the dictionary.
