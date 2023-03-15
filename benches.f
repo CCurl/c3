@@ -20,13 +20,16 @@ variable num
 
 : bm1 cr ." Bench: decrement loop, " dup . ." iterations ... "
     timer swap begin 1- dup while drop elapsed ;
-: bm2 cr ." Bench: empty do loop, " dup . ." iterations ... "
+: bm2 cr ." Bench: register decrement loop, " dup ." iterations ... "
+    s1 timer begin d1 r1 while elapsed ;
+: bm3 cr ." Bench: empty do loop, " dup . ." iterations ... "
     timer swap 0 do loop elapsed ;
-: bm3 cr ." Bench: number of primes in " dup . ." ... "
+: bm4 cr ." Bench: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
 
 \ load-abort
 
 250 mil bm1
 250 mil bm2
-2 mil bm3
+250 mil bm3
+2 mil bm4
