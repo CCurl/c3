@@ -13,7 +13,7 @@
         1+ 1+
     again ;
 
-var num cell allot
+variable num
 : num-primes 4 num ! 11 do
         i 3 prime? if num ++ then 1 +i
     loop num ? ;
@@ -25,7 +25,8 @@ var num cell allot
 : bm3 cr ." Bench: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
 
-99 state ! \ Abort/stop the load
+\ load-abort
+
 250 mil bm1
 250 mil bm2
 2 mil bm3

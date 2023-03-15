@@ -2,6 +2,11 @@
 : c, here c! (here) ++ ;
 : , here ! here cell + (here) ! ;
 
+: vhere  (vhere) @ ;
+: allot  vhere + (vhere) ! ;
+: vc, vhere c! (vhere) ++ ;
+: v,  vhere ! cell allot ;
+
 : last (last) @ ;
 : immediate 1 last cell + c! ;
 : inline 2 last cell + c! ;
@@ -10,69 +15,67 @@
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
 : bye 999 state ! ;
-
-: vhere (vhere) @ ;
-: const create (lit4) c, , (exit) c, ;
-: var vhere const ;
-: (var) here 1- cell - const ;
-: does> r> last ! ;
-: :noname here 1 state ! ;
-: exec >r ;
-
 : cells cell * ; inline
-: allot vhere + (vhere) ! ;
-: vc, vhere c! (vhere) ++ ;
-: v,  vhere ! cell allot ;
 
-: if  (jmpz) c, here 0 , ; immediate
-: else (jmp) c, here swap 0 , here swap ! ; immediate
-: then here swap ! ; immediate
-: exit (exit) c,   ; immediate
+: const  create (lit4) c, , (exit) c, ;
+: variable  vhere const cell allot ;
+: val  vhere const ;
+: (val)  here 1- cell - const ;
 
-: begin here         ; immediate
-: while (jmpnz) c, , ; immediate
-: until (jmpz)  c, , ; immediate
-: again (jmp)   c, , ; immediate
+: does>  r> last ! ;
+: :noname  here 1 state ! ;
+: exec  >r ;
 
-: tuck swap over ; inline
-: nip  swap drop ; inline
-: 2dup over over ; inline
-: ?dup dup if dup then ;
+: if    (jmpz) c, here 0 , ; immediate
+: else  (jmp) c, here swap 0 , here swap ! ; immediate
+: then  here swap ! ; immediate
+: exit  (exit) c,   ; immediate
 
-: +! tuck @ + swap ! ; inline
+: begin  here         ; immediate
+: while  (jmpnz) c, , ; immediate
+: until  (jmpz)  c, , ; immediate
+: again  (jmp)   c, , ; immediate
+
+: tuck  swap over ; inline
+: nip   swap drop ; inline
+: 2dup  over over ; inline
+: ?dup  dup if dup then ;
+
+: +!  tuck @ + swap ! ; inline
 : c++ dup @ 1+ swap ! ;
 : c-- dup @ 1- swap ! ;
-: 2* dup + ; inline
-: <= > 0= ; inline
-: >= < 0= ; inline
+: 2*  dup + ; inline
+: <=  > 0= ; inline
+: >=  < 0= ; inline
+: <>  = 0= ; inline
 
 : rdrop r> drop ; inline
-: rot  >r swap r> swap ;
-: -rot swap >r swap r> ;
+: rot   >r swap r> swap ;
+: -rot  swap >r swap r> ;
 
 : ( begin 
         >in @ c@ dup 0= if drop exit then
         >in ++ ')' = if exit then
     again ; immediate
 
-: bl #32 ; inline
+: bl  #32 ; inline
+: tab  #9 emit ; inline
+: cr  #13 emit #10 emit ; inline
 : space bl emit ; inline
-: tab #9 emit ; inline
-: cr #13 emit #10 emit ; inline
 
 : negate  com 1+ ; inline
 : abs  dup 0 < if negate then ;
 : min  over over > if swap then drop ;
 : max  over over < if swap then drop ;
 
-: i (i) @ ;
+: i  (i) @ ;
 : +i (i) +! ;
 : unloop (lsp) @ 3 - (lsp) ! ;
 
 : /   /mod nip  ; inline
 : mod /mod drop ; inline
 
-var (neg) cell allot
+variable (neg)
 : #digit '0' + dup '9' > if 7 + then ;
 : <# 0 swap dup 0 < (neg) ! abs ;    \ ( n1 -- 0 n2 )
 : # base @ /mod swap #digit swap ;   \ ( u1 -- c u2 )
@@ -91,8 +94,8 @@ var (neg) cell allot
 : count ( str--a n ) dup 1+ swap c@ ; inline
 : type  ( a n-- ) ?dup if 0 do dup c@ emit 1+ loop then drop ;
 
-var s  (var) (s)  : >s (s) ! ;  : s++ s (s) ++ ;
-var d  (var) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
+val s  (val) (s)  : >s (s) ! ;  : s++ s (s) ++ ;
+val d  (val) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
 
 : i" ( --str ) vhere dup >d 0 d++ c!
     begin >in @ c@ dup >s if >in ++ then
@@ -125,19 +128,20 @@ var d  (var) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
 : lshift ( n1 s--n2 ) 0 do 2* loop ;
 
 : load next-word drop 1- (load) ;
+: load-abort 99 state ! ;
 : fopen-r s" rb" fopen ;
 : fopen-w s" wb" fopen ;
 : fopen-a s" ab" fopen ;
 : fopen-rw s" r+b" fopen ;
 : ->stdout 0 (output_fp) ! ;
 
-var (fg) 3 cells allot
+variable (fg) 2 cells allot
 : fg cells (fg) + ;
 : marker here 0 fg ! vhere 1 fg ! last 2 fg ! ;
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
 : forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
-: .ver version 100 /mod (.) '.' emit . ;
+: .ver version 10 /mod (.) '.' emit . ;
 
 ." c3 - v" .ver ." - Chris Curl" cr
 here mem -   . ." code bytes used, " last here - . ." bytes free." cr
