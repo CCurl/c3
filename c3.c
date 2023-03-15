@@ -42,9 +42,9 @@ extern void printChar(const char c);
 
 enum {
     STOP = 0,
-    EXIT, JMP, JMPZ, JMPNZ,
+    EXIT, CALL, JMP, JMPZ, JMPNZ,
     STORE, CSTORE, FETCH, CFETCH,
-    CALL, LIT1, LIT4,
+    LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
@@ -102,6 +102,7 @@ opcode_t opcodes[] = {
 #define clearTib      fill(tib, 0, sizeof(tib))
 #define PRINT1(a)     printString(a)
 #define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
+#define CpAt(x)       (char*)Fetch((char*)x)
 
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
@@ -258,15 +259,13 @@ void Run(char *y) {
 next:
     switch (*(pc++)) {
     case STOP:                                                             return;
+    case EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];                NEXT;
+    case CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
+    case JMP: pc=CpAt(pc);                                                  NEXT;
+    case JMPZ: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }         NEXT;
+    case JMPNZ: if (pop()) { pc=CpAt(pc); } else { pc+=CELL_SZ; }           NEXT;
     case LIT1: push(*(pc++));                                               NEXT;
     case LIT4: push(*(cell_t*)pc); pc += CELL_SZ;                           NEXT;
-    case CALL: y = pc+CELL_SZ; if (*y != EXIT) { rstk[++rsp]=y; }
-            pc = *(char**)pc;                                               NEXT;
-    case EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];                NEXT;
-    case JMP: pc = *(char**)pc;                                             NEXT;
-    case JMPZ: if (pop()==0) { pc = *(char**)pc; }
-             else { pc += CELL_SZ; }                                        NEXT;
-    case JMPNZ: if (pop()) { pc=*(char**)pc; } else { pc+=CELL_SZ; }        NEXT;
     case STORE: t1=pop(); t2=pop(); Store((char*)t1, t2);                   NEXT;
     case CSTORE: *(char*)TOS = (char)NOS; DROP2;                            NEXT;
     case FETCH: TOS = Fetch((char*)TOS);                                    NEXT;
