@@ -53,7 +53,7 @@ enum {
     INC, INCA, DEC, DECA,
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
-    KEY, QKEY,
+    KEY, QKEY, IS_NUM,
     DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_S, REG_NEW, REG_FREE
@@ -87,6 +87,7 @@ opcode_t opcodes[] = {
     , { STORE,   IS_INLINE, "!" },      { CSTORE,   IS_INLINE, "c!" }
     , { FETCH,   IS_INLINE, "@" },      { CFETCH,   IS_INLINE, "c@" }
     , { REG_NEW, IS_INLINE, "+regs" },  { REG_FREE, IS_INLINE, "-regs" }
+    , { IS_NUM,  IS_INLINE, "number?" }
     , { 0, 0, 0 }
 };
 
@@ -323,6 +324,7 @@ next:
     case REG_S: reg[*(pc++)+reg_base] = pop();                              NEXT;
     case REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;                     NEXT;
     case REG_FREE: reg_base -= (0 < reg_base) ? 10 : 0;                     NEXT;
+    case IS_NUM: ++TOS; push(isNum());                                            NEXT;
     default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")                  break;
     }
 }
