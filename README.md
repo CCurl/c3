@@ -91,6 +91,7 @@ swap     (a b--b a)        Swap TOS and NOS
 $[0-f]*   (--N)            Input N as a hexadecimal number.
 %[0-1]*   (--N)            Input N as a binary number.
 'x'       (--N)            Input N as the ascii value of 'x'.
+number?   (S--N F|F)       Parse string S as a number. N: number if F=1.
 emit      (C--)            Output C as a character.
 next-word (--A L)          A: the next word from the input stream, L: length.
 key       (--C)            C: Next keyboard char, wait if no char available.
@@ -141,6 +142,7 @@ dX       (--)              Decrement register #X (X: [0-9]).
 -regs    (--)              Restore the last saved registers.
 
 *** SYSTEM ***
+version  (--n)   n: c3 version*10 (e.g. - 11 => v1.1)
 (exit)   (--n)   n: The byte-code value for EXIT.
 (jmp)    (--n)   n: The byte-code value for JMP.
 (jmpz)   (--n)   n: The byte-code value for JMPZ.
