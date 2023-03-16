@@ -3,23 +3,19 @@
 // Windows PC (Visual Studio)
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
-#define isPC
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define MEM_SZ            128*1024
-#define VARS_SZ           512*1024
-#define STK_SZ             64
-#define LSTK_SZ            30
-
 #ifdef _MSC_VER
     #include <conio.h>
+    #define isPC
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 #elif IS_LINUX
+    #define isPC
     int qKey() { return 0; }
     int key() { return 0; }
 #else
@@ -29,6 +25,13 @@
     #define MEM_SZ             64*1024
     #define VARS_SZ            96*1024
     #define STK_SZ             32
+    #define LSTK_SZ            30
+#endif
+
+#ifndef MEM_SZ
+    #define MEM_SZ            128*1024
+    #define VARS_SZ           512*1024
+    #define STK_SZ             64
     #define LSTK_SZ            30
 #endif
 
@@ -194,9 +197,7 @@ void find() {
     int len = strLen(nm);
     // PRINT3("-LF-(",nm,"):")
     dict_t *dp = last;
-    dict_t *stop = (dict_t*)&mem[0];
     while (dp < (dict_t*)&mem[MEM_SZ]) {
-        // PRINT3("-LF-(",nm,"):")
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
             PUSH(dp->xt);
             push(dp->f);
@@ -306,6 +307,7 @@ next:
     case RTO:    rstk[++rsp] = (char*)pop();                                NEXT; // >r
     case RFETCH: PUSH(rstk[rsp]);                                           NEXT; // r@
     case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
+#ifdef isPC
     case FOPEN:  NOS=(cell_t)fopen((char*)(NOS+1), (char*)TOS+1); DROP1;    NEXT;
     case FCLOSE: fclose((FILE*)pop());                                      NEXT;
     case FREAD: t2=pop(); t1=pop(); y=(char*)TOS;
@@ -316,6 +318,7 @@ next:
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
             else { PRINT1("-noFile-"); }                                    NEXT;
+#endif
     case QKEY: push(qKey());                                                NEXT;
     case KEY: push(key());                                                  NEXT;
     case REG_D: --reg[*(pc++)+reg_base];                                    NEXT;
