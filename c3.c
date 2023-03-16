@@ -122,14 +122,19 @@ char vars[VARS_SZ], *vhere;
 char *here, *pc, tib[128], *in;
 dict_t tempWords[10], *last;
 
-void push(cell_t x) { stk[++sp] = (cell_t)(x); }
-cell_t pop() { return stk[sp--]; }
+inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
+inline cell_t pop() { return stk[sp--]; }
 
-void CComma(cell_t x) { *(here++) = (char)x; }
-void Comma(cell_t x) { *(cell_t*)here = x; here += CELL_SZ; }
-
+#ifndef NEEDS_ALIGN
+inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
+inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+#else
 void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+#endif
+
+void CComma(cell_t x) { *(here++) = (char)x; }
+void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
 
 void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { *(d++)=val; } }
 char *strEnd(char *s) { while (*s) ++s; return s; }
@@ -267,7 +272,7 @@ next:
     case JMPZ: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }         NEXT;
     case JMPNZ: if (pop()) { pc=CpAt(pc); } else { pc+=CELL_SZ; }           NEXT;
     case LIT1: push(*(pc++));                                               NEXT;
-    case LIT4: push(*(cell_t*)pc); pc += CELL_SZ;                           NEXT;
+    case LIT4: push(Fetch(pc)); pc += CELL_SZ;                              NEXT;
     case STORE: t1=pop(); t2=pop(); Store((char*)t1, t2);                   NEXT;
     case CSTORE: *(char*)TOS = (char)NOS; DROP2;                            NEXT;
     case FETCH: TOS = Fetch((char*)TOS);                                    NEXT;
@@ -299,7 +304,6 @@ next:
     case CREATE: getword(); Create((char*)pop());                           NEXT;
     case FIND: getword(); find();                                           NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
-    case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case AND: NOS &= TOS; DROP1;                                            NEXT;
     case OR:  NOS |= TOS; DROP1;                                            NEXT;
     case XOR: NOS ^= TOS; DROP1;                                            NEXT;
@@ -308,6 +312,7 @@ next:
     case RFETCH: PUSH(rstk[rsp]);                                           NEXT; // r@
     case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
 #ifdef isPC
+    case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case FOPEN:  NOS=(cell_t)fopen((char*)(NOS+1), (char*)TOS+1); DROP1;    NEXT;
     case FCLOSE: fclose((FILE*)pop());                                      NEXT;
     case FREAD: t2=pop(); t1=pop(); y=(char*)TOS;
