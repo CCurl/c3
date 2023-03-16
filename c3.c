@@ -125,12 +125,20 @@ dict_t tempWords[10], *last;
 inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 inline cell_t pop() { return stk[sp--]; }
 
+#define NEEDS_ALIGN
 #ifndef NEEDS_ALIGN
 inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
 inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
 #else
-void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
-cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+#define S(x, y) (*(x)=((y)&0xFF))
+#define G(x, y) (*(x)<<y)
+void Store(char *l, cell_t v) { 
+    S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); 
+}
+cell_t Fetch(char *l) {
+    cell_t x = (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24);
+    return x;
+}
 #endif
 
 void CComma(cell_t x) { *(here++) = (char)x; }
