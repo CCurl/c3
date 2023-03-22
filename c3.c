@@ -26,6 +26,7 @@
     #define VARS_SZ            96*1024
     #define STK_SZ             32
     #define LSTK_SZ            30
+    #define NAME_LEN           13
     #define NEEDS_ALIGN
 #endif
 
@@ -34,11 +35,12 @@
     #define VARS_SZ           512*1024
     #define STK_SZ             64
     #define LSTK_SZ            30
+    #define NAME_LEN           13
 #endif
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
-typedef struct { char *xt; char f; char len; char name[14]; } dict_t;
+typedef struct { char *xt; char f; char len; char name[NAME_LEN+1]; } dict_t;
 typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
@@ -188,7 +190,7 @@ void Create(char *w) {
     if (isTempWord(w)) { tempWords[w[1]-'0'].xt = here; return; }
     int l = strLen(w);
     --last;
-    if (13 < l) { l=13; w[l]=0; }
+    if (NAME_LEN < l) { l=NAME_LEN; w[l]=0; PRINT1("-name-trunc-"); }
     strCpy(last->name, w);
     last->len = l;
     last->xt = here;
