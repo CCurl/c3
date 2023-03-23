@@ -16,8 +16,44 @@
     int key() { return _getch(); }
 #elif IS_LINUX
     #define isPC
-    int qKey() { return 0; }
-    int key() { return 0; }
+    #include <unistd.h>
+    #include <termios.h>
+    void ttyMode(int mode) {
+        static struct termios origt, rawt;
+        static int curMode = -1;
+        if (curMode == -1) {
+            curMode = 0;
+            tcgetattr( STDIN_FILENO, &origt);
+            cfmakeraw(&rawt);
+        }
+        if (mode != curMode) {
+            if (mode) {
+                tcsetattr( STDIN_FILENO, TCSANOW, &rawt);
+            } else {
+                tcsetattr( STDIN_FILENO, TCSANOW, &origt);
+            }
+            curMode = mode;
+        }
+    }
+    int qKey() {
+        struct timeval tv;
+        fd_set rdfs;
+        ttyMode(1);
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+        FD_ZERO(&rdfs);
+        FD_SET(STDIN_FILENO, &rdfs);
+        select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
+        int x = FD_ISSET(STDIN_FILENO, &rdfs);
+        ttyMode(0);
+        return x;
+    }
+    int key() {
+        ttyMode(1);
+        int x = getchar();
+        ttyMode(0);
+        return x;
+    }
 #else
     // Dev board
     extern int qKey();
@@ -337,7 +373,7 @@ next:
     case REG_S: reg[*(pc++)+reg_base] = pop();                              NEXT;
     case REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;                     NEXT;
     case REG_FREE: reg_base -= (0 < reg_base) ? 10 : 0;                     NEXT;
-    case IS_NUM: ++TOS; push(isNum());                                            NEXT;
+    case IS_NUM: ++TOS; push(isNum());                                      NEXT;
     default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")                  break;
     }
 }
