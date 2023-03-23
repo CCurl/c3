@@ -76,7 +76,8 @@
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
-typedef struct { char *xt; char f; char len; char name[NAME_LEN+1]; } dict_t;
+typedef unsigned char byte;
+typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
@@ -223,13 +224,13 @@ char isRegOp(char *w) {
 }
 
 void Create(char *w) {
-    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = here; return; }
+    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(w);
     --last;
     if (NAME_LEN < l) { l=NAME_LEN; w[l]=0; PRINT1("-name-trunc-"); }
     strCpy(last->name, w);
     last->len = l;
-    last->xt = here;
+    last->xt = (cell_t)here;
     last->f = 0;
 }
 
@@ -237,7 +238,7 @@ void Create(char *w) {
 void find() {
     char *nm = (char*)pop();
     if (isTempWord(nm)) {
-        PUSH(tempWords[nm[1]-'0'].xt);
+        push(tempWords[nm[1]-'0'].xt);
         push(0); push(1); return;
     }
     int len = strLen(nm);
@@ -245,7 +246,7 @@ void find() {
     dict_t *dp = last;
     while (dp < (dict_t*)&mem[MEM_SZ]) {
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
-            PUSH(dp->xt);
+            push(dp->xt);
             push(dp->f);
             push(1); return;
         }

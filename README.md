@@ -2,6 +2,7 @@
 
 The main goals for this project are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
+- To have as much flexibility as possible.
 - To be able to run on both Windows and Linux (and Apple).
 - To be deployable to development boards via the Arduino IDE.
 
@@ -17,21 +18,22 @@ The main goals for this project are as follows:
 - VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
 - Strings are both counted and null-terminated.
 - The dictionary starts at the end of the CODE area and grows down.
+- The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
 - A dictionary entry looks like this:
     - xt:      cell_t
     - flags:   byte
     - len:     byte
-    - name:    char[14] (NULL terminated)
+    - name:    char[NAME_LEN+1] (NULL terminated)
 
 ## Registers
 c3 provides 10 "virtual registers", r0 thru r9.
 There are 6 register operations: +regs, rX, sX, iX, dX, -regs.
-- +regs   saves the current registers.
-- r4      pushes the contents of register 4.
-- s4      sets the contents of register 4 from TOS.
-- i4      increments the contents of register 4.
-- d4      decrements the contents of register 4.
-- -regs   restores the last saved 10 new registers.
+- +regs   allocates 10 new current registers.
+- r4      pushes register #4.
+- s4      sets register #4 from TOS.
+- i4      increments register #4.
+- d4      decrements register #4.
+- -regs   restores the registers to their previous values.
 
 An example usage of registers:
 ```
@@ -128,8 +130,8 @@ do       (T F--)           Begin DO/LOOP loop.
 loop     (--)              Increment I, jump to DO if I < T.
 -loop    (--)              Decrement I, jump to DO if I > T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
-            NOTE: Words like IF/THEN and BEGIN/WHILE are not in the base c3.
-                  They are defined in core.f
+        NOTE: Words like IF/THEN/EXIT and BEGIN/WHILE are not in the base c3.
+              They are just words that are defined in core.f
 
 *** REGISTERS ***
 +regs    (--)              Save the current registers.
@@ -138,6 +140,8 @@ sX       (n--)             n: new value for register #X (X: [0-9]).
 iX       (--)              Increment register #X (X: [0-9]).
 dX       (--)              Decrement register #X (X: [0-9]).
 -regs    (--)              Restore the last saved registers.
+        NOTES: The registers are stored in an array/stack with a "register-base".
+               +regs simply adds 10 to "register-base", so it is a very efficient operation.
 
 *** SYSTEM ***
 version  (--n)   n: c3 version*10 (e.g. - 11 => v1.1)
