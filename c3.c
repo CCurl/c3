@@ -516,7 +516,7 @@ int main(int argc, char *argv[]) {
     for (int i=1; (i<argc) && (!input_fp); i++) {
         input_fp = (cell_t)fopen(argv[i],"rt");
         if (!input_fp) {
-            CT; SC(argv[i]); SC(" "); SC(iToA(i,10));
+            CT; SC(argv[i]); SC(" s"); SC(iToA(i,10));
             ParseLine(tib);
         }
     }
