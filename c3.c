@@ -68,7 +68,7 @@
 
 #ifndef MEM_SZ
     #define MEM_SZ            128*1024
-    #define VARS_SZ           512*1024
+    #define VARS_SZ        4*1024*1024
     #define STK_SZ             64
     #define LSTK_SZ            30
     #define NAME_LEN           13
@@ -143,10 +143,11 @@ opcode_t opcodes[] = {
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
-#define clearTib      fill(tib, 0, sizeof(tib))
 #define PRINT1(a)     printString(a)
 #define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 #define CpAt(x)       (char*)Fetch((char*)x)
+#define CT            fill(tib, 0, sizeof(tib))
+#define SC(x)         strCat(tib, x)
 
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
@@ -363,7 +364,7 @@ next:
         TOS=fwrite(y, 1, t1, (FILE*)t2);                                    NEXT;
     case FLOAD:  y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
-            if (t1) { input_fp = t1; clearTib; }
+            if (t1) { input_fp = t1; CT; }
             else { PRINT1("-noFile-"); }                                    NEXT;
 #endif
     case QKEY: push(qKey());                                                NEXT;
@@ -424,7 +425,7 @@ int ParseWord() {
 
 void ParseLine(char *x) {
     in = x;
-    if (in==0) { in=tib; clearTib; }
+    if (in==0) { in=tib; CT; }
     // PRINT3("-", in, "-")
     while (state != ALL_DONE) {
         if (getword() == 0) { return; }
@@ -432,10 +433,8 @@ void ParseLine(char *x) {
     }
 }
 
-#define SC(x) strCat(tib, x)
 void loadNum(const char *name, cell_t addr, int makeInline) {
-    clearTib;
-    strCpy(tib, ": ");
+    CT; strCpy(tib, ": ");
     SC(name); SC(" "); SC(iToA(addr, 10)); SC(" "); SC(";");
     ParseLine(tib);
     if (makeInline) { last->f = IS_INLINE; }
@@ -455,7 +454,7 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-    loadNum("version",  5,       1);
+    loadNum("version",  6,       1);
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);
@@ -489,7 +488,7 @@ void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); 
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
 
 void getInput() {
-    clearTib;
+    CT;
     if ((state == STOP_LOAD) && input_fp) {
         fclose((FILE*)input_fp);
         input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
@@ -514,7 +513,14 @@ void getInput() {
 
 int main(int argc, char *argv[]) {
     init();
-    input_fp = (cell_t)fopen("core.f", "rt");
+    for (int i=1; (i<argc) && (!input_fp); i++) {
+        input_fp = (cell_t)fopen(argv[i],"rt");
+        if (!input_fp) {
+            CT; SC(argv[i]); SC(" "); SC(iToA(i,10));
+            ParseLine(tib);
+        }
+    }
+    if (!input_fp) { input_fp = (cell_t)fopen("core.f", "rt"); }
     output_fp = 0;
     while (state != ALL_DONE) {
         getInput();

@@ -39,12 +39,14 @@
 : tuck  swap over ; inline
 : nip   swap drop ; inline
 : 2dup  over over ; inline
+: 2drop drop drop ; inline
 : ?dup  dup if dup then ;
 
 : +!  tuck @ + swap ! ; inline
 : c++ dup @ 1+ swap ! ;
 : c-- dup @ 1- swap ! ;
 : 2*  dup + ; inline
+: 2+  1+ 1+ ; inline
 : <=  > 0= ; inline
 : >=  < 0= ; inline
 : <>  = 0= ; inline
@@ -70,7 +72,7 @@
 
 : i  (i) @ ;
 : +i (i) +! ;
-: unloop (lsp) @ 3 - (lsp) ! ;
+: unloop (lsp) @ 3 - 0 max (lsp) ! ;
 
 : /   /mod nip  ; inline
 : mod /mod drop ; inline
@@ -93,29 +95,30 @@ variable (neg)
 
 : count ( str--a n ) dup 1+ swap c@ ; inline
 : type  ( a n-- ) ?dup if 0 do dup c@ emit 1+ loop then drop ;
+: typez ( a-- ) dup c@ dup 0= if 2drop exit then emit 1+ typez ;
 
-val s  (val) (s)  : >s (s) ! ;  : s++ s (s) ++ ;
-val d  (val) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
-
-: i" ( --str ) vhere dup >d 0 d++ c!
-    begin >in @ c@ dup >s if >in ++ then
-        s 0= s '"' = or
-        if 0 d++ c! exit then
-        s d++ c! vhere c++
+: T8 ( ch-- )   r8 c! i8 ;
+: T2 ( --str end )   +regs
+    vhere dup s8 s9   0 T8
+    begin >in @ c@ s1   r1 if >in ++ then
+        r1 0= r1 '"' = or
+        if 0 T8   r9 r8 -regs   exit then
+        r1 T8   r9 c++
     again ;
 
-: s" ( --str ) i" state @ if (lit4) c, , d (vhere) ! then ; immediate
+: s" ( --str ) T2 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate
 
-: ." ( -- ) i" state @ 0= if count type exit then
-    (lit4) c, , d (vhere) !
+: ." ( -- ) T2 state @ 0= if drop count type exit then
+    (vhere) ! (lit4) c, ,
     (call) c, [ (lit4) c, ' count drop drop , ] ,
     (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
 
 : .word dup cell + 1+ count type ;
-: words last begin
+: words r1 0 s1 last begin
         dup mem-end < if 
+            i1 r1 #11 mod 0= if cr then
             .word tab word-sz +
-        else drop exit
+        else ." (" r1 . ." words)" s1 exit
         then
     again ;
 
@@ -129,11 +132,7 @@ val d  (val) (d)  : >d (d) ! ;  : d++ d (d) ++ ;
 
 : load next-word drop 1- (load) ;
 : load-abort 99 state ! ;
-: fopen-r s" rb" fopen ;
-: fopen-w s" wb" fopen ;
-: fopen-a s" ab" fopen ;
-: fopen-rw s" r+b" fopen ;
-: ->stdout 0 (output_fp) ! ;
+: loaded? if 2drop load-abort then ;
 
 variable (fg) 2 cells allot
 : fg cells (fg) + ;
@@ -147,3 +146,6 @@ marker
 here mem -   . ." code bytes used, " last here - . ." bytes free." cr
 vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
 forget
+
+: sb forget s" sandbox.f" (load) ;
+marker
