@@ -3,25 +3,57 @@
 // Windows PC (Visual Studio)
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
-#define isPC
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define MEM_SZ            128*1024
-#define VARS_SZ           512*1024
-#define STK_SZ             64
-#define LSTK_SZ            30
-
 #ifdef _MSC_VER
     #include <conio.h>
+    #define isPC
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 #elif IS_LINUX
-    int qKey() { return 0; }
-    int key() { return 0; }
+    #define isPC
+    #include <unistd.h>
+    #include <termios.h>
+    void ttyMode(int mode) {
+        static struct termios origt, rawt;
+        static int curMode = -1;
+        if (curMode == -1) {
+            curMode = 0;
+            tcgetattr( STDIN_FILENO, &origt);
+            cfmakeraw(&rawt);
+        }
+        if (mode != curMode) {
+            if (mode) {
+                tcsetattr( STDIN_FILENO, TCSANOW, &rawt);
+            } else {
+                tcsetattr( STDIN_FILENO, TCSANOW, &origt);
+            }
+            curMode = mode;
+        }
+    }
+    int qKey() {
+        struct timeval tv;
+        fd_set rdfs;
+        ttyMode(1);
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+        FD_ZERO(&rdfs);
+        FD_SET(STDIN_FILENO, &rdfs);
+        select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
+        int x = FD_ISSET(STDIN_FILENO, &rdfs);
+        ttyMode(0);
+        return x;
+    }
+    int key() {
+        ttyMode(1);
+        int x = getchar();
+        ttyMode(0);
+        return x;
+    }
 #else
     // Dev board
     extern int qKey();
@@ -30,11 +62,22 @@
     #define VARS_SZ            96*1024
     #define STK_SZ             32
     #define LSTK_SZ            30
+    #define NAME_LEN           13
+    #define NEEDS_ALIGN
+#endif
+
+#ifndef MEM_SZ
+    #define MEM_SZ            128*1024
+    #define VARS_SZ           512*1024
+    #define STK_SZ             64
+    #define LSTK_SZ            30
+    #define NAME_LEN           13
 #endif
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
-typedef struct { char *xt; char f; char len; char name[14]; } dict_t;
+typedef unsigned char byte;
+typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 typedef struct { int op; int flg; const char *name; } opcode_t;
 
 extern void printString(const char *s);
@@ -42,9 +85,9 @@ extern void printChar(const char c);
 
 enum {
     STOP = 0,
-    EXIT, JMP, JMPZ, JMPNZ,
+    EXIT, CALL, JMP, JMPZ, JMPNZ,
     STORE, CSTORE, FETCH, CFETCH,
-    CALL, LIT1, LIT4,
+    LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, 
     LT, EQ, GT, NOT,
@@ -53,7 +96,7 @@ enum {
     INC, INCA, DEC, DECA,
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
-    KEY, QKEY,
+    KEY, QKEY, IS_NUM,
     DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_S, REG_NEW, REG_FREE
@@ -87,6 +130,7 @@ opcode_t opcodes[] = {
     , { STORE,   IS_INLINE, "!" },      { CSTORE,   IS_INLINE, "c!" }
     , { FETCH,   IS_INLINE, "@" },      { CFETCH,   IS_INLINE, "c@" }
     , { REG_NEW, IS_INLINE, "+regs" },  { REG_FREE, IS_INLINE, "-regs" }
+    , { IS_NUM,  IS_INLINE, "number?" }
     , { 0, 0, 0 }
 };
 
@@ -102,6 +146,7 @@ opcode_t opcodes[] = {
 #define clearTib      fill(tib, 0, sizeof(tib))
 #define PRINT1(a)     printString(a)
 #define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
+#define CpAt(x)       (char*)Fetch((char*)x)
 
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
@@ -117,14 +162,21 @@ char vars[VARS_SZ], *vhere;
 char *here, *pc, tib[128], *in;
 dict_t tempWords[10], *last;
 
-void push(cell_t x) { stk[++sp] = (cell_t)(x); }
-cell_t pop() { return stk[sp--]; }
+inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
+inline cell_t pop() { return stk[sp--]; }
+
+#ifndef NEEDS_ALIGN
+inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
+inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+#else
+#define S(x, y) (*(x)=((y)&0xFF))
+#define G(x, y) (*(x)<<y)
+void Store(char *l, cell_t v) { S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); }
+cell_t Fetch(unsigned char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
+#endif
 
 void CComma(cell_t x) { *(here++) = (char)x; }
-void Comma(cell_t x) { *(cell_t*)here = x; here += CELL_SZ; }
-
-void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
-cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
 
 void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { *(d++)=val; } }
 char *strEnd(char *s) { while (*s) ++s; return s; }
@@ -172,13 +224,13 @@ char isRegOp(char *w) {
 }
 
 void Create(char *w) {
-    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = here; return; }
+    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(w);
     --last;
-    if (13 < l) { l=13; w[l]=0; }
+    if (NAME_LEN < l) { l=NAME_LEN; w[l]=0; PRINT1("-name-trunc-"); }
     strCpy(last->name, w);
     last->len = l;
-    last->xt = here;
+    last->xt = (cell_t)here;
     last->f = 0;
 }
 
@@ -186,17 +238,15 @@ void Create(char *w) {
 void find() {
     char *nm = (char*)pop();
     if (isTempWord(nm)) {
-        PUSH(tempWords[nm[1]-'0'].xt);
+        push(tempWords[nm[1]-'0'].xt);
         push(0); push(1); return;
     }
     int len = strLen(nm);
     // PRINT3("-LF-(",nm,"):")
     dict_t *dp = last;
-    dict_t *stop = (dict_t*)&mem[0];
     while (dp < (dict_t*)&mem[MEM_SZ]) {
-        // PRINT3("-LF-(",nm,"):")
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
-            PUSH(dp->xt);
+            push(dp->xt);
             push(dp->f);
             push(1); return;
         }
@@ -258,15 +308,13 @@ void Run(char *y) {
 next:
     switch (*(pc++)) {
     case STOP:                                                             return;
-    case LIT1: push(*(pc++));                                               NEXT;
-    case LIT4: push(*(cell_t*)pc); pc += CELL_SZ;                           NEXT;
-    case CALL: y = pc+CELL_SZ; if (*y != EXIT) { rstk[++rsp]=y; }
-            pc = *(char**)pc;                                               NEXT;
     case EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];                NEXT;
-    case JMP: pc = *(char**)pc;                                             NEXT;
-    case JMPZ: if (pop()==0) { pc = *(char**)pc; }
-             else { pc += CELL_SZ; }                                        NEXT;
-    case JMPNZ: if (pop()) { pc=*(char**)pc; } else { pc+=CELL_SZ; }        NEXT;
+    case CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
+    case JMP: pc=CpAt(pc);                                                  NEXT;
+    case JMPZ: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }         NEXT;
+    case JMPNZ: if (pop()) { pc=CpAt(pc); } else { pc+=CELL_SZ; }           NEXT;
+    case LIT1: push(*(pc++));                                               NEXT;
+    case LIT4: push(Fetch(pc)); pc += CELL_SZ;                              NEXT;
     case STORE: t1=pop(); t2=pop(); Store((char*)t1, t2);                   NEXT;
     case CSTORE: *(char*)TOS = (char)NOS; DROP2;                            NEXT;
     case FETCH: TOS = Fetch((char*)TOS);                                    NEXT;
@@ -298,7 +346,6 @@ next:
     case CREATE: getword(); Create((char*)pop());                           NEXT;
     case FIND: getword(); find();                                           NEXT;
     case ENDWORD: state=0; CComma(EXIT);                                    NEXT;
-    case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case AND: NOS &= TOS; DROP1;                                            NEXT;
     case OR:  NOS |= TOS; DROP1;                                            NEXT;
     case XOR: NOS ^= TOS; DROP1;                                            NEXT;
@@ -306,6 +353,8 @@ next:
     case RTO:    rstk[++rsp] = (char*)pop();                                NEXT; // >r
     case RFETCH: PUSH(rstk[rsp]);                                           NEXT; // r@
     case RFROM:  PUSH(rstk[rsp--]);                                         NEXT; // r>
+#ifdef isPC
+    case SYSTEM: y=(char*)pop(); system(y+1);                               NEXT;
     case FOPEN:  NOS=(cell_t)fopen((char*)(NOS+1), (char*)TOS+1); DROP1;    NEXT;
     case FCLOSE: fclose((FILE*)pop());                                      NEXT;
     case FREAD: t2=pop(); t1=pop(); y=(char*)TOS;
@@ -316,6 +365,7 @@ next:
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; clearTib; }
             else { PRINT1("-noFile-"); }                                    NEXT;
+#endif
     case QKEY: push(qKey());                                                NEXT;
     case KEY: push(key());                                                  NEXT;
     case REG_D: --reg[*(pc++)+reg_base];                                    NEXT;
@@ -324,6 +374,7 @@ next:
     case REG_S: reg[*(pc++)+reg_base] = pop();                              NEXT;
     case REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;                     NEXT;
     case REG_FREE: reg_base -= (0 < reg_base) ? 10 : 0;                     NEXT;
+    case IS_NUM: ++TOS; push(isNum());                                      NEXT;
     default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")                  break;
     }
 }
@@ -404,7 +455,7 @@ void init() {
         CComma(EXIT);
         ++op;
     }
-    loadNum("version",  4,       1);
+    loadNum("version",  5,       1);
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
     loadNum("(jmpz)",   JMPZ,    1);
