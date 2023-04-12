@@ -1,69 +1,15 @@
 // c3.cpp - a minimal Forth system
 
-// Windows PC (Visual Studio)
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 #ifdef _MSC_VER
-    #include <conio.h>
-    #define isPC
-    int qKey() { return _kbhit(); }
-    int key() { return _getch(); }
+#include "sys-windows.inc"
 #elif IS_LINUX
-    #define isPC
-    #include <unistd.h>
-    #include <termios.h>
-    void ttyMode(int mode) {
-        static struct termios origt, rawt;
-        static int curMode = -1;
-        if (curMode == -1) {
-            curMode = 0;
-            tcgetattr( STDIN_FILENO, &origt);
-            cfmakeraw(&rawt);
-        }
-        if (mode != curMode) {
-            if (mode) {
-                tcsetattr( STDIN_FILENO, TCSANOW, &rawt);
-            } else {
-                tcsetattr( STDIN_FILENO, TCSANOW, &origt);
-            }
-            curMode = mode;
-        }
-    }
-    int qKey() {
-        struct timeval tv;
-        fd_set rdfs;
-        ttyMode(1);
-        tv.tv_sec = 0;
-        tv.tv_usec = 0;
-        FD_ZERO(&rdfs);
-        FD_SET(STDIN_FILENO, &rdfs);
-        select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
-        int x = FD_ISSET(STDIN_FILENO, &rdfs);
-        ttyMode(0);
-        return x;
-    }
-    int key() {
-        ttyMode(1);
-        int x = getchar();
-        ttyMode(0);
-        return x;
-    }
+#include "sys-linux.inc"
 #else
-    // Dev board
-    extern int qKey();
-    extern int key();
-    #define MEM_SZ             64*1024
-    #define VARS_SZ            96*1024
-    #define STK_SZ             32
-    #define LSTK_SZ            30
-    #define NAME_LEN           13
-    #define NEEDS_ALIGN
+#include "sys-board.inc"
 #endif
 
 #ifndef MEM_SZ
@@ -138,7 +84,6 @@ opcode_t opcodes[] = {
 #define NOS           (stk[sp-1])
 #define PUSH(x)       push((cell_t)(x))
 #define DROP1         sp--
-#define DROP2         sp-=2
 #define NEXT          goto next
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
@@ -179,7 +124,7 @@ cell_t Fetch(unsigned char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
 void CComma(cell_t x) { *(here++) = (char)x; }
 void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
 
-void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { *(d++)=val; } }
+void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { d[i]=val; } }
 char *strEnd(char *s) { while (*s) ++s; return s; }
 void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); } *d=0; }
 void strCpy(char *d, const char *s) { *d = 0; strCat(d, s); }
@@ -211,8 +156,7 @@ char *iToA(ucell_t N, int base) {
 }
 
 int isTempWord(char *w) {
-    if ((w[0]=='T') && BTW(w[1],'0','9') && (w[2]==0)){ return 1; }
-    return 0;
+    return ((w[0]=='T') && BTW(w[1],'0','9') && (w[2]==0)) ? 1 : 0;
 }
 
 char isRegOp(char *w) {
@@ -243,7 +187,6 @@ void find() {
         push(0); push(1); return;
     }
     int len = strLen(nm);
-    // PRINT3("-LF-(",nm,"):")
     dict_t *dp = last;
     while (dp < (dict_t*)&mem[MEM_SZ]) {
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
@@ -317,7 +260,7 @@ next:
     case LIT1: push(*(pc++));                                               NEXT;
     case LIT4: push(Fetch(pc)); pc += CELL_SZ;                              NEXT;
     case STORE: t1=pop(); t2=pop(); Store((char*)t1, t2);                   NEXT;
-    case CSTORE: *(char*)TOS = (char)NOS; DROP2;                            NEXT;
+    case CSTORE: *(char*)TOS = (char)NOS; sp -= 2;                          NEXT;
     case FETCH: TOS = Fetch((char*)TOS);                                    NEXT;
     case CFETCH: TOS = *(char*)TOS;                                         NEXT;
     case DUP: push(TOS);                                                    NEXT;
@@ -426,16 +369,15 @@ int ParseWord() {
 void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; CT; }
-    // PRINT3("-", in, "-")
     while (state != ALL_DONE) {
         if (getword() == 0) { return; }
         if (ParseWord() == 0) { return; }
     }
 }
 
-void loadNum(const char *name, cell_t addr, int makeInline) {
+void loadNum(const char *name, cell_t val, int makeInline) {
     CT; strCpy(tib, ": ");
-    SC(name); SC(" "); SC(iToA(addr, 10)); SC(" "); SC(";");
+    SC(name); SC(" "); SC(iToA(val, 10)); SC(" ;");
     ParseLine(tib);
     if (makeInline) { last->f = IS_INLINE; }
 }
@@ -484,48 +426,5 @@ void init() {
 }
 
 #ifdef isPC
-void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
-void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
-
-void getInput() {
-    CT;
-    if ((state == STOP_LOAD) && input_fp) {
-        fclose((FILE*)input_fp);
-        input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
-        state = 0;
-    }
-    if (input_fp) {
-        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
-        if (in != tib) {
-            fclose((FILE*)input_fp);
-            input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
-        }
-    }
-    if (! input_fp) {
-        cell_t tmp = output_fp;
-        output_fp = 0;
-        printString((state) ? "... > " : " ok\n");
-        in = fgets(tib, sizeof(tib), stdin);
-        output_fp = tmp;
-    }
-    in = tib;
-}
-
-int main(int argc, char *argv[]) {
-    init();
-    for (int i=1; (i<argc) && (!input_fp); i++) {
-        input_fp = (cell_t)fopen(argv[i],"rt");
-        if (!input_fp) {
-            CT; SC(argv[i]); SC(" s"); SC(iToA(i,10));
-            ParseLine(tib);
-        }
-    }
-    if (!input_fp) { input_fp = (cell_t)fopen("core.f", "rt"); }
-    output_fp = 0;
-    while (state != ALL_DONE) {
-        getInput();
-        ParseLine(tib);
-    }
-    return 0;
-}
+#include "sys-pc.inc"
 #endif
