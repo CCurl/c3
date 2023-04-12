@@ -376,8 +376,7 @@ void ParseLine(char *x) {
 }
 
 void loadNum(const char *name, cell_t val, int makeInline) {
-    CT; strCpy(tib, ": ");
-    SC(name); SC(" "); SC(iToA(val, 10)); SC(" ;");
+    CT; SC(": "); SC(name); SC(" "); SC(iToA(val, 10)); SC(" ;");
     ParseLine(tib);
     if (makeInline) { last->f = IS_INLINE; }
 }
