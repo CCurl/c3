@@ -42,7 +42,7 @@ enum {
     INC, INCA, DEC, DECA,
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM,
-    KEY, QKEY, IS_NUM,
+    KEY, QKEY, IS_NUM, TYPE, TYPEZ,
     DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_S, REG_NEW, REG_FREE
@@ -54,29 +54,29 @@ enum {
 #define ALL_DONE    999
 
 opcode_t opcodes[] = { 
-    { DEFINE,   IS_INLINE, ":" },      { ENDWORD, IS_IMMEDIATE, ";" }
-    , { CREATE, IS_INLINE, "create" }, { FIND,     IS_INLINE, "'" }
-    , { DUP,    IS_INLINE, "dup" },    { SWAP,     IS_INLINE, "swap" }
-    , { OVER,   IS_INLINE, "over" },   { DROP,     IS_INLINE, "drop" }
-    , { EMIT,   IS_INLINE, "emit" },   { TIMER,    IS_INLINE, "timer" }
-    , { ADD,    IS_INLINE, "+" },      { SUB,      IS_INLINE, "-" }
-    , { MULT,   IS_INLINE, "*" },      { SLMOD,    IS_INLINE, "/mod" }
+    { DEFINE,   IS_INLINE, ":" },       { ENDWORD, IS_IMMEDIATE, ";" }
+    , { CREATE, IS_INLINE, "create" },  { FIND,     IS_INLINE, "'" }
+    , { DUP,    IS_INLINE, "dup" },     { SWAP,     IS_INLINE, "swap" }
+    , { OVER,   IS_INLINE, "over" },    { DROP,     IS_INLINE, "drop" }
+    , { EMIT,   IS_INLINE, "emit" },    { TIMER,    IS_INLINE, "timer" }
+    , { ADD,    IS_INLINE, "+" },       { SUB,      IS_INLINE, "-" }
+    , { MULT,   IS_INLINE, "*" },       { SLMOD,    IS_INLINE, "/mod" }
     , { RTO, IS_INLINE, ">r" },  { RFETCH, IS_INLINE, "r@" }, { RFROM, IS_INLINE, "r>" }
     , { LT,  IS_INLINE, "<" },   { EQ,     IS_INLINE, "=" },  { GT,     IS_INLINE, ">" }
     , { AND, IS_INLINE, "and" }, { OR,     IS_INLINE, "or" }, { XOR,    IS_INLINE, "xor" }
-    , { KEY,     IS_INLINE, "key" },    { QKEY, IS_INLINE, "?key" } 
-    , { FOPEN,   IS_INLINE, "fopen" },  { FCLOSE,   IS_INLINE, "fclose" }
-    , { FREAD,   IS_INLINE, "fread" },  { FWRITE,   IS_INLINE, "fwrite" }
-    , { FLOAD,   IS_INLINE, "(load)" }, { WORD,     IS_INLINE, "next-word" }
-    , { COM,     IS_INLINE, "com" },    { NOT,      IS_INLINE, "0=" }
-    , { INC,     IS_INLINE, "1+" },     { INCA,     IS_INLINE, "++" }
-    , { DEC,     IS_INLINE, "1-" },     { DECA,     IS_INLINE, "--" }
+    , { KEY,     IS_INLINE, "key" },     { QKEY, IS_INLINE, "?key" } 
+    , { FOPEN,   IS_INLINE, "fopen" },   { FCLOSE,   IS_INLINE, "fclose" }
+    , { FREAD,   IS_INLINE, "fread" },   { FWRITE,   IS_INLINE, "fwrite" }
+    , { FLOAD,   IS_INLINE, "(load)" },  { WORD,     IS_INLINE, "next-word" }
+    , { COM,     IS_INLINE, "com" },     { NOT,      IS_INLINE, "0=" }
+    , { INC,     IS_INLINE, "1+" },      { INCA,     IS_INLINE, "++" }
+    , { DEC,     IS_INLINE, "1-" },      { DECA,     IS_INLINE, "--" }
     , { DO, IS_INLINE, "do" }, { LOOP, IS_INLINE, "loop" }, { LOOP2, IS_INLINE, "-loop" }
-    , { INDEX,   IS_INLINE, "(i)" },    { SYSTEM,   IS_INLINE, "system" }
-    , { STORE,   IS_INLINE, "!" },      { CSTORE,   IS_INLINE, "c!" }
-    , { FETCH,   IS_INLINE, "@" },      { CFETCH,   IS_INLINE, "c@" }
-    , { REG_NEW, IS_INLINE, "+regs" },  { REG_FREE, IS_INLINE, "-regs" }
-    , { IS_NUM,  IS_INLINE, "number?" }
+    , { INDEX,   IS_INLINE, "(i)" },     { SYSTEM,   IS_INLINE, "system" }
+    , { STORE,   IS_INLINE, "!" },       { CSTORE,   IS_INLINE, "c!" }
+    , { FETCH,   IS_INLINE, "@" },       { CFETCH,   IS_INLINE, "c@" }
+    , { REG_NEW, IS_INLINE, "+regs" },   { REG_FREE, IS_INLINE, "-regs" }
+    , { IS_NUM,  IS_INLINE, "number?" }, { TYPE, IS_INLINE, "type" }, { TYPEZ, IS_INLINE, "typez" }
     , { 0, 0, 0 }
 };
 
@@ -319,6 +319,9 @@ next:
     case REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;                     NEXT;
     case REG_FREE: reg_base -= (0 < reg_base) ? 10 : 0;                     NEXT;
     case IS_NUM: ++TOS; push(isNum());                                      NEXT;
+    case TYPE: t1=pop(); y=(char*)pop();
+        for (int i=0; i<t1; i++) { printChar(*(y++)); }                     NEXT;
+    case TYPEZ: y=(char*)pop(); PRINT1(y);                                  NEXT;
     default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")                  break;
     }
 }

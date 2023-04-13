@@ -17,10 +17,10 @@
 : bye 999 state ! ;
 : cells cell * ; inline
 
-: const  create (lit4) c, , (exit) c, ;
-: variable  vhere const cell allot ;
-: val  vhere const ;
-: (val)  here 1- cell - const ;
+: constant  create (lit4) c, , (exit) c, ;
+: variable  vhere constant cell allot ;
+: val  vhere constant ;
+: (val)  here 1- cell - constant ;
 
 : does>  r> last ! ;
 : :noname  here 1 state ! ;
@@ -71,6 +71,7 @@
 : max  over over < if swap then drop ;
 
 : i  (i) @ ;
+: j  (i) 3 cells - @ ;
 : +i (i) +! ;
 : unloop (lsp) @ 3 - 0 max (lsp) ! ;
 
@@ -94,8 +95,6 @@ variable (neg)
     then ')' emit ;
 
 : count ( str--a n ) dup 1+ swap c@ ; inline
-: type  ( a n-- ) ?dup if 0 do dup c@ emit 1+ loop then drop ;
-: typez ( a-- ) dup c@ dup 0= if 2drop exit then emit 1+ typez ;
 
 : T8 ( ch-- )   r8 c! i8 ;
 : T2 ( --str end )   +regs
@@ -147,5 +146,6 @@ here mem -   . ." code bytes used, " last here - . ." bytes free." cr
 vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
 forget
 
+: benches forget s" benches.f" (load) ;
 : sb forget s" sandbox.f" (load) ;
 marker
