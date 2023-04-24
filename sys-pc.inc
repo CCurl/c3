@@ -4,7 +4,7 @@ void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); 
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
 
 void getInput() {
-    CT;
+    ClearTib;
     if ((state == STOP_LOAD) && input_fp) {
         fclose((FILE*)input_fp);
         input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     for (int i=1; (i<argc) && (!input_fp); i++) {
         input_fp = (cell_t)fopen(argv[i],"rt");
         if (!input_fp) {
-            CT; SC(argv[i]); SC(" s"); SC(iToA(i,10));
+            ClearTib; SC(argv[i]); SC(" s"); SC(iToA(i,10));
             ParseLine(tib);
         }
     }

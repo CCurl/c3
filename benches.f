@@ -18,13 +18,13 @@ variable num
         i 3 prime? if num ++ then 1 +i
     loop num ? ;
 
-: bm1 cr ." Bench: decrement loop, " dup . ." iterations ... "
+: bm1 cr ." Bench 1: decrement loop, " dup . ." iterations ... "
     timer swap begin 1- dup while drop elapsed ;
-: bm2 cr ." Bench: register decrement loop, " dup . ." iterations ... "
+: bm2 cr ." Bench 2: register decrement loop, " dup . ." iterations ... "
     s1 timer begin d1 r1 while elapsed ;
-: bm3 cr ." Bench: empty do loop, " dup . ." iterations ... "
+: bm3 cr ." Bench 3: empty do loop, " dup . ." iterations ... "
     timer swap 0 do loop elapsed ;
-: bm4 cr ." Bench: number of primes in " dup . ." ... "
+: bm4 cr ." Bench 4: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
 
 \ load-abort

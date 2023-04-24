@@ -14,6 +14,7 @@
 : \ 0 >in @ ! ; immediate
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
+: -; (jmp) here cell - 1- c! 0 state ! ; immediate
 : bye 999 state ! ;
 : cells cell * ; inline
 
@@ -84,7 +85,7 @@ variable (neg)
 : #S begin # dup while ;             \ ( u1 -- u2 )
 : #> drop (neg) @ if '-' then ;
 : #P begin emit dup while drop ;     \ ( 0 ... n 0 -- )
-: (.) <# #S #> #P ;
+: (.) <# #S #> #P -;
 : . (.) space ;
 
 : 0sp 0 (sp) ! ;

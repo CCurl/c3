@@ -73,7 +73,7 @@ struct { int op; int flg; const char *name; } opcodes[] = {
 #define PRINT1(a)     printString(a)
 #define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 #define CpAt(x)       (char*)Fetch((char*)x)
-#define CT            fill(tib, 0, sizeof(tib))
+#define ClearTib      fill(tib, 0, sizeof(tib))
 #define SC(x)         strCat(tib, x)
 
 #define L0            lstk[lsp]
@@ -273,9 +273,9 @@ next:
         NCASE OR:  NOS |= TOS; DROP1;
         NCASE XOR: NOS ^= TOS; DROP1;
         NCASE COM: TOS = ~TOS;
-        NCASE RTO:    rstk[++rsp] = (char*)pop(); // >r
-        NCASE RFETCH: PUSH(rstk[rsp]); // r@
-        NCASE RFROM:  PUSH(rstk[rsp--]); // r>
+        NCASE RTO:    rstk[++rsp] = (char*)pop();
+        NCASE RFETCH: PUSH(rstk[rsp]);
+        NCASE RFROM:  PUSH(rstk[rsp--]);
 #ifdef isPC
         NCASE SYSTEM: y=(char*)pop(); system(y+1);
         NCASE FOPEN:  NOS=(cell_t)fopen((char*)(NOS+1), (char*)TOS+1); DROP1;NEXT;
@@ -286,7 +286,7 @@ next:
             TOS=fwrite(y, 1, t1, (FILE*)t2);
         NCASE FLOAD:  y=(char*)pop(); t1=(cell_t)fopen(y+1, "rt");
                 if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
-                if (t1) { input_fp = t1; CT; }
+                if (t1) { input_fp = t1; ClearTib; }
                 else { PRINT1("-noFile-"); }
 #endif
         NCASE QKEY: push(qKey());
@@ -351,7 +351,7 @@ int ParseWord() {
 
 void ParseLine(char *x) {
     in = x;
-    if (in==0) { in=tib; CT; }
+    if (in==0) { in=tib; ClearTib; }
     while (state != ALL_DONE) {
         if (getword() == 0) { return; }
         if (ParseWord() == 0) { return; }
@@ -359,7 +359,7 @@ void ParseLine(char *x) {
 }
 
 void loadNum(const char *name, cell_t val, int makeInline) {
-    CT; SC(": "); SC(name); SC(" "); SC(iToA(val, 10)); SC(" ;");
+    ClearTib; SC(": "); SC(name); SC(" "); SC(iToA(val, 10)); SC(" ;");
     ParseLine(tib);
     if (makeInline) { last->f = IS_INLINE; }
 }
