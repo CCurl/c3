@@ -1,10 +1,10 @@
 : here (here) @ ;
-: c, here c! (here) ++ ;
+: c, here c! 1 (here) +! ;
 : , here ! here cell + (here) ! ;
 
 : vhere  (vhere) @ ;
 : allot  vhere + (vhere) ! ;
-: vc, vhere c! (vhere) ++ ;
+: vc, vhere c! 1 (vhere) +! ;
 : v,  vhere ! cell allot ;
 
 : last (last) @ ;
@@ -42,9 +42,8 @@
 : 2drop drop drop ; inline
 : ?dup  dup if dup then ;
 
-: +!  tuck @ + swap ! ; inline
-: c++ dup @ 1+ swap ! ;
-: c-- dup @ 1- swap ! ;
+: ++  dup @  1+ swap ! ; inline
+: c++ dup c@ 1+ swap c! ; inline
 : 2*  dup + ; inline
 : 2+  1+ 1+ ; inline
 : <=  > 0= ; inline
@@ -99,7 +98,8 @@ variable (neg)
 : T8 ( ch-- )   r8 c! i8 ;
 : T2 ( --str end )   +regs
     vhere dup s8 s9   0 T8
-    begin >in @ c@ s1   r1 if >in ++ then
+    begin >in @ c@ s1
+        r1 if >in ++ then
         r1 0= r1 '"' = or
         if 0 T8   r9 r8 -regs   exit then
         r1 T8   r9 c++
@@ -112,12 +112,12 @@ variable (neg)
     (call) c, [ (lit4) c, ' count drop drop , ] ,
     (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
 
-: .word dup cell + 1+ count type ;
-: words r1 0 s1 last begin
-        dup mem-end < if 
+: .word cell + 1+ count type ;
+: words +regs 0 s1 last s2 begin
+        r2 mem-end < if 
             i1 r1 #11 mod 0= if cr then
-            .word tab word-sz +
-        else ." (" r1 . ." words)" s1 exit
+            r2 .word tab r2 word-sz + s2
+        else ." (" r1 . ." words)" -regs exit
         then
     again ;
 

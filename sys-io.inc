@@ -1,3 +1,13 @@
+#ifdef _MSC_VER
+
+// Support for Windows
+#include <conio.h>
+#define isPC
+int qKey() { return _kbhit(); }
+int key() { return _getch(); }
+
+#elif IS_LINUX
+
 // Support for Linux
 
 #include <unistd.h>
@@ -39,3 +49,27 @@ int key() {
     ttyMode(0);
     return x;
 }
+
+#else
+
+// Support for development boards
+
+// Dev board
+extern int qKey();
+extern int key();
+#define MEM_SZ             64*1024
+#define VARS_SZ            96*1024
+#define STK_SZ             32
+#define LSTK_SZ            30
+#define NAME_LEN           13
+#define NEEDS_ALIGN
+
+#endif
+
+#ifndef MEM_SZ
+    #define MEM_SZ            128*1024
+    #define VARS_SZ        4*1024*1024
+    #define STK_SZ             64
+    #define LSTK_SZ            30
+    #define NAME_LEN           13
+#endif

@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
         }
     }
     if (!input_fp) { input_fp = (cell_t)fopen("core.f", "rt"); }
+    if (!input_fp) { input_fp = (cell_t)fopen("..\\core.f", "rt"); }
     output_fp = 0;
     while (state != ALL_DONE) {
         getInput();
