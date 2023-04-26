@@ -7,14 +7,14 @@ void getInput() {
     ClearTib;
     if ((state == STOP_LOAD) && input_fp) {
         fclose((FILE*)input_fp);
-        input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
+        input_fp = (0 < fileSp) ? fileStk[fileSp--] : 0;
         state = 0;
     }
     if (input_fp) {
         in = fgets(tib, sizeof(tib), (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
-            input_fp =  (0 < fileSp) ? fileStk[fileSp--] : 0;
+            input_fp = (0 < fileSp) ? fileStk[fileSp--] : 0;
         }
     }
     if (! input_fp) {

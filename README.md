@@ -10,7 +10,7 @@ The main goals for this project are as follows:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
 - The Linux version is 64-bit but can also be 32-bit.
-- c3 provides 10 "virtual registers"", r0 thru r9.
+- c3 provides 10 "virtual registers", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
 - Not many primitives are built into the base executable.
 - The rest is built using those primitives (see core.f).
@@ -75,9 +75,8 @@ NOTE: many of the core words are defined in file 'core.f'
 +        (a b--c)          Addition
 -        (a b--c)          Subtraction
 *        (a b--c)          Multiplication
-/mod     (a b--r q)        q: quotient(a,b), r: modulo(a,b)
-++       (A--)             Increment CELL at A
---       (A--)             Decrement CELL at A
+/mod     (a b--r q)        r: modulo(a,b), q: quotient(a,b)
++!       (N A--)           Add N to CELL at A
 
 *** STACK ***
 1+       (a--b)            Increment TOS
@@ -104,9 +103,9 @@ fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
 fclose   (--fh)            fh: file-handle.
 fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
 fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
+(load)   (str--)           str: a counted string/filename to load
 (input-fp)  (--a)          a: address of the input-file pointer (PC only; used by "(load)").
 (output-fp) (--a)          a: address of the output-file pointer (PC only; redirects EMIT).
-(load)   (str--)           str: a counted string/filename to load
 
 *** LOGICAL ***
 =        (a b--f)          Equality.
@@ -154,6 +153,7 @@ version  (--n)   n: c3 version*10 (e.g. - 11 => v1.1)
 (jmp-gt) (--n)   n: The byte-code value for JMP-GT. On execute: (A B--A)  JUMP if A>B (Consumes B)
 (jmp-lt) (--n)   n: The byte-code value for JMP-LT. On execute: (A B--A)  JUMP if A<B (Consumes B)
 (call)   (--n)   n: The byte-code value for CALL.
+(lit1)   (--n)   n: The byte-code value for LIT1.
 (lit4)   (--n)   n: The byte-code value for LIT4.
 mem      (--a)   a: Start address for the MEMORY area.
 mem-end  (--a)   a: End address for the MEMORY area.
