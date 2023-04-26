@@ -1,4 +1,4 @@
-// c3.cpp - a minimal Forth system
+// c3.cpp - a minimal Forth engine
 
 #include <stdio.h>
 #include <stdlib.h>

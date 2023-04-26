@@ -1,24 +1,30 @@
 # c3 - A minimal Forth-like VM written in C.
 
-The main goals for this project are as follows:
+The goals for this project are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
-- To have as much flexibility as possible.
+- To provide as much flexibility to the programmer as possible.
 - To be able to run on both Windows and Linux (and Apple).
 - To be deployable to development boards via the Arduino IDE.
 
 ## Notes:
 - This is NOT an ANSI-standard Forth system.
-- This is a byte-coded implementation.
 - The Linux version is 64-bit but can also be 32-bit.
+- This is a byte-coded implementation.
+- Very few primitives are built into the base executable.
+- The rest is built using those primitives (see core.f).
+- This is a toolkit to create any environment the programmer desires.
+    - For example, the standard Forth IF/THEN is defined as follows:
+    - : if (jmpz) c, here 0 , ; immediate
+    - : then here swap ! ; immediate
+    - Since it is not built-in, the programmer has total control over it.
 - c3 provides 10 "virtual registers", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
-- Not many primitives are built into the base executable.
-- The rest is built using those primitives (see core.f).
 - The VARIABLE space is separated from the CODE space.
-- VHERE ("(vhere) @") is the address of the first available byte in the VARIABLE space.
 - Strings are both counted and null-terminated.
 - The dictionary starts at the end of the CODE area and grows down.
 - The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
+
+## The dictionary
 - A dictionary entry looks like this:
     - xt:      cell_t
     - flags:   byte
@@ -69,7 +75,7 @@ An example usage of temporary words:
 
 ## c3 Base system reference
 ```
-NOTE: many of the core words are defined in file 'core.f'
+NOTE: Since this is a toolkit, many of the core words are defined in file 'core.f'
 
 *** MATH ***
 +        (a b--c)          Addition
@@ -163,7 +169,6 @@ regs     (--a)   a: Start address for the REGISTERS (10 CELLs).
 (vhere)  (--a)   a: Address of the VHERE variable.
 (here)   (--a)   a: Address of the HERE variable.
 (last)   (--a)   a: Address of the LAST variable.
-(vhere)  (--a)   a: Address of the VHERE variable.
 (stk)    (--a)   a: Address of the stack.
 (sp)     (--a)   a: Address of the stack pointer.
 (rsp)    (--a)   a: Address of the return stack pointer.
