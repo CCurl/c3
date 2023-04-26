@@ -33,9 +33,11 @@
 : exit  (exit) c,   ; immediate
 
 : begin  here         ; immediate
-: while  (jmpnz) c, , ; immediate
 : until  (jmpz)  c, , ; immediate
 : again  (jmp)   c, , ; immediate
+: while  (jmpz)  c, here 0 , ; immediate
+: repeat swap (jmp) c, ,
+    here swap ! ; immediate
 
 : tuck  swap over ; inline
 : nip   swap drop ; inline
@@ -82,9 +84,9 @@ variable (neg)
 : #digit '0' + dup '9' > if 7 + then ;
 : <# 0 swap dup 0 < (neg) ! abs ;    \ ( n1 -- 0 n2 )
 : # base @ /mod swap #digit swap ;   \ ( u1 -- c u2 )
-: #S begin # dup while ;             \ ( u1 -- u2 )
+: #S begin # dup 0= until ;          \ ( u1 -- u2 )
 : #> drop (neg) @ if '-' then ;
-: #P begin emit dup while drop ;     \ ( 0 ... n 0 -- )
+: #P begin emit dup 0= until drop ;  \ ( 0 ... n 0 -- )
 : (.) <# #S #> #P -;
 : . (.) space ;
 
@@ -115,12 +117,11 @@ variable (neg)
 
 : .word cell + 1+ count type ;
 : words +regs 0 s1 last s2 begin
-        r2 mem-end < if 
+        r2 mem-end < while
             i1 r1 #11 mod 0= if cr then
             r2 .word tab r2 word-sz + s2
-        else ." (" r1 . ." words)" -regs exit
-        then
-    again ;
+    repeat
+    ." (" r1 . ." words)" -regs ;
 
 : binary  %10 base ! ;
 : decimal #10 base ! ;

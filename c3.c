@@ -14,7 +14,8 @@ extern void printString(const char *s);
 extern void printChar(const char c);
 
 enum {
-    STOP = 0, EXIT, CALL, JMP, JMPZ, JMPNZ,
+    STOP = 0, EXIT, CALL, JMP, ZJMP,
+    JMPg, JMPl, JMPz, JMPn, JMPp,
     STORE, CSTORE, FETCH, CFETCH,
     LIT1, LIT4,
     DUP, SWAP, OVER, DROP,
@@ -88,6 +89,7 @@ cell_t state, base, reg[100], reg_base, t1, t2;
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
 char *here, tib[128], *in;
+char fz, fe, fg, fl;
 dict_t tempWords[10], *last;
 
 inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
@@ -235,8 +237,12 @@ next:
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
         case  JMP: pc=CpAt(pc);
-        NCASE JMPZ: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE JMPNZ: if (pop()) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE ZJMP: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE JMPg: if (NOS>TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; } DROP1;
+        NCASE JMPl: if (NOS<TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; } DROP1;
+        NCASE JMPz: if (TOS==0)  { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE JMPn: if (TOS<0)   { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE JMPp: if (0<TOS)   { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE LIT1: push(*(pc++));
         NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE STORE: t1=pop(); t2=pop(); Store((char*)t1, t2);
@@ -379,8 +385,12 @@ void init() {
     loadNum("version",  6,       1);
     loadNum("(exit)",   EXIT,    0);
     loadNum("(jmp)",    JMP,     1);
-    loadNum("(jmpz)",   JMPZ,    1);
-    loadNum("(jmpnz)",  JMPNZ,   1);
+    loadNum("(jmpz)",   ZJMP,    1);
+    loadNum("(jmp-gt)", JMPg,    1);
+    loadNum("(jmp-lt)", JMPl,    1);
+    loadNum("(jmp=0)",  JMPz,    1);
+    loadNum("(jmp<0)",  JMPn,    1);
+    loadNum("(jmp>0)",  JMPp,    1);
     loadNum("(call)",   CALL,    1);
     loadNum("(lit4)",   LIT4,    1);
     loadNum("(output_fp)", (cell_t)&output_fp, 0);

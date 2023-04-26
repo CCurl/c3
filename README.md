@@ -146,9 +146,13 @@ dX       (--)              Decrement register #X (X: [0-9]).
 *** SYSTEM ***
 version  (--n)   n: c3 version*10 (e.g. - 11 => v1.1)
 (exit)   (--n)   n: The byte-code value for EXIT.
-(jmp)    (--n)   n: The byte-code value for JMP.
-(jmpz)   (--n)   n: The byte-code value for JMPZ.
-(jmpnz)  (--n)   n: The byte-code value for JMPNZ.
+(jmp)    (--n)   n: The byte-code value for JMP.    On execute: (?--?)    JUMP
+(jmpz)   (--n)   n: The byte-code value for JMPZ.   On execute: (N--)     JUMP if N=0 (Consumes N)
+(jmp=0)  (--n)   n: The byte-code value for JMP=0.  On execute: (N--N)    JUMP if N=0
+(jmp<0)  (--n)   n: The byte-code value for JMP<0.  On execute: (N--N)    JUMP if N<0
+(jmp>0)  (--n)   n: The byte-code value for JMP>0.  On execute: (N--N)    JUMP if N>0
+(jmp-gt) (--n)   n: The byte-code value for JMP-GT. On execute: (A B--A)  JUMP if A>B (Consumes B)
+(jmp-lt) (--n)   n: The byte-code value for JMP-LT. On execute: (A B--A)  JUMP if A<B (Consumes B)
 (call)   (--n)   n: The byte-code value for CALL.
 (lit4)   (--n)   n: The byte-code value for LIT4.
 mem      (--a)   a: Start address for the MEMORY area.
