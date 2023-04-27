@@ -81,7 +81,6 @@
 : /   /mod nip  ; inline
 : mod /mod drop ; inline
 
-: T0 emit cr ;
 variable (neg)
 variable #bufp
 : hold #bufp -- #bufp @ c! ;          \ ( c -- )
