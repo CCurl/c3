@@ -52,7 +52,7 @@ struct { int op; int flg; const char *name; } opcodes[] = {
     , { RTO,     IS_INLINE, ">r" },      { RFETCH,   IS_INLINE, "r@" },   { RFROM,  IS_INLINE, "r>" }
     , { LT,      IS_INLINE, "<" },       { EQ,       IS_INLINE, "=" },    { GT,     IS_INLINE, ">" }
     , { AND,     IS_INLINE, "and" },     { OR,       IS_INLINE, "or" },   { XOR,    IS_INLINE, "xor" }
-    , { INC,     IS_INLINE, "1+" },      { ADDA,     IS_INLINE, "+!" },   { DEC,    IS_INLINE, "1-" }
+    , { INC,     IS_INLINE, "1+" },      { DEC,      IS_INLINE, "1-" },   { ADDA,   IS_INLINE, "+!" }
     , { DO,      IS_INLINE, "do" },      { LOOP,     IS_INLINE, "loop" }, { LOOP2,  IS_INLINE, "-loop" }
     , { IS_NUM,  IS_INLINE, "number?" }, { TYPE,     IS_INLINE, "type" }, { TYPEZ,  IS_INLINE, "typez" }
     , { STORE,   IS_INLINE, "!" },       { CSTORE,   IS_INLINE, "c!" }
@@ -64,6 +64,8 @@ struct { int op; int flg; const char *name; } opcodes[] = {
 
 #define TOS           (stk[sp])
 #define NOS           (stk[sp-1])
+#define PopT            t1=pop()
+#define PopN            n1=pop()
 #define PUSH(x)       push((cell_t)(x))
 #define DROP1         sp--
 #define NEXT          goto next
@@ -86,7 +88,7 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[100], reg_base, t1, t2;
+cell_t state, base, reg[100], reg_base, t1, n1;
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
 char *here, tib[128], *in;
@@ -233,6 +235,7 @@ int getword() {
 
 void Run(char *pc) {
     char *y;
+    cell_t x1, x2;
 next:
     switch (*(pc++)) {
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
@@ -246,21 +249,21 @@ next:
         NCASE JMPp: if (0<TOS)    { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE LIT1: push(*(pc++));
         NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
-        NCASE STORE: t1=pop(); t2=pop(); Store(ToCP(t1), t2);
-        NCASE CSTORE: *ToCP(TOS) = (char)NOS; sp -= 2;
+        NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
+        NCASE CSTORE: *ToCP(TOS) = (char)NOS; sp-=2;
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
         NCASE CFETCH: TOS = *ToCP(TOS);
         NCASE DUP: push(TOS);
-        NCASE SWAP: t1=TOS; TOS=NOS; NOS=t1;
+        NCASE SWAP: t1=TOS; n1=NOS; TOS=n1; NOS=t1;
         NCASE OVER: push(NOS);
         NCASE DROP: DROP1;
-        NCASE ADD: NOS += TOS; DROP1;
-        NCASE SUB: NOS -= TOS; DROP1;
-        NCASE MULT: NOS *= TOS; DROP1;
-        NCASE SLMOD: t1=NOS; t2=TOS; TOS=t1/t2; NOS=t1%t2;
-        NCASE LT: NOS = (NOS <  TOS) ? -1 : 0; DROP1;
-        NCASE EQ: NOS = (NOS == TOS) ? -1 : 0; DROP1;
-        NCASE GT: NOS = (NOS >  TOS) ? -1 : 0; DROP1;
+        NCASE ADD: PopT; PopN; push(n1+t1);
+        NCASE SUB: PopT; PopN; push(n1-t1);
+        NCASE MULT: PopT; PopN; push(n1*t1);
+        NCASE SLMOD: PopT; PopN; push(n1%t1); push(n1/t1);
+        NCASE LT: PopT; PopN; push(n1< t1);
+        NCASE EQ: PopT; PopN; push(n1==t1);
+        NCASE GT: PopT; PopN; push(n1> t1);
         NCASE NOT: TOS = (TOS) ? 0: -1;
         NCASE EMIT: printChar((char)pop());
         NCASE TIMER: push(clock());
@@ -276,9 +279,9 @@ next:
         NCASE CREATE: getword(); doCreate(ToCP(pop()));
         NCASE FIND: getword(); doFind();
         NCASE ENDWORD: state=0; CComma(EXIT);
-        NCASE AND: NOS &= TOS; DROP1;
-        NCASE OR:  NOS |= TOS; DROP1;
-        NCASE XOR: NOS ^= TOS; DROP1;
+        NCASE AND: PopT; PopN; push(n1&t1);
+        NCASE OR:  PopT; PopN; push(n1|t1);
+        NCASE XOR: PopT; PopN; push(n1^t1);
         NCASE COM: TOS = ~TOS;
         NCASE RTO:    rstk[++rsp] = ToCP(pop());
         NCASE RFETCH: PUSH(rstk[rsp]);
@@ -287,8 +290,8 @@ next:
         NCASE SYSTEM: y=ToCP(pop()); system(y+1);
         NCASE FOPEN:  NOS=(cell_t)fopen(ToCP(NOS+1), ToCP(TOS+1)); DROP1;
         NCASE FCLOSE: fclose((FILE*)pop());
-        NCASE FREAD:  t2=pop(); t1=pop(); TOS=fread(ToCP(TOS), 1, t1, (FILE*)t2);
-        NCASE FWRITE: t2=pop(); t1=pop(); TOS=fwrite(ToCP(TOS), 1, t1, (FILE*)t2);
+        NCASE FREAD:  n1=pop(); t1=pop(); TOS=fread(ToCP(TOS), 1, t1, (FILE*)n1);
+        NCASE FWRITE: n1=pop(); t1=pop(); TOS=fwrite(ToCP(TOS), 1, t1, (FILE*)n1);
         NCASE FLOAD:  y=ToCP(pop()); t1=(cell_t)fopen(y+1, "rt");
                 if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
                 if (t1) { input_fp = t1; ClearTib; }
@@ -301,11 +304,10 @@ next:
         NCASE REG_R: push(reg[*(pc++)+reg_base]);
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
-        NCASE REG_FREE: reg_base -= (0 < reg_base) ? 10 : 0;
+        NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
         NCASE IS_NUM: ++TOS; push(isNum());
-        NCASE TYPE: t1=pop(); y=ToCP(pop());
-            for (int i=0; i<t1; i++) { printChar(*(y++)); }
-        NCASE TYPEZ: y=ToCP(pop()); PRINT1(y);
+        NCASE TYPE: x1=pop(); y=ToCP(pop()); for (int i=0; i<x1; i++) { printChar(*(y++)); }
+        NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE STOP: return;
         default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")
     }
@@ -393,6 +395,8 @@ void init() {
     loadNum("(call)",   CALL,  1);
     loadNum("(lit1)",   LIT1,  1);
     loadNum("(lit4)",   LIT4,  1);
+    loadNum("(t)",      (cell_t)&t1, 0);
+    loadNum("(n)",      (cell_t)&n1, 0);
     loadNum("(output_fp)", (cell_t)&output_fp, 0);
     loadNum("(input_fp)",  (cell_t)&input_fp, 0);
     loadNum("mem",      (cell_t)&mem[0], 0);
