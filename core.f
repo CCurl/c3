@@ -83,12 +83,11 @@
 
 : T0 emit cr ;
 variable (neg)
-variable #buf 32 allot
 variable #bufp
 : hold #bufp -- #bufp @ c! ;          \ ( c -- )
 : #digit '0' + dup '9' > if 7 + then ;
 : >neg dup 0 < (neg) ! abs ;          \ ( n1 -- u1 )
-: <# #buf 35 + #bufp ! 0 hold >neg -; \ ( n1 -- u1 )
+: <# here 35 + #bufp ! 0 hold >neg -; \ ( n1 -- u1 )
 : # base @ /mod swap #digit hold -;   \ ( u1 -- u2 )
 : #S begin # dup 0= until ;           \ ( u1 -- 0 )
 : #> drop (neg) @ if '-' hold then ;
