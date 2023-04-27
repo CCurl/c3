@@ -46,6 +46,7 @@
 : ?dup  dup if dup then ;
 
 : ++  dup @  1+ swap ! ; inline
+: --  dup @  1- swap ! ; inline
 : c++ dup c@ 1+ swap c! ; inline
 : 2*  dup + ; inline
 : 2+  1+ 1+ ; inline
@@ -80,13 +81,18 @@
 : /   /mod nip  ; inline
 : mod /mod drop ; inline
 
+: T0 emit cr ;
 variable (neg)
+variable #buf 32 allot
+variable #bufp
+: hold #bufp -- #bufp @ c! ;          \ ( c -- )
 : #digit '0' + dup '9' > if 7 + then ;
-: <# 0 swap dup 0 < (neg) ! abs ;    \ ( n1 -- 0 n2 )
-: # base @ /mod swap #digit swap ;   \ ( u1 -- c u2 )
-: #S begin # dup 0= until ;          \ ( u1 -- u2 )
-: #> drop (neg) @ if '-' then ;
-: #P begin emit dup 0= until drop ;  \ ( 0 ... n 0 -- )
+: >neg dup 0 < (neg) ! abs ;          \ ( n1 -- u1 )
+: <# #buf 35 + #bufp ! 0 hold >neg -; \ ( n1 -- u1 )
+: # base @ /mod swap #digit hold -;   \ ( u1 -- u2 )
+: #S begin # dup 0= until ;           \ ( u1 -- 0 )
+: #> drop (neg) @ if '-' hold then ;
+: #P #bufp @ typez ;                  \ ( 0 ... n 0 -- )
 : (.) <# #S #> #P -;
 : . (.) space ;
 
