@@ -21,8 +21,8 @@ enum {
     DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, ADDA, DEC,
     LT, EQ, GT, NOT,
-    DO, LOOP, LOOP2, INDEX,
     RTO, RFETCH, RFROM,
+    DO, LOOP, LOOP2, INDEX,
     COM, AND, OR, XOR,
     EMIT, TIMER, SYSTEM, KEY, QKEY, IS_NUM, 
     TYPE, TYPEZ,
@@ -35,32 +35,6 @@ enum {
 #define IS_INLINE     2
 #define STOP_LOAD    99
 #define ALL_DONE    999
-
-struct { int op; int flg; const char *name; } opcodes[] = { 
-    { DEFINE,    IS_INLINE, ":" },       { ENDWORD,  IS_IMMEDIATE, ";" }
-    , { CREATE,  IS_INLINE, "create" },  { FIND,     IS_INLINE, "'" }
-    , { DUP,     IS_INLINE, "dup" },     { SWAP,     IS_INLINE, "swap" }
-    , { OVER,    IS_INLINE, "over" },    { DROP,     IS_INLINE, "drop" }
-    , { EMIT,    IS_INLINE, "emit" },    { TIMER,    IS_INLINE, "timer" }
-    , { ADD,     IS_INLINE, "+" },       { SUB,      IS_INLINE, "-" }
-    , { MULT,    IS_INLINE, "*" },       { SLMOD,    IS_INLINE, "/mod" }
-    , { KEY,     IS_INLINE, "key" },     { QKEY,     IS_INLINE, "?key" } 
-    , { FOPEN,   IS_INLINE, "fopen" },   { FCLOSE,   IS_INLINE, "fclose" }
-    , { FREAD,   IS_INLINE, "fread" },   { FWRITE,   IS_INLINE, "fwrite" }
-    , { FLOAD,   IS_INLINE, "(load)" },  { WORD,     IS_INLINE, "next-word" }
-    , { COM,     IS_INLINE, "com" },     { NOT,      IS_INLINE, "0=" }
-    , { RTO,     IS_INLINE, ">r" },      { RFETCH,   IS_INLINE, "r@" },   { RFROM,  IS_INLINE, "r>" }
-    , { LT,      IS_INLINE, "<" },       { EQ,       IS_INLINE, "=" },    { GT,     IS_INLINE, ">" }
-    , { AND,     IS_INLINE, "and" },     { OR,       IS_INLINE, "or" },   { XOR,    IS_INLINE, "xor" }
-    , { INC,     IS_INLINE, "1+" },      { DEC,      IS_INLINE, "1-" },   { ADDA,   IS_INLINE, "+!" }
-    , { DO,      IS_INLINE, "do" },      { LOOP,     IS_INLINE, "loop" }, { LOOP2,  IS_INLINE, "-loop" }
-    , { IS_NUM,  IS_INLINE, "number?" }, { TYPE,     IS_INLINE, "type" }, { TYPEZ,  IS_INLINE, "typez" }
-    , { STORE,   IS_INLINE, "!" },       { CSTORE,   IS_INLINE, "c!" }
-    , { FETCH,   IS_INLINE, "@" },       { CFETCH,   IS_INLINE, "c@" }
-    , { REG_NEW, IS_INLINE, "+regs" },   { REG_FREE, IS_INLINE, "-regs" }
-    , { INDEX,   IS_INLINE, "(i)" },     { SYSTEM,   IS_INLINE, "system" }
-    , { 0, 0, 0 }
-};
 
 #define TOS           (stk[sp])
 #define NOS           (stk[sp-1])
@@ -224,7 +198,9 @@ int isNum() {
 int getword() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0; }
-    if (STK_SZ < sp) { PRINT1("over"); sp=0; }
+    if (STK_SZ < sp) {
+        PRINT1("-over-"); sp=0;
+    }
     while (*in && (*in < 33)) { ++in; }
     if (*in == 0) { return 0; }
     PUSH(in);
@@ -235,7 +211,7 @@ int getword() {
 
 void Run(char *pc) {
     char *y;
-    cell_t x1, x2;
+    cell_t x1;
 next:
     switch (*(pc++)) {
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
@@ -274,6 +250,9 @@ next:
         NCASE INDEX: PUSH(&L0);
         NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE RTO: rstk[++rsp] = ToCP(pop());
+        NCASE RFETCH: PUSH(rstk[rsp]);
+        NCASE RFROM: PUSH(rstk[rsp--]);
         NCASE WORD: t1=getword(); push(t1);
         NCASE DEFINE: getword(); doCreate(ToCP(pop())); state=1;
         NCASE CREATE: getword(); doCreate(ToCP(pop()));
@@ -283,9 +262,6 @@ next:
         NCASE OR:  PopT; PopN; push(n1|t1);
         NCASE XOR: PopT; PopN; push(n1^t1);
         NCASE COM: TOS = ~TOS;
-        NCASE RTO:    rstk[++rsp] = ToCP(pop());
-        NCASE RFETCH: PUSH(rstk[rsp]);
-        NCASE RFROM:  PUSH(rstk[rsp--]);
 #ifdef isPC
         NCASE SYSTEM: y=ToCP(pop()); system(y+1);
         NCASE FOPEN:  NOS=(cell_t)fopen(ToCP(NOS+1), ToCP(TOS+1)); DROP1;
@@ -365,10 +341,110 @@ void ParseLine(char *x) {
     }
 }
 
-void loadNum(const char *name, cell_t val, int makeInline) {
-    ClearTib; SC(": "); SC(name); SC(" "); SC(iToA(val, 10)); SC(" ;");
-    ParseLine(tib);
-    if (makeInline) { last->f = IS_INLINE; }
+struct { long op; const char *opName;  const char *c3Word; } prims[] = { 
+    { EXIT,        "(exit)",        "EXIT" },
+    { CALL,        "(call)",        "" },
+    { JMP,         "(jmp)",         "" },
+    { ZJMP,        "(zjmp)",        "" },
+    { JMPg,        "(jmpg)",        "" },
+    { JMPl,        "(jmpl)",        "" },
+    { JMPz,        "(jmpz)",        "" },
+    { JMPn,        "(jmpn)",        "" },
+    { JMPp,        "(jmpp)",        "" },
+    { LIT1,        "(lit1)",        "" },
+    { LIT4,        "(lit4)",        "" },
+    { STORE,       "(store)",       "!" },
+    { CSTORE,      "(cstore)",      "c!" },
+    { FETCH,       "(fetch)",       "@" },
+    { CFETCH,      "(cfetch)",      "c@" },
+    { DUP,         "(dup)",         "DUP" },
+    { SWAP,        "(swap)",        "SWAP" },
+    { OVER,        "(over)",        "OVER" },
+    { DROP,        "(drop)",        "DROP" },
+    { ADD,         "(add)",         "+" },
+    { SUB,         "(sub)",         "-" },
+    { MULT,        "(mult)",        "*" },
+    { SLMOD,       "(slmod)",       "/MOD" },
+    { LT,          "(lt)",          "<" },
+    { EQ,          "(eq)",          "=" },
+    { GT,          "(gt)",          ">" },
+    { NOT,         "(not)",         "0=" },
+    { EMIT,        "(emit)",        "EMIT" },
+    { TIMER,       "(timer)",       "TIMER" },
+    { INC,         "(inc)",         "1+" },
+    { ADDA,        "(adda)",        "+!" },
+    { DEC,         "(dec)",         "1-" },
+    { DO,          "(do)",          "DO" },
+    { INDEX,       "(index)",       "(i)" },
+    { LOOP,        "(loop)",        "LOOP" },
+    { LOOP2,       "(+loop)",       "+LOOP" },
+    { RTO,         "(rto)",         ">R" },
+    { RFETCH,      "(rfetch)",      "R@" },
+    { RFROM,       "(rfrom)",       "R>" },
+    { WORD,        "(word)",        "next-word" },
+    { DEFINE,      "(define)",      ":" },
+    { CREATE,      "(create)",      "CREATE" },
+    { FIND,        "(find)",        "'" },
+    { ENDWORD,     "(endword)",     ";" },
+    { AND,         "(and)",         "AND" },
+    { OR,          "(or)",          "OR" },
+    { XOR,         "(xor)",         "XOR" },
+    { COM,         "(com)",         "COM" },
+    { SYSTEM,      "(system)",      "SYSTEM" },
+    { FOPEN,       "(fopen)",       "FOPEN" },
+    { FCLOSE,      "(fclose)",      "FCLOSE" },
+    { FREAD,       "(fread)",       "FREAD" },
+    { FWRITE,      "(fwrite)",      "FWRITE" },
+    { FLOAD,       "(fload)",       "(load)" },
+    { QKEY,        "(qkey)",        "?KEY" },
+    { KEY,         "(key)",         "KEY" },
+    { REG_D,       "(reg_d)",       "" },
+    { REG_I,       "(reg_i)",       "" },
+    { REG_R,       "(reg_r)",       "" },
+    { REG_S,       "(reg_s)",       "" },
+    { REG_NEW,     "(reg_new)",     "+regs" },
+    { REG_FREE,    "(reg_free)",    "-regs" },
+    { IS_NUM,      "(is_num)",      "NUMBER?" },
+    { TYPE,        "(type)",        "TYPE" },
+    { TYPEZ,       "(typez)",       "TYPEZ" },
+    { STOP,        "",              "" },
+    { (cell_t)&sp,        "(sp)",        "" },
+    { (cell_t)&rsp,       "(rsp)",       "" },
+    { (cell_t)&lsp,       "(lsp)",       "" },
+    { (cell_t)&here,      "(here)",      "" },
+    { (cell_t)&vhere,     "(vhere)",     "" },
+    { (cell_t)&last,      "(last)",      "" },
+    { (cell_t)&stk[0],    "(stk)",       "" },
+    { (cell_t)&rstk[0],   "(rstk)",      "" },
+    { (cell_t)&tib[0],    "tib",         "" },
+    { (cell_t)&in,        ">in",         "" },
+    { (cell_t)&mem[0],    "mem",         "" },
+    { MEM_SZ,             "mem-sz",      "" },
+    { (cell_t)&vars[0],   "vars",        "" },
+    { VARS_SZ,            "vars-sz",     "" },
+    { (cell_t)&reg[0],    "regs",        "" },
+    { (cell_t)&output_fp, "(output_fp)", "" },
+    { (cell_t)&input_fp,  "(input_fp)",  "" },
+    { (cell_t)&state,     "state",       "" },
+    { sizeof(dict_t),     "word-sz",     "" },
+    { CELL_SZ,            "CELL",        "" },
+    { (cell_t)&base,      "base",        "" },
+    { 6,                  "VERSION",     "" },
+    { 0, 0, 0 }
+};
+
+void loadNum(const char *name, cell_t val, int isLit) {
+    doCreate((char*)name);
+    if (isLit) { 
+        if (BTW(val,1,127) && (val != EXIT)) {
+            last->f = IS_INLINE;
+            CComma(LIT1); CComma(val);
+        } else { CComma(LIT4); Comma(val); }
+    } else {
+        last->f = (val==ENDWORD) ? IS_IMMEDIATE : IS_INLINE;
+        CComma(val);
+    }
+    CComma(EXIT);
 }
 
 void init() {
@@ -377,46 +453,11 @@ void init() {
     last = (dict_t*)&mem[MEM_SZ];
     base = 10;
     sp = rsp = reg_base = t1 = 0;
-    while (opcodes[t1].op) {
-        doCreate(ToCP(opcodes[t1].name));
-        last->f = opcodes[t1].flg;
-        CComma(opcodes[t1++].op);
-        CComma(EXIT);
+    while (prims[t1].opName) {
+        if (prims[t1].opName[0]) { loadNum(prims[t1].opName, prims[t1].op, 1); }
+        if (prims[t1].c3Word[0]) { loadNum(prims[t1].c3Word, prims[t1].op, 0); }
+        ++t1;
     }
-    loadNum("version",  6,     1);
-    loadNum("(exit)",   EXIT,  0);
-    loadNum("(jmp)",    JMP,   1);
-    loadNum("(jmpz)",   ZJMP,  1);
-    loadNum("(jmp-gt)", JMPg,  1);
-    loadNum("(jmp-lt)", JMPl,  1);
-    loadNum("(jmp=0)",  JMPz,  1);
-    loadNum("(jmp<0)",  JMPn,  1);
-    loadNum("(jmp>0)",  JMPp,  1);
-    loadNum("(call)",   CALL,  1);
-    loadNum("(lit1)",   LIT1,  1);
-    loadNum("(lit4)",   LIT4,  1);
-    loadNum("(t)",      (cell_t)&t1, 0);
-    loadNum("(n)",      (cell_t)&n1, 0);
-    loadNum("(output_fp)", (cell_t)&output_fp, 0);
-    loadNum("(input_fp)",  (cell_t)&input_fp, 0);
-    loadNum("mem",      (cell_t)&mem[0], 0);
-    loadNum("mem-end",  (cell_t)&mem[MEM_SZ], 0);
-    loadNum("vars",     (cell_t)&vars[0], 0);
-    loadNum("regs",     (cell_t)&reg[0], 0);
-    loadNum("vars-end", (cell_t)&vars[VARS_SZ], 0);
-    loadNum("(vhere)",  (cell_t)&vhere, 0);
-    loadNum(">in",      (cell_t)&in, 0);
-    loadNum("tib",      (cell_t)&tib[0], 0);
-    loadNum("word-sz",  (cell_t)sizeof(dict_t), 1);
-    loadNum("(stk)",    (cell_t)&stk[0], 0);
-    loadNum("(sp)",     (cell_t)&sp, 0);
-    loadNum("(rsp)",    (cell_t)&rsp, 0);
-    loadNum("(lsp)",    (cell_t)&lsp, 0);
-    loadNum("(last)",   (cell_t)&last, 0);
-    loadNum("(here)",   (cell_t)&here, 0);
-    loadNum("state",    (cell_t)&state, 0);
-    loadNum("base",     (cell_t)&base, 0);
-    loadNum("cell",     CELL_SZ, 1);
 }
 
 #ifdef isPC

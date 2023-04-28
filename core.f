@@ -1,15 +1,21 @@
+: last (last) @ ;
+: immediate 1 last cell + c! ;
+: inline 2 last cell + c! ;
+
+: mem-end   mem  mem-sz  + ;
+: vars-end  vars vars-sz + ;
+
+: ++ dup @ 1+ swap ! ; inline
+: -- dup @ 1- swap ! ; inline
+
 : here (here) @ ;
-: c, here c! 1 (here) +! ;
+: c, here c! (here) ++ ;
 : , here ! here cell + (here) ! ;
 
 : vhere  (vhere) @ ;
 : allot  vhere + (vhere) ! ;
-: vc, vhere c! 1 (vhere) +! ;
+: vc, vhere c! (vhere) ++ ;
 : v,  vhere ! cell allot ;
-
-: last (last) @ ;
-: immediate 1 last cell + c! ;
-: inline 2 last cell + c! ;
 
 : \ 0 >in @ ! ; immediate
 : [ 0 state ! ; immediate
@@ -23,19 +29,19 @@
 : val  vhere constant ;
 : (val)  here 1- cell - constant ;
 
-: does>  r> last ! ;
 : :noname  here 1 state ! ;
+: does>  r> last ! ;
 : exec  >r ;
 
-: if    (jmpz) c, here 0 , ; immediate
+: if    (zjmp) c, here 0 , ; immediate
 : else  (jmp) c, here swap 0 , here swap ! ; immediate
 : then  here swap ! ; immediate
 : exit  (exit) c,   ; immediate
 
 : begin  here         ; immediate
-: until  (jmpz)  c, , ; immediate
+: until  (zjmp)  c, , ; immediate
 : again  (jmp)   c, , ; immediate
-: while  (jmpz)  c, here 0 , ; immediate
+: while  (zjmp)  c, here 0 , ; immediate
 : repeat swap (jmp) c, ,
     here swap ! ; immediate
 
@@ -45,8 +51,7 @@
 : 2drop drop drop ; inline
 : ?dup  dup if dup then ;
 
-: ++  dup @  1+ swap ! ; inline
-: --  dup @  1- swap ! ; inline
+: +! swap over @ + swap ! ;  inline
 : c++ dup c@ 1+ swap c! ; inline
 : 2*  dup + ; inline
 : 2+  1+ 1+ ; inline

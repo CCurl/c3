@@ -18,9 +18,9 @@ variable num
         i 3 prime? if num ++ then 1 +i
     loop num ? ;
 
-: while>0 (jmp>0) c, , ; immediate
+: -while (jmpp) c, , ; immediate
 : bm1 cr ." Bench 1: decrement loop, " dup . ." iterations ... "
-    timer swap begin 1- while>0 drop elapsed ;
+    timer swap begin 1- -while drop elapsed ;
 : bm2 cr ." Bench 2: register decrement loop, " dup . ." iterations ... "
     s1 timer begin d1 r1 0= until elapsed ;
 : bm3 cr ." Bench 3: empty do loop, " dup . ." iterations ... "
