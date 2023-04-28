@@ -195,12 +195,10 @@ int isNum() {
 }
 
 // ( --addr | <null> )
-int getword() {
+int nextWord() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0; }
-    if (STK_SZ < sp) {
-        PRINT1("-over-"); sp=0;
-    }
+    if (STK_SZ < sp) { PRINT1("-over-"); sp=0; }
     while (*in && (*in < 33)) { ++in; }
     if (*in == 0) { return 0; }
     PUSH(in);
@@ -253,10 +251,10 @@ next:
         NCASE RTO: rstk[++rsp] = ToCP(pop());
         NCASE RFETCH: PUSH(rstk[rsp]);
         NCASE RFROM: PUSH(rstk[rsp--]);
-        NCASE WORD: t1=getword(); push(t1);
-        NCASE DEFINE: getword(); doCreate(ToCP(pop())); state=1;
-        NCASE CREATE: getword(); doCreate(ToCP(pop()));
-        NCASE FIND: getword(); doFind();
+        NCASE WORD: push(nextWord());
+        NCASE DEFINE: nextWord(); doCreate(ToCP(pop())); state=1;
+        NCASE CREATE: nextWord(); doCreate(ToCP(pop()));
+        NCASE FIND: nextWord(); doFind();
         NCASE ENDWORD: state=0; CComma(EXIT);
         NCASE AND: PopT; PopN; push(n1&t1);
         NCASE OR:  PopT; PopN; push(n1|t1);
@@ -336,7 +334,7 @@ void ParseLine(char *x) {
     in = x;
     if (in==0) { in=tib; ClearTib; }
     while (state != ALL_DONE) {
-        if (getword() == 0) { return; }
+        if (nextWord() == 0) { return; }
         if (ParseWord() == 0) { return; }
     }
 }
