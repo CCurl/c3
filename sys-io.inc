@@ -1,10 +1,10 @@
 #ifdef _MSC_VER
 
-// Support for Windows
-#include <conio.h>
-#define isPC
-int qKey() { return _kbhit(); }
-int key() { return _getch(); }
+    // Support for Windows
+    #include <conio.h>
+    #define isPC
+    int qKey() { return _kbhit(); }
+    int key() { return _getch(); }
 
 #elif IS_LINUX
 
@@ -52,18 +52,28 @@ int key() {
 
 #else
 
-// Support for development boards
+    // Support for development boards
 
-// Dev board
-extern int qKey();
-extern int key();
-#define MEM_SZ             64*1024
-#define VARS_SZ            96*1024
-#define STK_SZ             32
-#define LSTK_SZ            30
-#define NAME_LEN           13
-#define NEEDS_ALIGN
+    // Dev board
+    extern int qKey();
+    extern int key();
+    #define MEM_SZ             64*1024
+    #define VARS_SZ            96*1024
+    #define STK_SZ             32
+    #define LSTK_SZ            30
+    #define NAME_LEN           13
+    #define NEEDS_ALIGN
 
+#endif
+
+#ifndef NEEDS_ALIGN
+    inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
+    inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+#else
+    #define S(x, y) (*(x)=((y)&0xFF))
+    #define G(x, y) (*(x)<<y)
+    void Store(char *l, cell_t v) { S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); }
+    cell_t Fetch(unsigned char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
 #endif
 
 #ifndef MEM_SZ
@@ -73,3 +83,6 @@ extern int key();
     #define LSTK_SZ            30
     #define NAME_LEN           13
 #endif
+
+extern void printString(const char *s);
+extern void printChar(const char c);

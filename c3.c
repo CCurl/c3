@@ -3,15 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "sys-io.inc"
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
-typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
-extern void printString(const char *s);
-extern void printChar(const char c);
+#include "sys-io.inc"
+
+typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
     STOP = 0, EXIT, CALL, JMP, ZJMP,
@@ -31,6 +30,7 @@ enum {
     REG_I, REG_D, REG_R, REG_S, REG_NEW, REG_FREE
 };
 
+#define C3_VERSION    6
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 #define STOP_LOAD    99
@@ -71,16 +71,6 @@ dict_t tempWords[10], *last;
 
 inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
 inline cell_t pop() { return stk[sp--]; }
-
-#ifndef NEEDS_ALIGN
-inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
-inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
-#else
-#define S(x, y) (*(x)=((y)&0xFF))
-#define G(x, y) (*(x)<<y)
-void Store(char *l, cell_t v) { S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); }
-cell_t Fetch(unsigned char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
-#endif
 
 void CComma(cell_t x) { *(here++) = (char)x; }
 void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
@@ -340,94 +330,94 @@ void ParseLine(char *x) {
 }
 
 struct { long op; const char *opName;  const char *c3Word; } prims[] = { 
-    { EXIT,        "(exit)",        "EXIT" },
-    { CALL,        "(call)",        "" },
-    { JMP,         "(jmp)",         "" },
-    { ZJMP,        "(zjmp)",        "" },
-    { JMPg,        "(jmpg)",        "" },
-    { JMPl,        "(jmpl)",        "" },
-    { JMPz,        "(jmpz)",        "" },
-    { JMPn,        "(jmpn)",        "" },
-    { JMPp,        "(jmpp)",        "" },
-    { LIT1,        "(lit1)",        "" },
-    { LIT4,        "(lit4)",        "" },
-    { STORE,       "(store)",       "!" },
-    { CSTORE,      "(cstore)",      "c!" },
-    { FETCH,       "(fetch)",       "@" },
-    { CFETCH,      "(cfetch)",      "c@" },
-    { DUP,         "(dup)",         "DUP" },
-    { SWAP,        "(swap)",        "SWAP" },
-    { OVER,        "(over)",        "OVER" },
-    { DROP,        "(drop)",        "DROP" },
-    { ADD,         "(add)",         "+" },
-    { SUB,         "(sub)",         "-" },
-    { MULT,        "(mult)",        "*" },
-    { SLMOD,       "(slmod)",       "/MOD" },
-    { LT,          "(lt)",          "<" },
-    { EQ,          "(eq)",          "=" },
-    { GT,          "(gt)",          ">" },
-    { NOT,         "(not)",         "0=" },
-    { EMIT,        "(emit)",        "EMIT" },
-    { TIMER,       "(timer)",       "TIMER" },
-    { INC,         "(inc)",         "1+" },
-    { ADDA,        "(adda)",        "+!" },
-    { DEC,         "(dec)",         "1-" },
-    { DO,          "(do)",          "DO" },
-    { INDEX,       "(index)",       "(i)" },
-    { LOOP,        "(loop)",        "LOOP" },
-    { LOOP2,       "(+loop)",       "+LOOP" },
-    { RTO,         "(rto)",         ">R" },
-    { RFETCH,      "(rfetch)",      "R@" },
-    { RFROM,       "(rfrom)",       "R>" },
-    { WORD,        "(word)",        "next-word" },
-    { DEFINE,      "(define)",      ":" },
-    { CREATE,      "(create)",      "CREATE" },
-    { FIND,        "(find)",        "'" },
-    { ENDWORD,     "(endword)",     ";" },
-    { AND,         "(and)",         "AND" },
-    { OR,          "(or)",          "OR" },
-    { XOR,         "(xor)",         "XOR" },
-    { COM,         "(com)",         "COM" },
-    { SYSTEM,      "(system)",      "SYSTEM" },
-    { FOPEN,       "(fopen)",       "FOPEN" },
-    { FCLOSE,      "(fclose)",      "FCLOSE" },
-    { FREAD,       "(fread)",       "FREAD" },
-    { FWRITE,      "(fwrite)",      "FWRITE" },
-    { FLOAD,       "(fload)",       "(load)" },
-    { QKEY,        "(qkey)",        "?KEY" },
-    { KEY,         "(key)",         "KEY" },
-    { REG_D,       "(reg_d)",       "" },
-    { REG_I,       "(reg_i)",       "" },
-    { REG_R,       "(reg_r)",       "" },
-    { REG_S,       "(reg_s)",       "" },
-    { REG_NEW,     "(reg_new)",     "+regs" },
-    { REG_FREE,    "(reg_free)",    "-regs" },
-    { IS_NUM,      "(is_num)",      "NUMBER?" },
-    { TYPE,        "(type)",        "TYPE" },
-    { TYPEZ,       "(typez)",       "TYPEZ" },
-    { STOP,        "",              "" },
-    { (cell_t)&sp,        "(sp)",        "" },
-    { (cell_t)&rsp,       "(rsp)",       "" },
-    { (cell_t)&lsp,       "(lsp)",       "" },
-    { (cell_t)&here,      "(here)",      "" },
-    { (cell_t)&vhere,     "(vhere)",     "" },
-    { (cell_t)&last,      "(last)",      "" },
-    { (cell_t)&stk[0],    "(stk)",       "" },
-    { (cell_t)&rstk[0],   "(rstk)",      "" },
-    { (cell_t)&tib[0],    "tib",         "" },
-    { (cell_t)&in,        ">in",         "" },
-    { (cell_t)&mem[0],    "mem",         "" },
-    { MEM_SZ,             "mem-sz",      "" },
-    { (cell_t)&vars[0],   "vars",        "" },
-    { VARS_SZ,            "vars-sz",     "" },
-    { (cell_t)&reg[0],    "regs",        "" },
-    { (cell_t)&output_fp, "(output_fp)", "" },
-    { (cell_t)&input_fp,  "(input_fp)",  "" },
-    { (cell_t)&state,     "state",       "" },
-    { sizeof(dict_t),     "word-sz",     "" },
-    { CELL_SZ,            "CELL",        "" },
-    { (cell_t)&base,      "base",        "" },
-    { 6,                  "VERSION",     "" },
+    { C3_VERSION,         "VERSION",       "" },
+    { EXIT,               "(exit)",        "EXIT" },
+    { CALL,               "(call)",        "" },
+    { JMP,                "(jmp)",         "" },
+    { ZJMP,               "(zjmp)",        "" },
+    { JMPg,               "(jmpg)",        "" },
+    { JMPl,               "(jmpl)",        "" },
+    { JMPz,               "(jmpz)",        "" },
+    { JMPn,               "(jmpn)",        "" },
+    { JMPp,               "(jmpp)",        "" },
+    { LIT1,               "(lit1)",        "" },
+    { LIT4,               "(lit4)",        "" },
+    { STORE,              "(store)",       "!" },
+    { CSTORE,             "(cstore)",      "c!" },
+    { FETCH,              "(fetch)",       "@" },
+    { CFETCH,             "(cfetch)",      "c@" },
+    { DUP,                "(dup)",         "DUP" },
+    { SWAP,               "(swap)",        "SWAP" },
+    { OVER,               "(over)",        "OVER" },
+    { DROP,               "(drop)",        "DROP" },
+    { ADD,                "(add)",         "+" },
+    { SUB,                "(sub)",         "-" },
+    { MULT,               "(mult)",        "*" },
+    { SLMOD,              "(slmod)",       "/MOD" },
+    { LT,                 "(lt)",          "<" },
+    { EQ,                 "(eq)",          "=" },
+    { GT,                 "(gt)",          ">" },
+    { NOT,                "(not)",         "0=" },
+    { EMIT,               "(emit)",        "EMIT" },
+    { TIMER,              "(timer)",       "TIMER" },
+    { INC,                "(inc)",         "1+" },
+    { ADDA,               "(adda)",        "+!" },
+    { DEC,                "(dec)",         "1-" },
+    { DO,                 "(do)",          "DO" },
+    { INDEX,              "(index)",       "(i)" },
+    { LOOP,               "(loop)",        "LOOP" },
+    { LOOP2,              "(+loop)",       "+LOOP" },
+    { RTO,                "(rto)",         ">R" },
+    { RFETCH,             "(rfetch)",      "R@" },
+    { RFROM,              "(rfrom)",       "R>" },
+    { WORD,               "(word)",        "next-word" },
+    { DEFINE,             "(define)",      ":" },
+    { CREATE,             "(create)",      "CREATE" },
+    { FIND,               "(find)",        "'" },
+    { ENDWORD,            "(endword)",     ";" },
+    { AND,                "(and)",         "AND" },
+    { OR,                 "(or)",          "OR" },
+    { XOR,                "(xor)",         "XOR" },
+    { COM,                "(com)",         "COM" },
+    { SYSTEM,             "(system)",      "SYSTEM" },
+    { FOPEN,              "(fopen)",       "FOPEN" },
+    { FCLOSE,             "(fclose)",      "FCLOSE" },
+    { FREAD,              "(fread)",       "FREAD" },
+    { FWRITE,             "(fwrite)",      "FWRITE" },
+    { FLOAD,              "(fload)",       "(load)" },
+    { QKEY,               "(qkey)",        "?KEY" },
+    { KEY,                "(key)",         "KEY" },
+    { REG_D,              "(reg_d)",       "" },
+    { REG_I,              "(reg_i)",       "" },
+    { REG_R,              "(reg_r)",       "" },
+    { REG_S,              "(reg_s)",       "" },
+    { REG_NEW,            "(reg_new)",     "+regs" },
+    { REG_FREE,           "(reg_free)",    "-regs" },
+    { IS_NUM,             "(is_num)",      "NUMBER?" },
+    { TYPE,               "(type)",        "TYPE" },
+    { TYPEZ,              "(typez)",       "TYPEZ" },
+    { STOP,               "(stop)",        "" },
+    { (cell_t)&sp,        "(sp)",          "" },
+    { (cell_t)&rsp,       "(rsp)",         "" },
+    { (cell_t)&lsp,       "(lsp)",         "" },
+    { (cell_t)&here,      "(here)",        "" },
+    { (cell_t)&vhere,     "(vhere)",       "" },
+    { (cell_t)&last,      "(last)",        "" },
+    { (cell_t)&stk[0],    "(stk)",         "" },
+    { (cell_t)&rstk[0],   "(rstk)",        "" },
+    { (cell_t)&tib[0],    "tib",           "" },
+    { (cell_t)&in,        ">in",           "" },
+    { (cell_t)&mem[0],    "mem",           "" },
+    { MEM_SZ,             "mem-sz",        "" },
+    { (cell_t)&vars[0],   "vars",          "" },
+    { VARS_SZ,            "vars-sz",       "" },
+    { (cell_t)&reg[0],    "regs",          "" },
+    { (cell_t)&output_fp, "(output_fp)",   "" },
+    { (cell_t)&input_fp,  "(input_fp)",    "" },
+    { (cell_t)&state,     "state",         "" },
+    { sizeof(dict_t),     "word-sz",       "" },
+    { CELL_SZ,            "CELL",          "" },
+    { (cell_t)&base,      "base",          "" },
     { 0, 0, 0 }
 };
 
