@@ -33,7 +33,7 @@
 : exec  >r ;
 
 : if    (jmpz) c, here 0 , ; immediate
-: else  (jmp) c, here swap 0 , here swap ! ; immediate
+: else  (jmp)  c, here swap 0 , here swap ! ; immediate
 : then  here swap ! ; immediate
 : exit  (exit) c,   ; immediate
 
@@ -43,6 +43,8 @@
 : while  (jmpz)  c, here 0 , ; immediate
 : repeat swap (jmp) c, ,
     here swap ! ; immediate
+: -while  (dup) c, (not) c,  (jmpz)  c, , ; immediate
+: for 1- 0 swap do ; inline
 
 : tuck  swap over ; inline
 : nip   swap drop ; inline
