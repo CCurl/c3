@@ -13,12 +13,10 @@ typedef unsigned char byte;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
-    STOP = 0, EXIT, CALL, JMP, ZJMP,
-    JMPg, JMPl, JMPz, JMPn, JMPp,
+    STOP = 0, EXIT, CALL, JMP, JMPZ,
     STORE, CSTORE, FETCH, CFETCH,
-    LIT1, LIT4,
-    DUP, SWAP, OVER, DROP,
-    ADD, MULT, SLMOD, SUB, INC, ADDA, DEC,
+    LIT1, LIT4, DUP, SWAP, OVER, DROP,
+    ADD, MULT, SLMOD, SUB, INC, DEC,
     LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM,
     DO, LOOP, LOOP2, INDEX,
@@ -38,11 +36,7 @@ enum {
 
 #define TOS           (stk[sp])
 #define NOS           (stk[sp-1])
-#define PopT            t1=pop()
-#define PopN            n1=pop()
 #define PUSH(x)       push((cell_t)(x))
-#define DROP1         sp--
-#define NEXT          goto next
 #define NCASE         goto next; case
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
@@ -62,7 +56,7 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[100], reg_base, t1, n1;
+cell_t state, base, reg[100], reg_base;
 char mem[MEM_SZ];
 char vars[VARS_SZ], *vhere;
 char *here, tib[128], *in;
@@ -199,18 +193,13 @@ int nextWord() {
 
 void Run(char *pc) {
     char *y;
-    cell_t x1;
+    cell_t t1, n1;
 next:
     switch (*(pc++)) {
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
         case  JMP: pc = CpAt(pc);
-        NCASE ZJMP: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE JMPg: if (NOS>TOS)  { pc=CpAt(pc); } else { pc+=CELL_SZ; } DROP1;
-        NCASE JMPl: if (NOS<TOS)  { pc=CpAt(pc); } else { pc+=CELL_SZ; } DROP1;
-        NCASE JMPz: if (TOS==0)   { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE JMPn: if (TOS<0)    { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE JMPp: if (0<TOS)    { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE JMPZ: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE LIT1: push(*(pc++));
         NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
@@ -218,21 +207,20 @@ next:
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
         NCASE CFETCH: TOS = *ToCP(TOS);
         NCASE DUP: push(TOS);
-        NCASE SWAP: t1=TOS; n1=NOS; TOS=n1; NOS=t1;
+        NCASE SWAP: t1 = TOS; TOS = NOS; NOS = t1;
         NCASE OVER: push(NOS);
-        NCASE DROP: DROP1;
-        NCASE ADD: PopT; PopN; push(n1+t1);
-        NCASE SUB: PopT; PopN; push(n1-t1);
-        NCASE MULT: PopT; PopN; push(n1*t1);
-        NCASE SLMOD: PopT; PopN; push(n1%t1); push(n1/t1);
-        NCASE LT: PopT; PopN; push(n1< t1);
-        NCASE EQ: PopT; PopN; push(n1==t1);
-        NCASE GT: PopT; PopN; push(n1> t1);
-        NCASE NOT: TOS = (TOS) ? 0: -1;
+        NCASE DROP: if (--sp < 0) { sp = 0; }
+        NCASE ADD:   t1=pop(); TOS += t1;
+        NCASE SUB:   t1=pop(); TOS -= t1;
+        NCASE MULT:  t1=pop(); TOS *= t1;
+        NCASE SLMOD: t1=TOS; TOS = (NOS/t1); NOS %= t1;
+        NCASE LT: t1=pop(); TOS = (TOS<t1);
+        NCASE EQ: t1=pop(); TOS = (TOS==t1);
+        NCASE GT: t1=pop(); TOS = (TOS>t1);
+        NCASE NOT: TOS = (TOS==0);
         NCASE EMIT: printChar((char)pop());
         NCASE TIMER: push(clock());
         NCASE INC: ++TOS;
-        NCASE ADDA: y=ToCP(pop()); t1 = pop(); Store(y, Fetch(y)+t1);
         NCASE DEC: --TOS;
         NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
         NCASE INDEX: PUSH(&L0);
@@ -246,16 +234,16 @@ next:
         NCASE CREATE: nextWord(); doCreate(ToCP(pop()));
         NCASE FIND: nextWord(); doFind();
         NCASE ENDWORD: state=0; CComma(EXIT);
-        NCASE AND: PopT; PopN; push(n1&t1);
-        NCASE OR:  PopT; PopN; push(n1|t1);
-        NCASE XOR: PopT; PopN; push(n1^t1);
+        NCASE AND: t1=pop(); TOS = (TOS & t1);
+        NCASE OR:  t1=pop(); TOS = (TOS | t1);
+        NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
         NCASE COM: TOS = ~TOS;
 #ifdef isPC
-        NCASE SYSTEM: y=ToCP(pop()); system(y+1);
-        NCASE FOPEN:  NOS=(cell_t)fopen(ToCP(NOS+1), ToCP(TOS+1)); DROP1;
-        NCASE FCLOSE: fclose((FILE*)pop());
-        NCASE FREAD:  n1=pop(); t1=pop(); TOS=fread(ToCP(TOS), 1, t1, (FILE*)n1);
-        NCASE FWRITE: n1=pop(); t1=pop(); TOS=fwrite(ToCP(TOS), 1, t1, (FILE*)n1);
+        NCASE SYSTEM: t1=pop(); system(ToCP(t1+1));
+        NCASE FOPEN:  t1=pop(); TOS=(cell_t)fopen(ToCP(TOS+1), ToCP(t1+1));
+        NCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
+        NCASE FREAD:  t1=pop(); n1=pop(); TOS =  fread(ToCP(TOS), 1, n1, (FILE*)t1);
+        NCASE FWRITE: t1=pop(); n1=pop(); TOS = fwrite(ToCP(TOS), 1, n1, (FILE*)t1);
         NCASE FLOAD:  y=ToCP(pop()); t1=(cell_t)fopen(y+1, "rt");
                 if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
                 if (t1) { input_fp = t1; ClearTib; }
@@ -270,7 +258,7 @@ next:
         NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
         NCASE IS_NUM: ++TOS; push(isNum());
-        NCASE TYPE: x1=pop(); y=ToCP(pop()); for (int i=0; i<x1; i++) { printChar(*(y++)); }
+        NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE STOP: return;
         default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")
@@ -334,12 +322,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { EXIT,               "(exit)",        "EXIT" },
     { CALL,               "(call)",        "" },
     { JMP,                "(jmp)",         "" },
-    { ZJMP,               "(zjmp)",        "" },
-    { JMPg,               "(jmpg)",        "" },
-    { JMPl,               "(jmpl)",        "" },
-    { JMPz,               "(jmpz)",        "" },
-    { JMPn,               "(jmpn)",        "" },
-    { JMPp,               "(jmpp)",        "" },
+    { JMPZ,               "(jmpz)",        "" },
     { LIT1,               "(lit1)",        "" },
     { LIT4,               "(lit4)",        "" },
     { STORE,              "(store)",       "!" },
@@ -361,7 +344,6 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { EMIT,               "(emit)",        "EMIT" },
     { TIMER,              "(timer)",       "TIMER" },
     { INC,                "(inc)",         "1+" },
-    { ADDA,               "(adda)",        "+!" },
     { DEC,                "(dec)",         "1-" },
     { DO,                 "(do)",          "DO" },
     { INDEX,              "(index)",       "(i)" },
@@ -396,7 +378,6 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { IS_NUM,             "(is_num)",      "NUMBER?" },
     { TYPE,               "(type)",        "TYPE" },
     { TYPEZ,              "(typez)",       "TYPEZ" },
-    { STOP,               "(stop)",        "" },
     { (cell_t)&sp,        "(sp)",          "" },
     { (cell_t)&rsp,       "(rsp)",         "" },
     { (cell_t)&lsp,       "(lsp)",         "" },
@@ -440,11 +421,10 @@ void init() {
     vhere = &vars[0];
     last = (dict_t*)&mem[MEM_SZ];
     base = 10;
-    sp = rsp = reg_base = t1 = 0;
-    while (prims[t1].opName) {
-        if (prims[t1].opName[0]) { loadNum(prims[t1].opName, prims[t1].op, 1); }
-        if (prims[t1].c3Word[0]) { loadNum(prims[t1].c3Word, prims[t1].op, 0); }
-        ++t1;
+    sp = rsp = reg_base = 0;
+    for (int i = 0; prims[i].opName;i++) {
+        if (prims[i].opName[0]) { loadNum(prims[i].opName, prims[i].op, 1); }
+        if (prims[i].c3Word[0]) { loadNum(prims[i].c3Word, prims[i].op, 0); }
     }
 }
 

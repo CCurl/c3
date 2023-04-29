@@ -20,7 +20,6 @@
 : \ 0 >in @ ! ; immediate
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
-: -; (jmp) here cell - 1- c! 0 state ! ; immediate
 : bye 999 state ! ;
 : cells cell * ; inline
 
@@ -33,15 +32,15 @@
 : does>  r> last ! ;
 : exec  >r ;
 
-: if    (zjmp) c, here 0 , ; immediate
+: if    (jmpz) c, here 0 , ; immediate
 : else  (jmp) c, here swap 0 , here swap ! ; immediate
 : then  here swap ! ; immediate
 : exit  (exit) c,   ; immediate
 
 : begin  here         ; immediate
-: until  (zjmp)  c, , ; immediate
+: until  (jmpz)  c, , ; immediate
 : again  (jmp)   c, , ; immediate
-: while  (zjmp)  c, here 0 , ; immediate
+: while  (jmpz)  c, here 0 , ; immediate
 : repeat swap (jmp) c, ,
     here swap ! ; immediate
 
@@ -91,12 +90,12 @@ variable #bufp
 : hold #bufp -- #bufp @ c! ;          \ ( c -- )
 : #digit '0' + dup '9' > if 7 + then ;
 : >neg dup 0 < (neg) ! abs ;          \ ( n1 -- u1 )
-: <# here 35 + #bufp ! 0 hold >neg -; \ ( n1 -- u1 )
-: # base @ /mod swap #digit hold -;   \ ( u1 -- u2 )
+: <# here 66 + #bufp ! 0 hold >neg ;  \ ( n1 -- u1 )
+: # base @ /mod swap #digit hold ;    \ ( u1 -- u2 )
 : #S begin # dup 0= until ;           \ ( u1 -- 0 )
 : #> drop (neg) @ if '-' hold then ;
 : #P #bufp @ typez ;                  \ ( 0 ... n 0 -- )
-: (.) <# #S #> #P -;
+: (.) <# #S #> #P ;
 : . (.) space ;
 
 : 0sp 0 (sp) ! ;
