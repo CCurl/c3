@@ -225,7 +225,7 @@ next:
         NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
         NCASE INDEX: PUSH(&L0);
         NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
-        NCASE LOOP2: if (--L0>=L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE RTO: rstk[++rsp] = ToCP(pop());
         NCASE RFETCH: PUSH(rstk[rsp]);
         NCASE RFROM: PUSH(rstk[rsp--]);
@@ -348,7 +348,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { DO,                 "(do)",          "DO" },
     { INDEX,              "(index)",       "(i)" },
     { LOOP,               "(loop)",        "LOOP" },
-    { LOOP2,              "(next)",        "NEXT" },
+    { LOOP2,              "(-loop)",       "-LOOP" },
     { RTO,                "(rto)",         ">R" },
     { RFETCH,             "(rfetch)",      "R@" },
     { RFROM,              "(rfrom)",       "R>" },

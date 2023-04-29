@@ -44,7 +44,6 @@
 : repeat swap (jmp) c, ,
     here swap ! ; immediate
 : -while  (dup) c, (not) c,  (jmpz)  c, , ; immediate
-: for 1- 0 swap do ; inline
 
 : tuck  swap over ; inline
 : nip   swap drop ; inline
