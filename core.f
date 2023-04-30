@@ -43,7 +43,9 @@
 : while  (jmpz)  c, here 0 , ; immediate
 : repeat swap (jmp) c, ,
     here swap ! ; immediate
-: -while  (dup) c, (not) c,  (jmpz)  c, , ; immediate
+: -while  (dup) c,  (not) c,  (jmpz) c, , ; immediate
+: for 0 swap do ; inline
+: next -loop ; inline
 
 : tuck  swap over ; inline
 : nip   swap drop ; inline
@@ -106,6 +108,7 @@ variable #bufp
     then ')' emit ;
 
 : count ( str--a n ) dup 1+ swap c@ ; inline
+: dump for dup c@ . 1+ next drop ;
 
 : T8 ( ch-- )   r8 c! i8 ;
 : T2 ( --str end )   +regs

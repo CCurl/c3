@@ -205,7 +205,7 @@ next:
         NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
         NCASE CSTORE: *ToCP(TOS) = (char)NOS; sp-=2;
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
-        NCASE CFETCH: TOS = *ToCP(TOS);
+        NCASE CFETCH: TOS = *(byte*)(TOS);
         NCASE DUP: push(TOS);
         NCASE SWAP: t1 = TOS; TOS = NOS; NOS = t1;
         NCASE OVER: push(NOS);
@@ -292,9 +292,8 @@ int ParseWord() {
         if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
         if (f & IS_INLINE) {
             CComma(*(xt++));
-            while ((*xt) && (*xt != EXIT)) { CComma(*(xt++)); }
-        }
-        else { CComma(CALL); Comma((cell_t)xt); }
+            while (*xt != EXIT) { CComma(*(xt++)); }
+        } else { CComma(CALL); Comma((cell_t)xt); }
         return 1;
     }
 
