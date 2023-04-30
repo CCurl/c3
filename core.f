@@ -33,19 +33,22 @@
 : exec  >r ;
 
 : if    (jmpz) c, here 0 , ; immediate
-: else  (jmp)  c, here swap 0 , here swap ! ; immediate
+: else  (jmp) c, here swap 0 , here swap ! ; immediate
 : then  here swap ! ; immediate
 : exit  (exit) c,   ; immediate
 
 : begin  here         ; immediate
-: until  (jmpz)  c, , ; immediate
-: again  (jmp)   c, , ; immediate
-: while  (jmpz)  c, here 0 , ; immediate
-: repeat swap (jmp) c, ,
-    here swap ! ; immediate
-: -while  (dup) c,  (not) c,  (jmpz) c, , ; immediate
+: until  (jmpz) c, , ; immediate
+: again  (jmp) c, , ; immediate
+: while  (jmpz) c, here 0 , ; immediate
+: repeat swap (jmp) c, , here swap ! ; immediate
 : for 0 swap do ; inline
 : next -loop ; inline
+
+\ MachineForth words
+: -if     (dup) c,  (jmpz) c, here 0 , ; immediate
+: -until  (dup) c,  (jmpz) c, , ; immediate
+: -while  (jmpnz) c, , ; immediate
 
 : tuck  swap over ; inline
 : nip   swap drop ; inline
@@ -53,9 +56,13 @@
 : 2drop drop drop ; inline
 : ?dup  dup if dup then ;
 
+: /   /mod nip  ; inline
+: mod /mod drop ; inline
+
 : +! swap over @ + swap ! ;  inline
 : c++ dup c@ 1+ swap c! ; inline
 : 2*  dup + ; inline
+: 2/  2 / ; inline
 : 2+  1+ 1+ ; inline
 : <=  > 0= ; inline
 : >=  < 0= ; inline
@@ -84,9 +91,6 @@
 : j  (i) 3 cells - @ ;
 : +i (i) +! ;
 : unloop (lsp) @ 3 - 0 max (lsp) ! ;
-
-: /   /mod nip  ; inline
-: mod /mod drop ; inline
 
 variable (neg)
 variable #bufp
@@ -140,8 +144,8 @@ variable #bufp
 : hex     $10 base ! ;
 : ? @ . ;
 
-: rshift ( n1 s--n2 ) 0 do 2 / loop ;
 : lshift ( n1 s--n2 ) 0 do 2* loop ;
+: rshift ( n1 s--n2 ) 0 do 2/ loop ;
 
 : load next-word drop 1- (load) ;
 : load-abort 99 state ! ;

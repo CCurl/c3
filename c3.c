@@ -13,9 +13,10 @@ typedef unsigned char byte;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
-    STOP = 0, EXIT, CALL, JMP, JMPZ,
+    STOP = 0, LIT1, LIT4, 
+    EXIT, CALL, JMP, JMPZ, JMPNZ,
     STORE, CSTORE, FETCH, CFETCH,
-    LIT1, LIT4, DUP, SWAP, OVER, DROP,
+    DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC,
     LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM,
@@ -199,7 +200,8 @@ next:
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
         case  JMP: pc = CpAt(pc);
-        NCASE JMPZ: if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
+        NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE LIT1: push(*(pc++));
         NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
@@ -322,6 +324,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { CALL,               "(call)",        "" },
     { JMP,                "(jmp)",         "" },
     { JMPZ,               "(jmpz)",        "" },
+    { JMPNZ,              "(jmpnz)",       "" },
     { LIT1,               "(lit1)",        "" },
     { LIT4,               "(lit4)",        "" },
     { STORE,              "(store)",       "!" },

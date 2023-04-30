@@ -58,7 +58,7 @@ c3 provides 10 temporary words, T0 thru T9.
 An example usage of temporary words:
 ```
    \ The Babylon square root algorithm
-   : T0 ( n--sqrt ) dup 4 / begin >r dup r@ / r@ + 2 / dup r> - while nip ;
+   : T0 ( n--sqrt ) dup 4 / begin >r dup r@ / r@ + 2 / dup r> - 0= until nip ;
    : sqrt ( n--0|sqrt ) dup 0 > if T0 else drop 0 then ;
 ```
 
@@ -132,10 +132,10 @@ c!       (b a--)           Store BYTE b to address a.
 create x (--)              Creates a definition for x word.
 do       (T F--)           Begin DO/LOOP loop.
 (i)      (--a)             a: address of the index variable.
-loop     (--)              Increment I, jump to DO if I < T.
--loop    (--)              Decrement I, jump to DO if I > T.
+loop     (--)              Increment I, Jump to DO if I < T.
+-loop    (--)              Decrement I, Jump to DO if I > T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
-        NOTE: Words like IF/THEN/EXIT and BEGIN/WHILE are not in the base c3.
+        NOTE: Words like IF/THEN/EXIT and BEGIN/UNTIL are not in the base c3.
               They are just words that are defined in core.f
 
 *** REGISTERS ***
@@ -149,15 +149,11 @@ dX       (--)              Decrement register #X (X: [0-9]).
                +regs simply adds 10 to "register-base", so it is a very efficient operation.
 
 *** SYSTEM ***
-version  (--n)   n: c3 version*10 (e.g. - 11 => v1.1)
+version  (--n)   n: c3 version*10 (e.g. - 4 => v0.4)
 (exit)   (--n)   n: The byte-code value for EXIT.
-(jmp)    (--n)   n: The byte-code value for JMP.    On execute: (?--?)    JUMP
-(jmpz)   (--n)   n: The byte-code value for JMPZ.   On execute: (N--)     JUMP if N=0 (Consumes N)
-(jmp=0)  (--n)   n: The byte-code value for JMP=0.  On execute: (N--N)    JUMP if N=0
-(jmp<0)  (--n)   n: The byte-code value for JMP<0.  On execute: (N--N)    JUMP if N<0
-(jmp>0)  (--n)   n: The byte-code value for JMP>0.  On execute: (N--N)    JUMP if N>0
-(jmp-gt) (--n)   n: The byte-code value for JMP-GT. On execute: (A B--A)  JUMP if A>B (Consumes B)
-(jmp-lt) (--n)   n: The byte-code value for JMP-LT. On execute: (A B--A)  JUMP if A<B (Consumes B)
+(jmp)    (--n)   n: The byte-code value for JMP.    On execute: (?--?)  JUMP
+(jmpz)   (--n)   n: The byte-code value for JMPZ.   On execute: (N--)   JUMP if N==0 (Consumes N)
+(jmpnz)  (--n)   n: The byte-code value for JMPNZ.  On execute: (N--N)  JUMP if N!=0
 (call)   (--n)   n: The byte-code value for CALL.
 (lit1)   (--n)   n: The byte-code value for LIT1.
 (lit4)   (--n)   n: The byte-code value for LIT4.
