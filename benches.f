@@ -21,7 +21,7 @@ variable num
 : bm1 cr ." Bench 1: decrement loop, " dup . ." iterations ... "
     timer swap begin 1- -while drop elapsed ;
 : bm2 cr ." Bench 2: register decrement loop, " dup . ." iterations ... "
-    s1 timer begin d1 r1 0= until elapsed ;
+    s1 timer begin r1- while repeat elapsed ;
 : bm3 cr ." Bench 3: empty do/loop, " dup . ." iterations ... "
     timer swap 0 do loop elapsed ;
 : bm4 cr ." Bench 4: empty for/next, " dup . ." iterations ... "
