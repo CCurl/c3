@@ -104,7 +104,7 @@ number?   (S--N F|F)       Parse string S as a number. N: number if F=1.
 emit      (C--)            Output C as a character.
 next-word (--A L)          A: the next word from the input stream, L: length.
 key       (--C)            C: Next keyboard char, wait if no char available.
-key?      (--F)            F: FALSE if no char available, else TRUE.
+?key      (--F)            F: FALSE if no char available, else TRUE.
 
 *** FILES ***
 fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
