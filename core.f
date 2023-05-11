@@ -112,16 +112,15 @@ variable #bufp
     then ')' emit ;
 
 : count ( str--a n ) dup 1+ swap c@ ; inline
-: dump for dup c@ . 1+ next drop ;
+: dump ( a n-- ) for dup c@ . 1+ next drop ;
 
-: T8 ( ch-- )   r8 c! i8 ;
 : T2 ( --str end )   +regs
-    vhere dup s8 s9   0 T8
+    vhere dup s8 s9   0 r8+ c!
     begin >in @ c@ s1
         r1 if >in ++ then
         r1 0= r1 '"' = or
-        if 0 T8   r9 r8 -regs   exit then
-        r1 T8   r9 c++
+        if 0 r8+ c!   r9 r8 -regs   exit then
+        r1   r8+ c!   r9 c++
     again ;
 
 : s" ( --str ) T2 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate
@@ -132,12 +131,12 @@ variable #bufp
     (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
 
 : .word cell + 1+ count type ;
-: words +regs 0 s1 last s2 begin
+: words +regs 0 s1 0 s3 last s2 begin
         r2 mem-end < while
-            i1 r1 #11 mod 0= if cr then
-            r2 .word tab r2 word-sz + s2
+            r1+ #10 > if 0 s1 cr then
+            i3 r2 .word tab r2 word-sz + s2
     repeat
-    ." (" r1 . ." words)" -regs ;
+    ." (" r3 . ." words)" -regs ;
 
 : binary  %10 base ! ;
 : decimal #10 base ! ;
@@ -148,7 +147,7 @@ variable #bufp
 : rshift ( n1 s--n2 ) 0 do 2/ loop ;
 
 : load next-word drop 1- (load) ;
-: load-abort 99 state ! ;
+: load-abort #99 state ! ;
 : loaded? if 2drop load-abort then ;
 
 variable (fg) 2 cells allot
