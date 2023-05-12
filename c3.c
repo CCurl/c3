@@ -30,7 +30,7 @@ enum {
     REG_NEW, REG_FREE
 };
 
-#define C3_VERSION    6
+#define C3_VERSION    7
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 #define STOP_LOAD    99
