@@ -26,10 +26,11 @@ enum {
     TYPE, TYPEZ,
     DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
-    REG_I, REG_D, REG_R, REG_S, REG_NEW, REG_FREE
+    REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
+    REG_NEW, REG_FREE
 };
 
-#define C3_VERSION    6
+#define C3_VERSION    7
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 #define STOP_LOAD    99
@@ -106,8 +107,14 @@ int isTempWord(char *w) {
 }
 
 char isRegOp(char *w) {
-    if ((strLen(w) != 2) || !BTW(w[1],'0','9')) { return 0; }
-    if (w[0]=='r') { return REG_R; }
+    if (!BTW(w[1],'0','9')) { return 0; }
+    if (w[0]=='r') { 
+        if (w[2]==0) { return REG_R; }
+        if ((w[2]=='-') && (w[3]==0))  { return REG_RD; }
+        if ((w[2]=='+') && (w[3]==0))  { return REG_RI; }
+        return 0;
+    }
+    if (w[2]) { return 0; }
     if (w[0]=='s') { return REG_S; }
     if (w[0]=='i') { return REG_I; }
     if (w[0]=='d') { return REG_D; }
@@ -253,9 +260,11 @@ next:
 #endif
         NCASE QKEY: push(qKey());
         NCASE KEY:  push(key());
-        NCASE REG_D: --reg[*(pc++)+reg_base];
-        NCASE REG_I: ++reg[*(pc++)+reg_base];
-        NCASE REG_R: push(reg[*(pc++)+reg_base]);
+        NCASE REG_D: reg[*(pc++)+reg_base]--;
+        NCASE REG_I: reg[*(pc++)+reg_base]++;
+        NCASE REG_R:  push(reg[*(pc++)+reg_base]);
+        NCASE REG_RD: push(reg[*(pc++)+reg_base]--);
+        NCASE REG_RI: push(reg[*(pc++)+reg_base]++);
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
@@ -351,14 +360,14 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { INDEX,              "(index)",       "(i)" },
     { LOOP,               "(loop)",        "LOOP" },
     { LOOP2,              "(-loop)",       "-LOOP" },
-    { RTO,                "(rto)",         ">R" },
-    { RFETCH,             "(rfetch)",      "R@" },
-    { RFROM,              "(rfrom)",       "R>" },
+    { RTO,                "(>r)",          ">R" },
+    { RFETCH,             "(r@)",          "R@" },
+    { RFROM,              "(r>)",          "R>" },
     { WORD,               "(word)",        "next-word" },
-    { DEFINE,             "(define)",      ":" },
+    { DEFINE,             "(:)",           ":" },
     { CREATE,             "(create)",      "CREATE" },
     { FIND,               "(find)",        "'" },
-    { ENDWORD,            "(endword)",     ";" },
+    { ENDWORD,            "(;)",           ";" },
     { AND,                "(and)",         "AND" },
     { OR,                 "(or)",          "OR" },
     { XOR,                "(xor)",         "XOR" },
@@ -369,11 +378,13 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { FREAD,              "(fread)",       "FREAD" },
     { FWRITE,             "(fwrite)",      "FWRITE" },
     { FLOAD,              "(fload)",       "(load)" },
-    { QKEY,               "(qkey)",        "?KEY" },
+    { QKEY,               "(?key)",        "?KEY" },
     { KEY,                "(key)",         "KEY" },
     { REG_D,              "(reg_d)",       "" },
     { REG_I,              "(reg_i)",       "" },
     { REG_R,              "(reg_r)",       "" },
+    { REG_RD,             "(reg_r-)",      "" },
+    { REG_RI,             "(reg_r+)",      "" },
     { REG_S,              "(reg_s)",       "" },
     { REG_NEW,            "(reg_new)",     "+regs" },
     { REG_FREE,           "(reg_free)",    "-regs" },

@@ -33,9 +33,11 @@ The goals for this project are as follows:
 
 ## Registers
 c3 provides 10 "virtual registers", r0 thru r9.
-There are 6 register operations: +regs, rX, sX, iX, dX, -regs.
+There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
 - +regs   allocates 10 new current registers.
 - r4      pushes register #4.
+- r4+     pushes register #4, then increments it.
+- r4-     pushes register #4, then decrements it.
 - s4      sets register #4 from TOS.
 - i4      increments register #4.
 - d4      decrements register #4.
@@ -102,7 +104,7 @@ number?   (S--N F|F)       Parse string S as a number. N: number if F=1.
 emit      (C--)            Output C as a character.
 next-word (--A L)          A: the next word from the input stream, L: length.
 key       (--C)            C: Next keyboard char, wait if no char available.
-key?      (--F)            F: FALSE if no char available, else TRUE.
+?key      (--F)            F: FALSE if no char available, else TRUE.
 
 *** FILES ***
 fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
@@ -140,10 +142,12 @@ loop     (--)              Increment I, Jump to DO if I < T.
 
 *** REGISTERS ***
 +regs    (--)              Save the current registers.
-rX       (--n)             n: the value of register #X (X: [0-9]).
-sX       (n--)             n: new value for register #X (X: [0-9]).
-iX       (--)              Increment register #X (X: [0-9]).
-dX       (--)              Decrement register #X (X: [0-9]).
+rX       (--n)             n: the value of register #X.
+rX+      (--n)             n: the value of register #X. Increment register X.
+rX-      (--n)             n: the value of register #X. Decrement register X.
+sX       (n--)             n: new value for register #X.
+iX       (--)              Increment register #X.
+dX       (--)              Decrement register #X.
 -regs    (--)              Restore the last saved registers.
         NOTES: The registers are stored in an array/stack with a "register-base".
                +regs simply adds 10 to "register-base", so it is a very efficient operation.
