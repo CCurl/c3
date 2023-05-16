@@ -30,7 +30,7 @@ enum {
     REG_NEW, REG_FREE
 };
 
-#define C3_VERSION    7
+#define C3_VERSION    8
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 #define STOP_LOAD    99
@@ -106,7 +106,7 @@ int isTempWord(char *w) {
     return ((w[0]=='T') && BTW(w[1],'0','9') && (w[2]==0)) ? 1 : 0;
 }
 
-char isRegOp(char *w) {
+char isRegOp(const char *w) {
     if (!BTW(w[1],'0','9')) { return 0; }
     if (w[0]=='r') { 
         if (w[2]==0) { return REG_R; }
@@ -276,54 +276,50 @@ next:
     }
 }
 
-int ParseWord() {
-    char *w = ToCP(pop()), t = isRegOp(w);
-    if (t) {
-        if (state) { CComma(t); CComma(w[1]-'0'); }
-        else {
-            tib[120]=t; tib[121]=w[1]-'0'; tib[122]=EXIT;
-            Run(&tib[120]);
-        }
-        return 1;
-    }
-
-    PUSH(w);
-    if (isNum()) {
-        if (state) {
-            if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
-            else { CComma(LIT4); Comma(pop()); }
-        }
-        return 1;
-    }
-
-    PUSH(w); doFind();
-    if (pop()) {
-        cell_t f = pop();
-        char *xt = ToCP(pop());
-        if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
-        if (f & IS_INLINE) {
-            CComma(*(xt++));
-            while (*xt != EXIT) { CComma(*(xt++)); }
-        } else { CComma(CALL); Comma((cell_t)xt); }
-        return 1;
-    }
-
-    PRINT3("[", w, "]??")
+int doNum(const char *wd) {
+    PUSH(wd);
+    if (isNum() == 0) { return 0; }
     if (state) {
-        here = ToCP(last);
-        ++last;
-        state = 0;
+        if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
+        else { CComma(LIT4); Comma(pop()); }
     }
-    base = 10;
-    return 0;
+    return 1;
+}
+
+int doReg(const char *w) {
+    char t = isRegOp(w);
+    if (t == 0) { return 0; }
+    if (state) { CComma(t); CComma(w[1]-'0'); }
+    else {
+        tib[120]=t; tib[121]=w[1]-'0'; tib[122]=EXIT;
+        Run(&tib[120]);
+    }
+    return 1;
+}
+
+int doWord(const char *w) {
+    PUSH(w); doFind();
+    if (pop() == 0) { return 0; }
+    cell_t f = pop();
+    char *xt = ToCP(pop());
+    if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
+    if (f & IS_INLINE) {
+        CComma(*(xt++));
+        while (*xt != EXIT) { CComma(*(xt++)); }
+    } else { CComma(CALL); Comma((cell_t)xt); }
+    return 1;
 }
 
 void ParseLine(char *x) {
     in = x;
-    if (in==0) { in=tib; ClearTib; }
-    while (state != ALL_DONE) {
-        if (nextWord() == 0) { return; }
-        if (ParseWord() == 0) { return; }
+    while ((state != ALL_DONE) && nextWord()) {
+        char *w = ToCP(pop());
+        if (doReg(w)) { continue; }
+        if (doNum(w)) { continue; }
+        if (doWord(w)) { continue; }
+        PRINT3("[", w, "]??")
+        if (state) { here = ToCP(last++); state = 0; }
+        return;
     }
 }
 
