@@ -145,7 +145,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include=".gitignore" />
-    <None Include="core.f" />
+    <None Include="core.c3" />
     <None Include="file.f" />
     <None Include="LICENSE" />
     <None Include="make" />
