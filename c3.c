@@ -27,7 +27,7 @@ enum {
     DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
-    REG_NEW, REG_FREE
+    REG_NEW, REG_FREE, INLINE, IMMEDIATE
 };
 
 #define C3_VERSION    8
@@ -271,6 +271,8 @@ next:
         NCASE IS_NUM: t1=pop(); push(isNum(ToCP(t1+1)));
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
+        NCASE INLINE: last->f = IS_INLINE;
+        NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
         NCASE STOP: return;
         default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")
     }
@@ -337,24 +339,24 @@ void ParseLine(char *x) {
 struct { long op; const char *opName;  const char *c3Word; } prims[] = { 
     { C3_VERSION,         "VERSION",       "" },
     { EXIT,               "(exit)",        "EXIT" },
-    { CALL,               "(call)",        "" },
-    { JMP,                "(jmp)",         "" },
-    { JMPZ,               "(jmpz)",        "" },
-    { JMPNZ,              "(jmpnz)",       "" },
-    { LIT1,               "(lit1)",        "" },
-    { LIT4,               "(lit4)",        "" },
-// { STORE,              "(store)",       "!" },
+//  { CALL,               "(call)",        "" },
+//  { JMP,                "(jmp)",         "" },
+//  { JMPZ,               "(jmpz)",        "" },
+//  { JMPNZ,              "(jmpnz)",       "" },
+//  { LIT1,               "(lit1)",        "" },
+//  { LIT4,               "(lit4)",        "" },
+    { STORE,              "(store)",       "!" },
     { CSTORE,             "(cstore)",      "c!" },
     { FETCH,              "(fetch)",       "@" },
-    { CFETCH,             "(cfetch)",      "c@" },
-    { DUP,                "(dup)",         "DUP" },
-    { SWAP,               "(swap)",        "SWAP" },
-    { OVER,               "(over)",        "OVER" },
-    { DROP,               "(drop)",        "DROP" },
+//  { CFETCH,             "(cfetch)",      "c@" },
+//  { DUP,                "(dup)",         "DUP" },
+//  { SWAP,               "(swap)",        "SWAP" },
+//  { OVER,               "(over)",        "OVER" },
+//  { DROP,               "(drop)",        "DROP" },
     { ADD,                "(add)",         "+" },
-    { SUB,                "(sub)",         "-" },
-    { MULT,               "(mult)",        "*" },
-    { SLMOD,              "(slmod)",       "/MOD" },
+//  { MULT,               "(mult)",        "*" },
+//  { SLMOD,              "(slmod)",       "/MOD" },
+//  { SUB,                "(sub)",         "-" },
     { LT,                 "(lt)",          "<" },
     { EQ,                 "(eq)",          "=" },
     { GT,                 "(gt)",          ">" },

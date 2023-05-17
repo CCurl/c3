@@ -1,28 +1,47 @@
+: (lit1)     1 ; inline
+: (lit4)     2 ; inline
+: (exit)     3 ;
+: (call)     4 ; inline
+: (jmp)      5 ; inline
+: (jmpz)     6 ; inline
+: (jmpnz)    7 ; inline
+: (dup)     12 ; inline
+-ML- EXIT    3 3 -MLX- inline
+-ML- !       8 3 -MLX- inline
+-ML- c!      9 3 -MLX- inline
+-ML- @      10 3 -MLX- inline
+-ML- c@     11 3 -MLX- inline
+-ML- DUP    12 3 -MLX- inline
+-ML- SWAP   13 3 -MLX- inline
+-ML- OVER   14 3 -MLX- inline
+-ML- DROP   15 3 -MLX- inline
+-ML- *      17 3 -MLX- inline
+-ML- /MOD   18 3 -MLX- inline
+-ML- -      19 3 -MLX- inline
+
+: \ 0 >in @ ! ; immediate
+\ Bootstrapping ...
+
+: [ 0 state ! ; immediate
+: ] 1 state ! ;
+
 : last (last) @ ;
-: immediate 1 last cell + c! ;
-: inline 2 last cell + c! ;
+: here (here) @ ;
+: c, here c! here 1+     (here) ! ;
+: ,  here !  here cell + (here) ! ;
 
--ML- !  8 3 -MLX- inline
--ML- - 19 3 -MLX- inline
-
+\ Now we can start
 : mem-end   mem  mem-sz  + ;
 : vars-end  vars vars-sz + ;
 
 : ++ dup @ 1+ swap ! ; inline
 : -- dup @ 1- swap ! ; inline
 
-: here (here) @ ;
-: c, here c! (here) ++ ;
-: , here ! here cell + (here) ! ;
-
 : vhere  (vhere) @ ;
 : allot  vhere + (vhere) ! ;
 : vc, vhere c! (vhere) ++ ;
 : v,  vhere ! cell allot ;
 
-: \ 0 >in @ ! ; immediate
-: [ 0 state ! ; immediate
-: ] 1 state ! ;
 : bye 999 state ! ;
 : cells cell * ; inline
 
