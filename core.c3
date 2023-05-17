@@ -98,13 +98,13 @@
 variable (neg)
 variable #bufp
 : hold #bufp -- #bufp @ c! ;          \ ( c -- )
-: #digit '0' + dup '9' > if 7 + then ;
+: #digit dup 9 > if 7 + then '0' + ;  \ ( n--c )
 : >neg dup 0 < (neg) ! abs ;          \ ( n1 -- u1 )
-: <# here 66 + #bufp ! 0 hold >neg ;  \ ( n1 -- u1 )
+: <# here #66 + #bufp ! 0 hold >neg ; \ ( n1 -- u1 )
 : # base @ /mod swap #digit hold ;    \ ( u1 -- u2 )
-: #S begin # dup 0= until ;           \ ( u1 -- 0 )
-: #> drop (neg) @ if '-' hold then ;
-: #P #bufp @ typez ;                  \ ( 0 ... n 0 -- )
+: #S begin # dup 0= until ;           \ ( 0 -- )
+: #> drop (neg) @ if '-' hold then ; 
+: #P #bufp @ typez ;                  \ ( -- )
 : (.) <# #S #> #P ;
 : . (.) space ;
 
