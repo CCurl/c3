@@ -128,7 +128,6 @@ int nextWord() {
     if (sp < 0) { PRINT1("-under-"); sp=0; }
     if (STK_SZ < sp) { PRINT1("-over-"); sp=0; }
     while (*in && (*in < 33)) { ++in; }
-    if (*in == 0) { return 0; }
     while (32 < *in) { WD[len++] = *(in++); }
     WD[len] = 0;
     return len;
@@ -136,7 +135,7 @@ int nextWord() {
 
 void doCreate(char *nm) {
     if (nm == 0) { nextWord(); nm = WD; }
-    PRINT3("cr[",nm,"]\n")
+    // PRINT3("cr[",nm,"]\n")
     if (isTempWord(nm)) { tempWords[nm[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(nm);
     --last;
@@ -177,7 +176,7 @@ int isDecimal(const char *wd) {
     return 1;
 }
 
-// ( nm--n | <null> )
+// ( --n | <null> )
 int isNum(const char *wd) {
     if ((wd[0]=='\'') && (wd[2]=='\'') && (wd[3]==0)) { push(wd[1]); return 1; }
     int b = base, lastCh = '9';
@@ -242,7 +241,7 @@ next:
         NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         NCASE DEFINE: doCreate(0); state=1;
         NCASE CREATE: doCreate(0);
-        NCASE FIND: doFind(0);
+        NCASE FIND: push(doFind(0));
         NCASE ENDWORD: state=0; CComma(EXIT);
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
@@ -257,7 +256,7 @@ next:
         NCASE FLOAD:  y=ToCP(pop()); t1=(cell_t)fopen(y+1, "rt");
                 if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
                 if (t1) { input_fp = t1; ClearTib; }
-                else { PRINT1("-noFile-"); }
+                else { PRINT3("-noFile[",y+1,"]-"); }
 #endif
         NCASE QKEY: push(qKey());
         NCASE KEY:  push(key());

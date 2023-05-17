@@ -117,8 +117,8 @@ variable #bufp
 : count ( str--a n ) dup 1+ swap c@ ; inline
 : dump ( a n-- ) for dup c@ . 1+ next drop ;
 
-: T2 ( --str end )   +regs
-    vhere dup s8 s9   0 r8+ c!
+: T2 ( --str end )   +regs   >in ++
+    vhere dup s8 s9  0 r8+ c!
     begin >in @ c@ s1
         r1 if >in ++ then
         r1 0= r1 '"' = or
@@ -131,7 +131,7 @@ variable #bufp
 : ." ( -- ) T2 state @ 0= if drop count type exit then
     (vhere) ! (lit4) c, ,
     (call) c, [ (lit4) c, ' count drop drop , ] ,
-    (call) c, [ (lit4) c, ' type  drop drop , ] , ;  immediate
+    (type) c, ;  immediate
 
 : .word cell + 1+ count type ;
 : words +regs 0 s1 0 s3 last s2 begin
