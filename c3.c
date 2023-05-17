@@ -75,10 +75,10 @@ void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { d[i]=val; } 
 char *strEnd(char *s) { while (*s) ++s; return s; }
 void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); } *d=0; }
 void strCpy(char *d, const char *s) { *d = 0; strCat(d, s); }
-int strLen(char *d) { int len = 0; while (*d++) { ++len; } return len; }
+int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 
-int strEq(char *d, char *s, int caseSensitive) {
+int strEq(const char *d, const char *s, int caseSensitive) {
     while (*s || *d) {
         if (caseSensitive) { if (*s != *d) return 0; }
         else { if (lower(*s) != lower(*d)) return 0; }
@@ -102,7 +102,7 @@ char *iToA(ucell_t N, int base) {
     return x;
 }
 
-int isTempWord(char *w) {
+int isTempWord(const char *w) {
     return ((w[0]=='T') && BTW(w[1],'0','9') && (w[2]==0)) ? 1 : 0;
 }
 
@@ -121,23 +121,38 @@ char isRegOp(const char *w) {
     return 0;
 }
 
-void doCreate(char *w) {
-    if (isTempWord(w)) { tempWords[w[1]-'0'].xt = (cell_t)here; return; }
-    int l = strLen(w);
+// ( --addr | <null> )
+char WD[32];
+int nextWord() {
+    int len = 0;
+    if (sp < 0) { PRINT1("-under-"); sp=0; }
+    if (STK_SZ < sp) { PRINT1("-over-"); sp=0; }
+    while (*in && (*in < 33)) { ++in; }
+    if (*in == 0) { return 0; }
+    while (32 < *in) { WD[len++] = *(in++); }
+    WD[len] = 0;
+    return len;
+}
+
+void doCreate(char *nm) {
+    if (nm == 0) { nextWord(); nm = WD; }
+    PRINT3("cr[",nm,"]\n")
+    if (isTempWord(nm)) { tempWords[nm[1]-'0'].xt = (cell_t)here; return; }
+    int l = strLen(nm);
     --last;
-    if (NAME_LEN < l) { l=NAME_LEN; w[l]=0; PRINT1("-name-trunc-"); }
-    strCpy(last->name, w);
+    if (NAME_LEN < l) { l=NAME_LEN; nm[l]=0; PRINT1("-name-trunc-"); }
+    strCpy(last->name, nm);
     last->len = l;
     last->xt = (cell_t)here;
     last->f = 0;
 }
 
-// ( nm--xt flags 1 | 0 )
-void doFind() {
-    char *nm = ToCP(pop());
+// ( nm--xt flags | <null> )
+int doFind(const char *nm) {
+    if (nm == 0) { nextWord(); nm = WD; }
     if (isTempWord(nm)) {
         push(tempWords[nm[1]-'0'].xt);
-        push(0); push(1); return;
+        push(0); return 1;
     }
     int len = strLen(nm);
     dict_t *dp = last;
@@ -145,14 +160,14 @@ void doFind() {
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
             push(dp->xt);
             push(dp->f);
-            push(1); return;
+            return 1;
         }
         ++dp;
     }
-    push(0);
+    return 0;
 }
 
-// ( --n? )
+// ( --n | <null> )
 int isDecimal(const char *wd) {
     cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
     if (isNeg && (*(++wd) == 0)) { return 0; }
@@ -162,10 +177,9 @@ int isDecimal(const char *wd) {
     return 1;
 }
 
-// ( nm--n? )
-int isNum() {
-    char *wd = ToCP(pop());
-    if ((wd[0] == '\'') && (wd[2] == '\'') && (wd[3] == 0)) { push(wd[1]); return 1; }
+// ( nm--n | <null> )
+int isNum(const char *wd) {
+    if ((wd[0]=='\'') && (wd[2]=='\'') && (wd[3]==0)) { push(wd[1]); return 1; }
     int b = base, lastCh = '9';
     if (*wd == '#') { b = 10;  ++wd; }
     if (*wd == '$') { b = 16;  ++wd; }
@@ -184,19 +198,6 @@ int isNum() {
     }
     push(x);
     return 1;
-}
-
-// ( --addr | <null> )
-int nextWord() {
-    int len = 0;
-    if (sp < 0) { PRINT1("-under-"); sp=0; }
-    if (STK_SZ < sp) { PRINT1("-over-"); sp=0; }
-    while (*in && (*in < 33)) { ++in; }
-    if (*in == 0) { return 0; }
-    PUSH(in);
-    while (32 < *in) { ++in; ++len; }
-    *(in++) = 0;
-    return len;
 }
 
 void Run(char *pc) {
@@ -238,10 +239,10 @@ next:
         NCASE RTO: rstk[++rsp] = ToCP(pop());
         NCASE RFETCH: PUSH(rstk[rsp]);
         NCASE RFROM: PUSH(rstk[rsp--]);
-        NCASE WORD: push(nextWord());
-        NCASE DEFINE: nextWord(); doCreate(ToCP(pop())); state=1;
-        NCASE CREATE: nextWord(); doCreate(ToCP(pop()));
-        NCASE FIND: nextWord(); doFind();
+        NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
+        NCASE DEFINE: doCreate(0); state=1;
+        NCASE CREATE: doCreate(0);
+        NCASE FIND: doFind(0);
         NCASE ENDWORD: state=0; CComma(EXIT);
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
@@ -268,7 +269,7 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
-        NCASE IS_NUM: ++TOS; push(isNum());
+        NCASE IS_NUM: t1=pop(); push(isNum(ToCP(t1+1)));
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE STOP: return;
@@ -276,9 +277,8 @@ next:
     }
 }
 
-int doNum(const char *wd) {
-    PUSH(wd);
-    if (isNum() == 0) { return 0; }
+int doNum(const char *w) {
+    if (isNum(w) == 0) { return 0; }
     if (state) {
         if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
         else { CComma(LIT4); Comma(pop()); }
@@ -298,8 +298,7 @@ int doReg(const char *w) {
 }
 
 int doWord(const char *w) {
-    PUSH(w); doFind();
-    if (pop() == 0) { return 0; }
+    if (doFind(w)==0) { return 0; }
     cell_t f = pop();
     char *xt = ToCP(pop());
     if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
@@ -310,14 +309,27 @@ int doWord(const char *w) {
     return 1;
 }
 
+int doML(const char *w) {
+    if (state) { return 0; }
+    if (strEq(w,"-ML-",1) == 0) { return 0; }
+    doCreate(0);
+    while (nextWord()) {
+        if (strEq(WD,"-MLX-",1)) { return 1; }
+        if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
+        CComma(pop());
+    }
+    return 1;
+}
+
 void ParseLine(char *x) {
     in = x;
     while ((state != ALL_DONE) && nextWord()) {
-        char *w = ToCP(pop());
-        if (doReg(w)) { continue; }
-        if (doNum(w)) { continue; }
-        if (doWord(w)) { continue; }
-        PRINT3("[", w, "]??")
+        // PRINT3("[",WD,"]\n");
+        if (doML(WD)) { continue; }
+        if (doReg(WD)) { continue; }
+        if (doNum(WD)) { continue; }
+        if (doWord(WD)) { continue; }
+        PRINT3("[", WD, "]??")
         if (state) { here = ToCP(last++); state = 0; }
         return;
     }
@@ -332,7 +344,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { JMPNZ,              "(jmpnz)",       "" },
     { LIT1,               "(lit1)",        "" },
     { LIT4,               "(lit4)",        "" },
-    { STORE,              "(store)",       "!" },
+// { STORE,              "(store)",       "!" },
     { CSTORE,             "(cstore)",      "c!" },
     { FETCH,              "(fetch)",       "@" },
     { CFETCH,             "(cfetch)",      "c@" },

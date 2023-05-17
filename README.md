@@ -11,7 +11,7 @@ The goals for this project are as follows:
 - The Linux version is 64-bit but can also be 32-bit.
 - This is a byte-coded implementation.
 - Very few primitives are built into the base executable.
-- The rest is built using those primitives (see core.f).
+- The rest is built using those primitives (see core.c3).
 - This is a toolkit to create any environment the programmer desires.
     - For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
@@ -20,7 +20,7 @@ The goals for this project are as follows:
 - c3 provides 10 "virtual registers", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
 - The VARIABLE space is separated from the CODE space.
-- Strings are both counted and null-terminated.
+- Counted strings are also null-terminated.
 - The dictionary starts at the end of the CODE area and grows down.
 - The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
 
@@ -77,7 +77,7 @@ An example usage of temporary words:
 
 ## c3 Base system reference
 ```
-NOTE: Since this is a toolkit, many of the core words are defined in file 'core.f'
+NOTE: Since this is a toolkit, many of the core words are defined in file 'core.c3'
 
 *** MATH ***
 +        (a b--c)          Addition
@@ -138,19 +138,19 @@ loop     (--)              Increment I, Jump to DO if I < T.
 -loop    (--)              Decrement I, Jump to DO if I > T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
         NOTE: Words like IF/THEN/EXIT and BEGIN/UNTIL are not in the base c3.
-              They are just words that are defined in core.f
+              They are just words that are defined in core.c3
 
 *** REGISTERS ***
-+regs    (--)              Save the current registers.
-rX       (--n)             n: the value of register #X.
-rX+      (--n)             n: the value of register #X. Increment register X.
-rX-      (--n)             n: the value of register #X. Decrement register X.
-sX       (n--)             n: new value for register #X.
++regs    (--)              Save the current registers (register-base += 10).
+rX       (--N)             N: the value of register #X.
+rX+      (--N)             N: the value of register #X. Then increment register X.
+rX-      (--N)             N: the value of register #X. Then decrement register X.
+sX       (N--)             Set register #X to N.
 iX       (--)              Increment register #X.
 dX       (--)              Decrement register #X.
--regs    (--)              Restore the last saved registers.
-        NOTES: The registers are stored in an array/stack with a "register-base".
-               +regs simply adds 10 to "register-base", so it is a very efficient operation.
+-regs    (--)              Restore the last saved registers (register-base -= 10).
+        NOTES: 1. The registers are stored in an array/stack with a "register-base".
+               2. +regs simply adds 10 to "register-base", so it is a very efficient operation.
 
 *** SYSTEM ***
 version  (--n)   n: c3 version*10 (e.g. - 4 => v0.4)

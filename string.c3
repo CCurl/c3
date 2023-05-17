@@ -1,8 +1,8 @@
-\ string.f - some string handling words
+\ string.c3 - some string handling words
 
 ' s-len loaded?
 
-load memory.f
+load memory.c3
 
 : s-len ( str--len ) c@ ; inline
 : s-end ( str--end ) dup s-len + 1+ ; inline

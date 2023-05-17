@@ -146,13 +146,13 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="core.c3" />
-    <None Include="file.f" />
+    <None Include="file.c3" />
     <None Include="LICENSE" />
     <None Include="make" />
-    <None Include="memory.f" />
+    <None Include="memory.c3" />
     <None Include="README.md" />
-    <None Include="benches.f" />
-    <None Include="screen.f" />
+    <None Include="benches.c3" />
+    <None Include="screen.c3" />
     <None Include="sys-pc.inc" />
     <None Include="sys-io.inc" />
   </ItemGroup>
