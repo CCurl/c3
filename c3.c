@@ -50,9 +50,9 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[100], reg_base;
+cell_t state, base, reg[100], reg_base, t1, n1;
 char mem[MEM_SZ], vars[VARS_SZ], tib[128], WD[32];
-char *here, *vhere, *in;
+char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
 inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
@@ -188,8 +188,6 @@ int isNum(const char *wd) {
 }
 
 void Run(char *pc) {
-    char *y;
-    cell_t t1, n1;
 next:
     switch (*(pc++)) {
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];

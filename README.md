@@ -11,24 +11,24 @@ The goals for c3 are as follows:
 - This is a toolkit to create any environment the programmer desires.
 - This is a byte-coded implementation.
 - There are 64 operations built into the base executable.
-- Six of the operations are exposed as c3 words:
+- Six operations are exposed as c3 words:
     - '-ML-'      - define a c3 "Machine Language" word
     - ':'         - define a c3 word
     - ';'         - end word definition
     - 'INLINE'    - mark the last word as inline
     - 'IMMEDIATE' - mark the last word as immediate
     - '//'        - comment to end of line
-- Additionally, c3 system information is exposed by c3.
-- Everything is built using those primitives (see core.c3).
+- Additionally, the c3 system information is exposed as words.
+- Everything else is built using the above (see core.c3).
 - For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
     - : then here swap ! ; immediate
-    - Since the words are not built-in, the programmer has total control over them.
+    - Since they are not built-in, I can change them if I want.
 - c3 provides 10 "virtual registers", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
-- The VARIABLE space is separated from the CODE space.
 - Counted strings are also null-terminated.
 - The dictionary starts at the end of the CODE area and grows down.
+- The VARIABLE space is separated from the CODE space.
 - The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
 
 ## Defining a c3 'machine language' word
@@ -102,7 +102,6 @@ When c3 starts, it can take a filename as the program.
 If no filename is given, it tries to open 'core.c3' or '../core.c3'.
 NOTE: almost all of the 'standard' c3 words are defined in 'core.c3'
 ```
-
 *** MATH ***
 +        (a b--c)          Addition
 -        (a b--c)          Subtraction
