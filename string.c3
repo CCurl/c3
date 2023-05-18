@@ -1,4 +1,4 @@
-// string.c3 - some string handling words
+\ string.c3 - some string handling words
 
 ' s-len loaded?
 

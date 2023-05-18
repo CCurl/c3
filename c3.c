@@ -308,7 +308,6 @@ int doML(const char *w) {
 void ParseLine(char *x) {
     in = x;
     while ((state != ALL_DONE) && nextWord()) {
-        if (strEq(WD, "//", 1)) { return; }
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
         if (doNum(WD)) { continue; }

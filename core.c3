@@ -1,21 +1,25 @@
-// ***********************************************
-// c3 opcodes
-// ***********************************************
-
-// : (stop)      0 ; inline
-// : (lit1)      1 ; inline
-: (lit4)         2 ; inline
--ML- EXIT        3 3 -MLX- inline
-: (exit)         3 ;
-: (call)         4 ; inline
-: (jmp)          5 ; inline
-: (jmpz)         6 ; inline
-: (jmpnz)        7 ; inline
 -ML- !           8 3 -MLX- inline
--ML- c!          9 3 -MLX- inline
 -ML- @          10 3 -MLX- inline
+: \ 0 >in @ ! ; immediate
+
+\ ***********************************************
+\ c3 opcodes
+\ ***********************************************
+
+\ (stop)      is 0
+\ (lit1)      is 1
+: (lit4)         2 ;       inline
+-ML- EXIT        3 3 -MLX- inline
+: (exit)         3 ;       \ NOT inline
+: (call)         4 ;       inline
+: (jmp)          5 ;       inline
+: (jmpz)         6 ;       inline
+: (jmpnz)        7 ;       inline
+\ !   (line 1)   8         \ defined above
+-ML- c!          9 3 -MLX- inline
+\ @   (line 2)  10         \ defined above
 -ML- c@         11 3 -MLX- inline
-: (dup)         12 ; inline
+: (dup)         12 ;       inline
 -ML- DUP        12 3 -MLX- inline
 -ML- SWAP       13 3 -MLX- inline
 -ML- OVER       14 3 -MLX- inline
@@ -46,11 +50,11 @@
 -ML- SYSTEM     39 3 -MLX- inline
 -ML- KEY        40 3 -MLX- inline
 -ML- ?KEY       41 3 -MLX- inline
-: (TYPE)        42 ; inline
+: (TYPE)        42 ;       inline
 -ML- TYPE       42 3 -MLX- inline
 -ML- TYPEZ      43 3 -MLX- inline
-// : (:)        44 ; inline
-// : (;)        45 ; inline
+\ (define)   is 44
+\ (end-word) is 45
 -ML- CREATE     46 3 -MLX- inline
 -ML- '          47 3 -MLX- inline
 -ML- NEXT-WORD  48 3 -MLX- inline
@@ -59,20 +63,20 @@
 -ML- (load)     51 3 -MLX- inline
 -ML- FREAD      52 3 -MLX- inline
 -ML- FWRITE     53 3 -MLX- inline
-// : (iX)       54 ; inline
-// : (dX)       55 ; inline
-// : (rX)       56 ; inline
-// : (rX-)      57 ; inline
-// : (rX+)      58 ; inline
-// : (sX)       59 ; inline
+\ (iX)       is 54
+\ (dX)       is 55
+\ (rX)       is 56
+\ (rX-)      is 57
+\ (rX+)      is 58
+\ (sX)       is 59
 -ML- +REGs      60 3 -MLX- inline
 -ML- -REGS      61 3 -MLX- inline
-// : INLINE     62 ; inline
-// : IMMEDIATE  63 ; inline
+\ : INLINE      62 ;       inline
+\ : IMMEDIATE   63 ;       inline
 
-// ***********************************************
-// OK ... now we can get things going
-// ***********************************************
+\ ***********************************************
+\ OK ... now we can get things going
+\ ***********************************************
 
 : [ 0 state ! ; immediate
 : ] 1 state ! ;
@@ -82,7 +86,6 @@
 : c, here c! here 1+     (here) ! ;
 : ,  here !  here cell + (here) ! ;
 
-// Now we can start
 : mem-end   mem  mem-sz  + ;
 : vars-end  vars vars-sz + ;
 
@@ -119,7 +122,7 @@
 : for 0 swap do ; inline
 : next -loop ; inline
 
-// Some 'MachineForth' inspired words
+\ Some 'MachineForth' inspired words
 : -if     (dup) c,  (jmpz) c, here 0 , ; immediate
 : -until  (dup) c,  (jmpz) c, , ; immediate
 : -while  (jmpnz) c, , ; immediate
@@ -160,6 +163,7 @@
 : abs  dup 0 < if negate then ;
 : min  over over > if swap then drop ;
 : max  over over < if swap then drop ;
+: btw +regs s3 s2 s1 r1 r2 >= r1 r3 <= and -regs ;
 
 : i  (i) @ ;
 : j  (i) 3 cells - @ ;
@@ -168,14 +172,14 @@
 
 variable (neg)
 variable #bufp
-: hold #bufp -- #bufp @ c! ;          // ( c -- )
-: #digit dup 9 > if 7 + then '0' + ;  // ( n -- c )
-: >neg dup 0 < (neg) ! abs ;          // ( n1 -- u1 )
-: <# here #66 + #bufp ! 0 hold >neg ; // ( n1 -- u1 )
-: # base @ /mod swap #digit hold ;    // ( u1 -- u2 )
-: #S begin # dup 0= until drop ;      // ( u1 -- )
-: #> (neg) @ if '-' hold then ;       // ( -- )
-: #P #bufp @ typez ;                  // ( -- )
+: hold #bufp -- #bufp @ c! ;          \ ( c -- )
+: #digit dup 9 > if 7 + then '0' + ;  \ ( n -- c )
+: >neg dup 0 < (neg) ! abs ;          \ ( n1 -- u1 )
+: <# here #66 + #bufp ! 0 hold >neg ; \ ( n1 -- u1 )
+: # base @ /mod swap #digit hold ;    \ ( u1 -- u2 )
+: #S begin # dup 0= until drop ;      \ ( u1 -- )
+: #> (neg) @ if '-' hold then ;       \ ( -- )
+: #P #bufp @ typez ;                  \ ( -- )
 : (.) <# #S #> #P ;
 : . (.) space ;
 
@@ -239,4 +243,6 @@ forget
 
 : benches forget s" benches.c3" (load) ;
 : sb forget s" sandbox.c3" (load) ;
+: work forget s" work.c3" (load) ;
+: ed forget s" editor.c3" (load) ;
 marker

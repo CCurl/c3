@@ -1,4 +1,4 @@
-// Some benchmarks
+\ Some benchmarks
 
 : ms . ." usec" ;
 : elapsed timer swap - ms ;
@@ -29,7 +29,7 @@ variable num
 : bm5 cr ." Bench 5: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
 
-// load-abort
+\ load-abort
 
 250 mil bm1
 250 mil bm2
