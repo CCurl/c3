@@ -1,5 +1,5 @@
 // ***********************************************
-// Bootstrapping, c3 opcodes
+// c3 opcodes
 // ***********************************************
 
 // : (stop)      0 ; inline
@@ -67,6 +67,8 @@
 // : (sX)       59 ; inline
 -ML- +REGs      60 3 -MLX- inline
 -ML- -REGS      61 3 -MLX- inline
+// : INLINE     62 ; inline
+// : IMMEDIATE  63 ; inline
 
 // ***********************************************
 // OK ... now we can get things going
