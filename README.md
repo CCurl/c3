@@ -1,6 +1,6 @@
-# c3 - A minimal Forth-like VM written in C.
+# c3 - A minimal Forth VM written in C.
 
-The goals for this project are as follows:
+The goals for c3 are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
 - To provide as much flexibility to the programmer as possible.
 - To be able to run on both Windows and Linux (and Apple).
@@ -8,16 +8,15 @@ The goals for this project are as follows:
 
 ## Notes:
 - This is NOT an ANSI-standard Forth system.
-- The Linux version is 64-bit but can also be 32-bit.
-- This is a byte-coded implementation.
 - This is a toolkit to create any environment the programmer desires.
+- This is a byte-coded implementation.
 - There are 64 operations built into the base executable.
 - Six of the operations are exposed as c3 words:
+    - '-ML-'      - define a c3 "Machine Language" word
     - ':'         - define a c3 word
     - ';'         - end word definition
     - 'INLINE'    - mark the last word as inline
     - 'IMMEDIATE' - mark the last word as immediate
-    - '-ML-'      - define a c3 "Machine Language" word
     - '//'        - comment to end of line
 - Additionally, c3 system information is exposed by c3.
 - Everything is built using those primitives (see core.c3).
@@ -32,6 +31,18 @@ The goals for this project are as follows:
 - The dictionary starts at the end of the CODE area and grows down.
 - The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
 
+## Defining a c3 'machine language' word
+The beginning of core.c3 defines all 64 opcodes, most using -ML-.
+
+The machine language support uses the form:
+- -ML- [name] op1 op2 ... -MLX-
+- For example:
+```
+// Define DUP to execute opcode 12 (dup) and 3 (exit).
+// Also make it inline.
+-ML- DUP 12 3 -MLX- inline
+```
+
 ## The dictionary
 - A dictionary entry looks like this:
     - xt:      cell_t
@@ -40,21 +51,23 @@ The goals for this project are as follows:
     - name:    char[NAME_LEN+1] (NULL terminated)
 
 ## Registers
-c3 provides 10 "virtual registers", r0 thru r9.
+c3 exposes 10 "virtual registers", r0 thru r9.
 There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
-- +regs   allocate 10 new current registers.
-- r4      push register #4.
-- r4+     push register #4, then increment it.
-- r4-     push register #4, then decrement it.
+- +regs   allocate 10 new registers.
+- r4      push register #4 to the stack.
+- r4+     push register #4 to the stack, then increment it.
+- r4-     push register #4 to the stack, then decrement it.
 - s4      set register #4 from TOS.
 - i4      increment register #4.
 - d4      decrement register #4.
 - -regs   restore the registers to their previous values.
 
-An example usage of registers:
+Some example uses of registers:
 ```
    : btw  ( n l h--f )  +regs s3 s2 s1  r2 r1 <   r1 r3 <  and -regs ;
    : btwi ( n l h--f )  +regs s3 s2 s1  r2 r1 <=  r1 r3 <= and -regs ;
+   : rot ( a b c--b c a ) +regs s3 s2 s1  r2 r3 r1  -regs ;
+   : fill ( a c n-- ) +regs s3 s2 s1  r3 0 do r2 r1+ c! loop -regs ;
 ```
 
 ## Temporary words
@@ -68,7 +81,7 @@ c3 provides 10 temporary words, T0 thru T9.
 An example usage of temporary words:
 ```
    \ The Babylon square root algorithm
-   : T0 ( n--sqrt ) dup 4 / begin >r dup r@ / r@ + 2 / dup r> - 0= until nip ;
+   : T0 ( n--sqrt ) dup 4 / begin s1 dup r1 / r1 + 2 / dup s1 - 0= until nip ;
    : sqrt ( n--0|sqrt ) dup 0 > if T0 else drop 0 then ;
 ```
 
@@ -77,15 +90,18 @@ An example usage of temporary words:
   - use the x86 configuration
 - Linux: there is a 'make' script
   - it uses clang and builds a 64-bit version
-  - you can also use gcc or -m32 to build a 2 bit version
+  - use -m32 to build a 32-bit version
+  - you can also use gcc if you desire
 - Apple: I do not have an Apple, so I cannot build for Apple
   - But c3 is minimal enough that it should be easy to port to an Apple system
 - Arduino: there is a c3.ino file (FUTURE)
   - I use the Arduino IDE v 1.8 or 2.0
 
 ## c3 Base system reference
+When c3 starts, it can take a filename as the program.
+If no filename is given, it tries to open 'core.c3' or '../core.c3'.
+NOTE: almost all of the 'standard' c3 words are defined in 'core.c3'
 ```
-NOTE: Since this is a toolkit, many of the core words are defined in file 'core.c3'
 
 *** MATH ***
 +        (a b--c)          Addition

@@ -2,6 +2,7 @@
 // Bootstrapping, c3 opcodes
 // ***********************************************
 
+// : (stop)      0 ; inline
 // : (lit1)      1 ; inline
 : (lit4)         2 ; inline
 -ML- EXIT        3 3 -MLX- inline
