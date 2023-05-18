@@ -51,7 +51,7 @@ char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
 cell_t state, base, reg[100], reg_base;
-char mem[MEM_SZ], vars[VARS_SZ], tib[128];
+char mem[MEM_SZ], vars[VARS_SZ], tib[128], WD[32];
 char *here, *vhere, *in;
 dict_t tempWords[10], *last;
 
@@ -112,7 +112,6 @@ char isRegOp(const char *w) {
 }
 
 // ( --addr | <null> )
-char WD[32];
 int nextWord() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0; }
@@ -125,7 +124,6 @@ int nextWord() {
 
 void doCreate(char *nm) {
     if (nm == 0) { nextWord(); nm = WD; }
-    // PRINT3("cr[",nm,"]\n")
     if (isTempWord(nm)) { tempWords[nm[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(nm);
     --last;
@@ -269,10 +267,9 @@ next:
 
 int doNum(const char *w) {
     if (isNum(w) == 0) { return 0; }
-    if (state) {
-        if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
-        else { CComma(LIT4); Comma(pop()); }
-    }
+    if (state == 0) { return 1; }
+    if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
+    else { CComma(LIT4); Comma(pop()); }
     return 1;
 }
 
@@ -300,8 +297,7 @@ int doWord(const char *w) {
 }
 
 int doML(const char *w) {
-    if (state) { return 0; }
-    if (strEq(w,"-ML-",1) == 0) { return 0; }
+    if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
     doCreate(0);
     while (nextWord()) {
         if (strEq(WD,"-MLX-",1)) { return 1; }
@@ -314,7 +310,6 @@ int doML(const char *w) {
 void ParseLine(char *x) {
     in = x;
     while ((state != ALL_DONE) && nextWord()) {
-        // PRINT3("[",WD,"]\n");
         if (strEq(WD, "//", 1)) { return; }
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
