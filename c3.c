@@ -1,4 +1,4 @@
-// c3.cpp - a minimal Forth engine
+// c3.cpp - a minimal Forth VM
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,32 +13,24 @@ typedef unsigned char byte;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
-    STOP = 0, LIT1, LIT4, 
-    EXIT, CALL, JMP, JMPZ, JMPNZ,
-    STORE, CSTORE, FETCH, CFETCH,
-    DUP, SWAP, OVER, DROP,
-    ADD, MULT, SLMOD, SUB, INC, DEC,
-    LT, EQ, GT, NOT,
-    RTO, RFETCH, RFROM,
-    DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR,
-    EMIT, TIMER, SYSTEM, KEY, QKEY, IS_NUM, 
-    TYPE, TYPEZ,
-    DEFINE, ENDWORD, CREATE, FIND, WORD,
+    STOP = 0, LIT1, LIT4, EXIT, CALL, JMP, JMPZ, JMPNZ,
+    STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
+    ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
+    RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
+    COM, AND, OR, XOR, EMIT, TIMER, SYSTEM, KEY, QKEY,
+    TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
     FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
-    REG_NEW, REG_FREE, INLINE, IMMEDIATE
+    REG_NEW, REG_FREE, INLINE, IMMEDIATE,
+    STOP_LOAD = 99, ALL_DONE = 999
 };
 
 #define C3_VERSION    8
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
-#define STOP_LOAD    99
-#define ALL_DONE    999
 
 #define TOS           (stk[sp])
 #define NOS           (stk[sp-1])
-#define PUSH(x)       push((cell_t)(x))
 #define NCASE         goto next; case
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
@@ -59,10 +51,8 @@ char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
 cell_t state, base, reg[100], reg_base;
-char mem[MEM_SZ];
-char vars[VARS_SZ], *vhere;
-char *here, tib[128], *in;
-char fz, fe, fg, fl;
+char mem[MEM_SZ], vars[VARS_SZ], tib[128];
+char *here, *vhere, *in;
 dict_t tempWords[10], *last;
 
 inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
@@ -232,12 +222,12 @@ next:
         NCASE INC: ++TOS;
         NCASE DEC: --TOS;
         NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
-        NCASE INDEX: PUSH(&L0);
+        NCASE INDEX: push((cell_t)&L0);
         NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE RTO: rstk[++rsp] = ToCP(pop());
-        NCASE RFETCH: PUSH(rstk[rsp]);
-        NCASE RFROM: PUSH(rstk[rsp--]);
+        NCASE RFETCH: push((cell_t)rstk[rsp]);
+        NCASE RFROM: push((cell_t)rstk[rsp--]);
         NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         NCASE DEFINE: doCreate(0); state=1;
         NCASE CREATE: doCreate(0);
@@ -268,7 +258,6 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
-        NCASE IS_NUM: t1=pop(); push(isNum(ToCP(t1+1)));
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE INLINE: last->f = IS_INLINE;
@@ -326,6 +315,7 @@ void ParseLine(char *x) {
     in = x;
     while ((state != ALL_DONE) && nextWord()) {
         // PRINT3("[",WD,"]\n");
+        if (strEq(WD, "//", 1)) { return; }
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
         if (doNum(WD)) { continue; }
@@ -337,69 +327,11 @@ void ParseLine(char *x) {
 }
 
 struct { long op; const char *opName;  const char *c3Word; } prims[] = { 
+    { DEFINE,             "",              ":" },
+    { ENDWORD,            "",              ";" },
+    { INLINE,             "",              "INLINE" },
+    { IMMEDIATE,          "",              "IMMEDIATE" },
     { C3_VERSION,         "VERSION",       "" },
-    { EXIT,               "(exit)",        "EXIT" },
-//  { CALL,               "(call)",        "" },
-//  { JMP,                "(jmp)",         "" },
-//  { JMPZ,               "(jmpz)",        "" },
-//  { JMPNZ,              "(jmpnz)",       "" },
-//  { LIT1,               "(lit1)",        "" },
-//  { LIT4,               "(lit4)",        "" },
-    { STORE,              "(store)",       "!" },
-    { CSTORE,             "(cstore)",      "c!" },
-    { FETCH,              "(fetch)",       "@" },
-//  { CFETCH,             "(cfetch)",      "c@" },
-//  { DUP,                "(dup)",         "DUP" },
-//  { SWAP,               "(swap)",        "SWAP" },
-//  { OVER,               "(over)",        "OVER" },
-//  { DROP,               "(drop)",        "DROP" },
-    { ADD,                "(add)",         "+" },
-//  { MULT,               "(mult)",        "*" },
-//  { SLMOD,              "(slmod)",       "/MOD" },
-//  { SUB,                "(sub)",         "-" },
-    { LT,                 "(lt)",          "<" },
-    { EQ,                 "(eq)",          "=" },
-    { GT,                 "(gt)",          ">" },
-    { NOT,                "(not)",         "0=" },
-    { EMIT,               "(emit)",        "EMIT" },
-    { TIMER,              "(timer)",       "TIMER" },
-    { INC,                "(inc)",         "1+" },
-    { DEC,                "(dec)",         "1-" },
-    { DO,                 "(do)",          "DO" },
-    { INDEX,              "(index)",       "(i)" },
-    { LOOP,               "(loop)",        "LOOP" },
-    { LOOP2,              "(-loop)",       "-LOOP" },
-    { RTO,                "(>r)",          ">R" },
-    { RFETCH,             "(r@)",          "R@" },
-    { RFROM,              "(r>)",          "R>" },
-    { WORD,               "(word)",        "next-word" },
-    { DEFINE,             "(:)",           ":" },
-    { CREATE,             "(create)",      "CREATE" },
-    { FIND,               "(find)",        "'" },
-    { ENDWORD,            "(;)",           ";" },
-    { AND,                "(and)",         "AND" },
-    { OR,                 "(or)",          "OR" },
-    { XOR,                "(xor)",         "XOR" },
-    { COM,                "(com)",         "COM" },
-    { SYSTEM,             "(system)",      "SYSTEM" },
-    { FOPEN,              "(fopen)",       "FOPEN" },
-    { FCLOSE,             "(fclose)",      "FCLOSE" },
-    { FREAD,              "(fread)",       "FREAD" },
-    { FWRITE,             "(fwrite)",      "FWRITE" },
-    { FLOAD,              "(fload)",       "(load)" },
-    { QKEY,               "(?key)",        "?KEY" },
-    { KEY,                "(key)",         "KEY" },
-    { REG_D,              "(reg_d)",       "" },
-    { REG_I,              "(reg_i)",       "" },
-    { REG_R,              "(reg_r)",       "" },
-    { REG_RD,             "(reg_r-)",      "" },
-    { REG_RI,             "(reg_r+)",      "" },
-    { REG_S,              "(reg_s)",       "" },
-    { REG_NEW,            "(reg_new)",     "+regs" },
-    { REG_FREE,           "(reg_free)",    "-regs" },
-    { IS_NUM,             "(is_num)",      "NUMBER?" },
-    { TYPE,               "(type)",        "TYPE" },
-    { TYPEZ,              "(typez)",       "TYPEZ" },
     { (cell_t)&sp,        "(sp)",          "" },
     { (cell_t)&rsp,       "(rsp)",         "" },
     { (cell_t)&lsp,       "(lsp)",         "" },
@@ -427,7 +359,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
 void loadNum(const char *name, cell_t val, int isLit) {
     doCreate((char*)name);
     if (isLit) { 
-        if (BTW(val,1,127) && (val != EXIT)) {
+        if (BTW(val,1,127)) {
             last->f = IS_INLINE;
             CComma(LIT1); CComma(val);
         } else { CComma(LIT4); Comma(val); }

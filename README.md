@@ -10,13 +10,21 @@ The goals for this project are as follows:
 - This is NOT an ANSI-standard Forth system.
 - The Linux version is 64-bit but can also be 32-bit.
 - This is a byte-coded implementation.
-- Very few primitives are built into the base executable.
-- The rest is built using those primitives (see core.c3).
 - This is a toolkit to create any environment the programmer desires.
-    - For example, the standard Forth IF/THEN is defined as follows:
+- There are 64 operations built into the base executable.
+- Six of the operations are exposed as c3 words:
+    - ':'         - define a c3 word
+    - ';'         - end word definition
+    - 'INLINE'    - mark the last word as inline
+    - 'IMMEDIATE' - mark the last word as immediate
+    - '-ML-'      - define a c3 "Machine Language" word
+    - '//'        - comment to end of line
+- Additionally, c3 system information is exposed by c3.
+- Everything is built using those primitives (see core.c3).
+- For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
     - : then here swap ! ; immediate
-    - Since it is not built-in, the programmer has total control over it.
+    - Since the words are not built-in, the programmer has total control over them.
 - c3 provides 10 "virtual registers", r0 thru r9.
 - c3 provides 10 temporary words, T0 thru T9.
 - The VARIABLE space is separated from the CODE space.
@@ -34,14 +42,14 @@ The goals for this project are as follows:
 ## Registers
 c3 provides 10 "virtual registers", r0 thru r9.
 There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
-- +regs   allocates 10 new current registers.
-- r4      pushes register #4.
-- r4+     pushes register #4, then increments it.
-- r4-     pushes register #4, then decrements it.
-- s4      sets register #4 from TOS.
-- i4      increments register #4.
-- d4      decrements register #4.
-- -regs   restores the registers to their previous values.
+- +regs   allocate 10 new current registers.
+- r4      push register #4.
+- r4+     push register #4, then increment it.
+- r4-     push register #4, then decrement it.
+- s4      set register #4 from TOS.
+- i4      increment register #4.
+- d4      decrement register #4.
+- -regs   restore the registers to their previous values.
 
 An example usage of registers:
 ```

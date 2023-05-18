@@ -1,4 +1,4 @@
-\ Words for screen handling
+// Words for screen handling
 
 ' cls loaded?
 

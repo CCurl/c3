@@ -1,11 +1,11 @@
-\ Some benchmarks
+// Some benchmarks
 
 : ms . ." usec" ;
 : elapsed timer swap - ms ;
 : mil #1000 dup * * ;
 
 : prime? begin ( n 3--f )
-        over over /mod swap if  \ test 2
+        over over /mod swap if
             over < if drop exit then
         else 
             drop = exit
@@ -29,7 +29,7 @@ variable num
 : bm5 cr ." Bench 5: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
 
-\ load-abort
+// load-abort
 
 250 mil bm1
 250 mil bm2
