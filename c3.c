@@ -1,4 +1,4 @@
-// c3.cpp - a minimal Forth VM
+// c3.cpp - a minimal Forth-like VM
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,26 +25,22 @@ enum {
     STOP_LOAD = 99, ALL_DONE = 999
 };
 
-#define C3_VERSION    8
-#define IS_IMMEDIATE  1
-#define IS_INLINE     2
-
-#define TOS           (stk[sp])
-#define NOS           (stk[sp-1])
-#define NCASE         goto next; case
-
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
-#define PRINT1(a)     printString(a)
-#define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 #define CpAt(x)       (char*)Fetch((char*)x)
 #define ToCP(x)       (char*)(x)
 #define ClearTib      fill(tib, 0, sizeof(tib))
 #define SC(x)         strCat(tib, x)
-
+#define TOS           (stk[sp])
+#define NOS           (stk[sp-1])
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
 #define L2            lstk[lsp-2]
+#define IS_IMMEDIATE  1
+#define IS_INLINE     2
+#define NCASE         goto next; case
+#define PRINT1(a)     printString(a)
+#define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 
 cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
@@ -323,7 +319,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { ENDWORD,            "",              ";" },
     { INLINE,             "",              "INLINE" },
     { IMMEDIATE,          "",              "IMMEDIATE" },
-    { C3_VERSION,         "VERSION",       "" },
+    { 80,                 "VERSION",       "" },
     { (cell_t)&sp,        "(sp)",          "" },
     { (cell_t)&rsp,       "(rsp)",         "" },
     { (cell_t)&lsp,       "(lsp)",         "" },

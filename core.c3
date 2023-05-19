@@ -234,7 +234,7 @@ variable (fg) 2 cells allot
 : forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
 : forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
-: .ver version 10 /mod (.) '.' emit . ;
+: .ver version 100 /mod (.) '.' emit . ;
 
 ." c3 - v" .ver ." - Chris Curl" cr
 here mem -   . ." code bytes used, " last here - . ." bytes free." cr

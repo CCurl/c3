@@ -1,5 +1,13 @@
 # c3 - A minimal Forth VM written in C.
 
+## What is c3?
+
+Attributes of c3:
+- c3 is a stack-based VM whose "CPU" has 64 opcodes.
+- c3 provides 10 "virtual registers", r0 thru r9. Each register has 6 operations.
+- c3 provides 10 temporary words, T0 thru T9.
+
+## Goals
 The goals for c3 are as follows:
 - To have an implementation that is minimal and "intuitively obvious upon casual inspection".
 - To provide as much flexibility to the programmer as possible.
@@ -11,37 +19,37 @@ The goals for c3 are as follows:
 - This is a toolkit to create any environment the programmer desires.
 - This is a byte-coded implementation.
 - There are 64 operations built into the base executable.
-- Six operations are exposed as c3 words:
-    - '-ML-'      - define a c3 "Machine Language" word
+- Four of the operations are exposed as c3 words:
     - ':'         - define a c3 word
     - ';'         - end word definition
     - 'INLINE'    - mark the last word as inline
     - 'IMMEDIATE' - mark the last word as immediate
-    - '//'        - comment to end of line
-- Additionally, the c3 system information is exposed as words.
-- Everything else is built using the above (see core.c3).
+- In addition to the above, c3 also defines some 'system' words (the addresses of system variables and sizes of buffers).
+- Everything else in c3 can be defined from those.
+- c3 loads file "core.c3" on startup, so that is where you put your bootstrap code.
+- The code I have put in there has a Forth feel to it, but it doesn't have to.
 - For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
     - : then here swap ! ; immediate
     - Since they are not built-in, I can change them if I want.
-- c3 provides 10 "virtual registers", r0 thru r9.
-- c3 provides 10 temporary words, T0 thru T9.
 - Counted strings are also null-terminated.
 - The dictionary starts at the end of the CODE area and grows down.
 - The VARIABLE space is separated from the CODE space.
 - The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
 
-## Defining a c3 'machine language' word
-The beginning of core.c3 defines all 64 opcodes, most using -ML-.
+## Inline words
+In c3, an "INLINE" word is like a macro ... when conpiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too (especially on a 64-bit system, where the CELL size is 8). Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.
 
-The machine language support uses the form:
-- -ML- [name] op1 op2 ... -MLX-
-- For example:
-```
-// Define DUP to execute opcode 12 (dup) and 3 (exit).
-// Also make it inline.
+## Bootstraping c3
+To bootstrap, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of core.c3, I define my aliases for the opcodes, like this:
+
+...
+-ML- EXIT 3 3 -MLX-
+...
 -ML- DUP 12 3 -MLX- inline
-```
+...
+
+Note that this gives me the ultimate flexibility, I don't HAVE to define opcode 12 to be "DUP", I could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so I am using DUP. :)
 
 ## The dictionary
 - A dictionary entry looks like this:
@@ -176,18 +184,11 @@ dX       (--)              Decrement register #X.
                2. +regs simply adds 10 to "register-base", so it is a very efficient operation.
 
 *** SYSTEM ***
-version  (--n)   n: c3 version*10 (e.g. - 4 => v0.4)
-(exit)   (--n)   n: The byte-code value for EXIT.
-(jmp)    (--n)   n: The byte-code value for JMP.    On execute: (?--?)  JUMP
-(jmpz)   (--n)   n: The byte-code value for JMPZ.   On execute: (N--)   JUMP if N==0 (Consumes N)
-(jmpnz)  (--n)   n: The byte-code value for JMPNZ.  On execute: (N--N)  JUMP if N!=0
-(call)   (--n)   n: The byte-code value for CALL.
-(lit1)   (--n)   n: The byte-code value for LIT1.
-(lit4)   (--n)   n: The byte-code value for LIT4.
+version  (--n)   n: c3 version*100 (e.g. - 41 => v0.41)
 mem      (--a)   a: Start address for the MEMORY area.
-mem-end  (--a)   a: End address for the MEMORY area.
+mem-sz   (--n)   a: The size of the MEMORY area in bytes.
 vars     (--a)   a: Start address for the VARIABLES area.
-vars-end (--a)   a: End address for the VARIABLES area.
+vars-sz  (--n)   n: The size of the VARIABLES area in bytes.
 regs     (--a)   a: Start address for the REGISTERS (10 CELLs).
 (vhere)  (--a)   a: Address of the VHERE variable.
 (here)   (--a)   a: Address of the HERE variable.
@@ -196,13 +197,12 @@ regs     (--a)   a: Start address for the REGISTERS (10 CELLs).
 (sp)     (--a)   a: Address of the stack pointer.
 (rsp)    (--a)   a: Address of the return stack pointer.
 (lsp)    (--a)   a: Address of the loop stack pointer.
-word-sz  (--n)   n: The size in bytes of a dictionary entry.
+word-sz  (--n)   n: The size of a dictionary entry in bytes.
 base     (--a)   a: Address of the BASE variable.
 state    (--a)   a: Address of the STATE variable.
 tib      (--a)   a: Address of TIB (text input buffer).
 >in      (--a)   a: Address of >IN.
-cell     (--n)   n: size in bytes of a CELL.
-timer    (--n)   n: return value from clock() function call.
+cell     (--n)   n: size of a CELL in bytes.
 ```
 
 ## Extending c3
