@@ -1,22 +1,21 @@
-# c3 - A minimal Forth VM written in C.
+# c3 - A minimal Forth-like VM written in C.
 
 ## What is c3?
-
-Attributes of c3:
 - c3 is a stack-based VM whose "CPU" has 64 opcodes.
 - c3 provides 10 "virtual registers", r0 thru r9. Each register has 6 operations.
 - c3 provides 10 temporary words, T0 thru T9.
+- c3 is a toolkit to create any environment the programmer desires.
 
 ## Goals
 The goals for c3 are as follows:
-- To have an implementation that is minimal and "intuitively obvious upon casual inspection".
+- To have an implementation that is as minimal as possible.
+- To have an implementation that is "intuitively obvious upon casual inspection".
 - To provide as much flexibility to the programmer as possible.
 - To be able to run on both Windows and Linux (and Apple).
 - To be deployable to development boards via the Arduino IDE.
 
 ## Notes:
 - This is NOT an ANSI-standard Forth system.
-- This is a toolkit to create any environment the programmer desires.
 - This is a byte-coded implementation.
 - There are 64 operations built into the base executable.
 - Four of the operations are exposed as c3 words:
@@ -31,14 +30,13 @@ The goals for c3 are as follows:
 - For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
     - : then here swap ! ; immediate
-    - Since they are not built-in, I can change them if I want.
+    - Since they are not built-in, I can change them if I want by modifying core.c3.
 - Counted strings are also null-terminated.
-- The dictionary starts at the end of the CODE area and grows down.
-- The VARIABLE space is separated from the CODE space.
-- The WORD length is defined by NAME_LEN (in c3.c) as 13 chars.
+- The dictionary starts at the end of the MEM area and grows down.
+- The VARIABLE space is separated from the MEM space.
 
 ## Inline words
-In c3, an "INLINE" word is like a macro ... when conpiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too (especially on a 64-bit system, where the CELL size is 8). Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.
+In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too (especially on a 64-bit system, where the CELL size is 8). Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.
 
 ## Bootstraping c3
 To bootstrap, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of core.c3, I define my aliases for the opcodes, like this:
@@ -49,25 +47,33 @@ To bootstrap, c3 has a simple "machine language parser" that can create words in
 -ML- DUP 12 3 -MLX- inline
 ...
 
-Note that this gives me the ultimate flexibility, I don't HAVE to define opcode 12 to be "DUP", I could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so I am using DUP. :)
+Note that this approach gives me the ultimate flexibility, I don't HAVE to define opcode 12 to be "DUP", I could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so I am using DUP. :)
 
 ## The dictionary
 - A dictionary entry looks like this:
     - xt:      cell_t
-    - flags:   byte
+    - flags:   byte (IMMEDIATE=0x01, INLINE=0x02)
     - len:     byte
     - name:    char[NAME_LEN+1] (NULL terminated)
+
+## Default sizes
+- The default NAME_LEN is 13.
+- The default MEM_SZ is 128K (131,072) bytes.
+- The default VARS_SZ is 4MB (4,194,304) bytes.
+- The default stack size (STK_SZ) is 64 bytes.
+- The default loop stack size (LSTK_SZ) is 30 bytes.
+- These can be easily changed in the sys-io.inc file.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9.
 There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
 - +regs   allocate 10 new registers.
-- r4      push register #4 to the stack.
-- r4+     push register #4 to the stack, then increment it.
-- r4-     push register #4 to the stack, then decrement it.
-- s4      set register #4 from TOS.
-- i4      increment register #4.
-- d4      decrement register #4.
+- r4      push register 4 to the stack.
+- r4+     push register 4 to the stack, then increment it.
+- r4-     push register 4 to the stack, then decrement it.
+- s4      set register 4 from TOS.
+- i4      increment register 4.
+- d4      decrement register 4.
 - -regs   restore the registers to their previous values.
 
 Some example uses of registers:
@@ -107,8 +113,9 @@ An example usage of temporary words:
 
 ## c3 Base system reference
 When c3 starts, it can take a filename as the program.
-If no filename is given, it tries to open 'core.c3' or '../core.c3'.
-NOTE: almost all of the 'standard' c3 words are defined in 'core.c3'
+If no filename is given, it tries to open 'core.c3', then '../core.c3'.
+NOTE: the startup c3 words are defined in 'core.c3'. The list of words below is not complete.
+- See file core.c3 for details.
 ```
 *** MATH ***
 +        (a b--c)          Addition
@@ -162,9 +169,9 @@ c!       (b a--)           Store BYTE b to address a.
 : word   (--)              Begin definition of word. 
 : T[0-9] (--)              Begin definition of a temporary word.
 ;        (--)              End current definition.
-create x (--)              Creates a definition for x word.
+create x (--)              Create a definition for word "x".
 do       (T F--)           Begin DO/LOOP loop.
-(i)      (--a)             a: address of the index variable.
+(i)      (--a)             a: address of the loop index variable I.
 loop     (--)              Increment I, Jump to DO if I < T.
 -loop    (--)              Decrement I, Jump to DO if I > T.
 ' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
@@ -184,7 +191,7 @@ dX       (--)              Decrement register #X.
                2. +regs simply adds 10 to "register-base", so it is a very efficient operation.
 
 *** SYSTEM ***
-version  (--n)   n: c3 version*100 (e.g. - 41 => v0.41)
+version  (--n)   n: c3 version*100 (e.g. - 47 => v0.47).
 mem      (--a)   a: Start address for the MEMORY area.
 mem-sz   (--n)   a: The size of the MEMORY area in bytes.
 vars     (--a)   a: Start address for the VARIABLES area.
@@ -206,4 +213,6 @@ cell     (--n)   n: size of a CELL in bytes.
 ```
 
 ## Extending c3
-(TODO)
+1. Add your new opcode to to the enum { ... } in beginning of c3.
+2. In Run(char \*pc), add a NCASE for your new opcode. 
+3. Edit core.c3 and add a -ML- in core.c3 to define your new opcode.
