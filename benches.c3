@@ -5,7 +5,7 @@
 : mil #1000 dup * * ;
 
 : prime? begin ( n 3--f )
-        over over /mod swap if  \ test 2
+        over over /mod swap if
             over < if drop exit then
         else 
             drop = exit
