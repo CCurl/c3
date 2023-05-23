@@ -73,19 +73,12 @@ int strEq(const char *d, const char *s, int caseSensitive) {
     return -1;
 }
 
-char *iToA(ucell_t N, int base) {
-    static char ret[CELL_SZ*8];
-    char *x = &ret[CELL_SZ*8-1];
-    *(x) = 0;
-    int neg = (((cell_t)N<0) && (base==10)) ? 1 : 0;
-    if (neg) N = (~N) + 1;
-    do {
-        int r = (N % base) + '0';
-        *(--x) = ('9'<r) ? r+7 : r;
-        N /= base;
-    } while (N);
-    if (neg) { *(--x)='-'; }
-    return x;
+char *iToA(byte N) {
+    tib[120] = N / 100 % 10 + '0';
+    tib[121] = N /  10 % 10 + '0';
+    tib[122] = N /   1 % 10 + '0';
+    tib[123] = 0;
+    return &tib[120];
 }
 
 int isTempWord(const char *w) {
@@ -134,8 +127,10 @@ void doCreate(char *nm) {
 int doFind(const char *nm) {
     if (nm == 0) { nextWord(); nm = WD; }
     if (isTempWord(nm)) {
-        push(tempWords[nm[1]-'0'].xt);
-        push(0); return 1;
+        n1 = nm[1]-'0';
+        push(tempWords[n1].xt);
+        push(tempWords[n1].f);
+        return 1;
     }
     int len = strLen(nm);
     dict_t *dp = last;
@@ -255,7 +250,7 @@ next:
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
         NCASE STOP: return;
-        default: PRINT3("-[", iToA((cell_t)*(pc-1),10), "]?-")
+        default: PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }
 }
 
@@ -319,7 +314,7 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { ENDWORD,            "",              ";" },
     { INLINE,             "",              "INLINE" },
     { IMMEDIATE,          "",              "IMMEDIATE" },
-    { 80,                 "VERSION",       "" },
+    { 81,                 "VERSION",       "" },
     { (cell_t)&sp,        "(sp)",          "" },
     { (cell_t)&rsp,       "(rsp)",         "" },
     { (cell_t)&lsp,       "(lsp)",         "" },
@@ -368,6 +363,9 @@ void init() {
         if (prims[i].opName[0]) { loadNum(prims[i].opName, prims[i].op, 1); }
         if (prims[i].c3Word[0]) { loadNum(prims[i].c3Word, prims[i].op, 0); }
     }
+    for (int i=0; i<6; i++) { tempWords[i].f = 0; }
+    for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
+    tempWords[9].f = IS_IMMEDIATE;
 }
 
 #ifdef isPC
