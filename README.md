@@ -41,7 +41,7 @@ The goals for c3 are:
 ## Inline words
 In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too (especially on a 64-bit system, where the CELL size is 8). Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.
 
-## Bootstraping c3
+## Bootstrapping c3
 To bootstrap, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of core.c3, I define my aliases for the opcodes, like this:
 
 ...
@@ -50,7 +50,7 @@ To bootstrap, c3 has a simple "machine language parser" that can create words in
 -ML- DUP 12 3 -MLX- inline
 ...
 
-Note that this approach gives me the ultimate flexibility. I don't HAVE to define opcode 12 to be "DUP", I could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so I am using DUP. :)
+Note that this approach gives the user the ultimate flexibility. We don't HAVE to define opcode 12 to be "DUP", we could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
 
 ## The dictionary
 - A dictionary entry looks like this:
@@ -115,23 +115,26 @@ An example usage of temporary words:
   - I use the Arduino IDE v 1.8 or 2.0
 
 ## c3 Base system reference
-When c3 starts, it can take a filename as the program.
+When c3 starts, it can take a filename as the startup file/program.
+
 If no filename is given, it tries to open 'core.c3', then '../core.c3'.
-NOTE: the startup c3 words are defined in 'core.c3'. The list of words below is not complete.
-- See file core.c3 for details.
+
+NOTE: Most of these words are defined in 'core.c3'.
+- The below list is not complete.
+- See file core.c3 for full details.
 ```
 *** MATH ***
 +        (a b--c)          Addition
 -        (a b--c)          Subtraction
 *        (a b--c)          Multiplication
 /mod     (a b--r q)        r: modulo(a,b), q: quotient(a,b)
-+!       (N A--)           Add N to CELL at A
 
 *** STACK ***
 1+       (a--b)            Increment TOS
 1-       (a--b)            Decrement TOS
 drop     (a b--a)          Drop TOS
 dup      (a--a a)          Duplicate TOS
+?dup     (a--a a?)         Duplicate TOS if TOS <> 0
 over     (a b--a b a)      Copy NOS
 swap     (a b--b a)        Swap TOS and NOS
 
@@ -167,6 +170,10 @@ fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars w
 c@       (a--b)            b: BYTE at address a.
 !        (n a--)           Store CELL n to address a.
 c!       (b a--)           Store BYTE b to address a.
++!       (N A--)           Add N to CELL at A
+++       (A--)             Incement value of CELL at A
+--       (A--)             Decement value of CELL at A
+c++      (A--)             Incement value of BYTE at A
 
 *** WORDS and FLOW CONTROL ***
 : word   (--)              Begin definition of word. 
@@ -174,7 +181,10 @@ c!       (b a--)           Store BYTE b to address a.
         NOTE: T0-T5 are normal, T6-T8 are INLINE, and T9 is IMMEDIATE.
 ;        (--)              End current definition.
 create x (--)              Create a definition for word "x".
+for      (N--)             Begin a FOR loop. Set I = N.
+next     (--)              Decrement I. If I>0, jump to for.
 do       (T F--)           Begin DO/LOOP loop.
+i        (--n)             n: the loop index variable I.
 (i)      (--a)             a: address of the loop index variable I.
 loop     (--)              Increment I, Jump to DO if I < T.
 -loop    (--)              Decrement I, Jump to DO if I > T.
@@ -195,7 +205,7 @@ dX       (--)              Decrement register #X.
                2. +regs simply adds 10 to "register-base", so it is a very efficient operation.
 
 *** SYSTEM ***
-version  (--n)   n: c3 version*100 (e.g. - 47 => v0.47).
+version  (--n)   n: c3 version*100 (e.g. - 147 => v1.47).
 mem      (--a)   a: Start address for the MEMORY area.
 mem-sz   (--n)   a: The size of the MEMORY area in bytes.
 vars     (--a)   a: Start address for the VARIABLES area.
@@ -217,6 +227,6 @@ cell     (--n)   n: size of a CELL in bytes.
 ```
 
 ## Extending c3
-1. Add your new opcode to to the enum { ... } in beginning of c3.
-2. In Run(char \*pc), add a NCASE for your new opcode. 
+1. Add the new opcode to to the enum { ... } in beginning of c3.
+2. In Run(char \*pc), add a NCASE for your new opcode that implements the opcode's behavior.
 3. Edit core.c3 and add a -ML- in core.c3 to define your new opcode.
