@@ -2,19 +2,22 @@
 
 ## What is c3?
 - c3 is a stack-based VM whose "CPU" has 64 opcodes.
-- c3 provides 10 "virtual registers", r0 thru r9. Each register has 6 operations.
-- c3 provides 10 temporary words, T0 thru T9.
 - c3 is a toolkit to create any environment the programmer desires.
+- c3 provides 10 "virtual registers", r0 thru r9.
+  - Each register has 6 operations.
+- c3 provides 10 temporary words, T0 thru T9.
+  - T0-T5 are normal words, T6-T8 are INLINE, and T9 is IMMEDIATE.
 
 ## Goals
-The goals for c3 are as follows:
+The goals for c3 are:
 - To have an implementation that is as minimal as possible.
 - To have an implementation that is "intuitively obvious upon casual inspection".
+- To to be very easy to extend as desired.
 - To provide as much flexibility to the programmer as possible.
-- To be able to run on both Windows and Linux (and Apple).
+- To be able to run on Windows and Linux (and Apple).
 - To be deployable to development boards via the Arduino IDE.
 
-## Notes:
+## Notes about c3:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
 - There are 64 operations built into the base executable.
@@ -26,7 +29,7 @@ The goals for c3 are as follows:
 - In addition to the above, c3 also defines some 'system' words (the addresses of system variables and sizes of buffers).
 - Everything else in c3 can be defined from those.
 - c3 loads file "core.c3" on startup, so that is where you put your bootstrap code.
-- The code I have put in there has a Forth feel to it, but it doesn't have to.
+- The code I have put in core.c3 has a Forth feel to it, but it doesn't have to.
 - For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
     - : then here swap ! ; immediate
@@ -47,7 +50,7 @@ To bootstrap, c3 has a simple "machine language parser" that can create words in
 -ML- DUP 12 3 -MLX- inline
 ...
 
-Note that this approach gives me the ultimate flexibility, I don't HAVE to define opcode 12 to be "DUP", I could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so I am using DUP. :)
+Note that this approach gives me the ultimate flexibility. I don't HAVE to define opcode 12 to be "DUP", I could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so I am using DUP. :)
 
 ## The dictionary
 - A dictionary entry looks like this:
@@ -90,7 +93,7 @@ c3 provides 10 temporary words, T0 thru T9.
 - Temporary words are intended to be helpful in factoring code.
 - A temporary word can be redefined as often as desired.
 - When redefined, code references to the previous definition are unchanged.
-- A temporary word cannot be INLINE or IMMEDIATE.
+- T0-T5 are normal words, T6-T8 are INLINE, and T9 is IMMEDIATE.
 
 An example usage of temporary words:
 ```
@@ -168,6 +171,7 @@ c!       (b a--)           Store BYTE b to address a.
 *** WORDS and FLOW CONTROL ***
 : word   (--)              Begin definition of word. 
 : T[0-9] (--)              Begin definition of a temporary word.
+        NOTE: T0-T5 are normal, T6-T8 are INLINE, and T9 is IMMEDIATE.
 ;        (--)              End current definition.
 create x (--)              Create a definition for word "x".
 do       (T F--)           Begin DO/LOOP loop.

@@ -32,7 +32,8 @@ int main(int argc, char *argv[]) {
     for (int i=1; (i<argc) && (!input_fp); i++) {
         input_fp = (cell_t)fopen(argv[i],"rt");
         if (!input_fp) {
-            ClearTib; SC(argv[i]); SC(" s"); SC(iToA(i,10));
+            char x[2] = {i+'0',0};
+            ClearTib; SC(argv[i]); SC(" s"); SC(x);
             ParseLine(tib);
         }
     }
