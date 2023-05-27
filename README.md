@@ -70,6 +70,7 @@ Note that this approach gives the user the ultimate flexibility. We don't HAVE t
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9.
 There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
+Note: the support for registers is build into c3, and they do NOT show up in "WORDS".
 - +regs   allocate 10 new registers.
 - r4      push register 4 to the stack.
 - r4+     push register 4 to the stack, then increment it.
@@ -97,9 +98,9 @@ c3 provides 10 temporary words, T0 thru T9.
 
 An example usage of temporary words:
 ```
-   \ The Babylon square root algorithm
-   : T0 ( n--sqrt ) dup 4 / begin s1 dup r1 / r1 + 2 / dup s1 - 0= until nip ;
-   : sqrt ( n--0|sqrt ) dup 0 > if T0 else drop 0 then ;
+\ The Babylon square root algorithm
+: T0 ( n--sqrt ) dup 4 / begin >r dup r@ / r@ + 2 / dup r> - 0= until nip ;
+: sqrt ( n--0|sqrt ) dup 0 > if T0 else drop 0 then ;
 ```
 
 ## Building c3:
