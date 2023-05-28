@@ -1,0 +1,11 @@
+#ifdef isPC
+
+    enum { SYSTEM = IMMEDIATE+1, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
+
+#else
+
+    enum { PIN_INPUT = IMMEDIATE+1, PIN_OUTPUT, PIN_PULLUP
+        , PIN_READ, PIN_WRITE, PIN_READA, PIN_WRITEA
+    };
+
+#endif

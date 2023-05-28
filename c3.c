@@ -8,7 +8,7 @@ typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
 
-#include "sys-io.inc"
+#include "sys-init.inc"
 
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
@@ -17,13 +17,14 @@ enum {
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR, EMIT, TIMER, SYSTEM, KEY, QKEY,
+    COM, AND, OR, XOR, EMIT, TIMER, KEY, QKEY,
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
-    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
     REG_NEW, REG_FREE, INLINE, IMMEDIATE,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 82
+    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 83
 };
+
+#include "sys-enum.inc"
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -46,7 +47,7 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[100], reg_base, t1, n1;
+cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
 char mem[MEM_SZ], vars[VARS_SZ], tib[128], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
@@ -224,17 +225,6 @@ next:
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
         NCASE COM: TOS = ~TOS;
-#ifdef isPC
-        NCASE SYSTEM: t1=pop(); system(ToCP(t1+1));
-        NCASE FOPEN:  t1=pop(); TOS=(cell_t)fopen(ToCP(TOS+1), ToCP(t1+1));
-        NCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
-        NCASE FREAD:  t1=pop(); n1=pop(); TOS =  fread(ToCP(TOS), 1, n1, (FILE*)t1);
-        NCASE FWRITE: t1=pop(); n1=pop(); TOS = fwrite(ToCP(TOS), 1, n1, (FILE*)t1);
-        NCASE FLOAD:  y=ToCP(pop()); t1=(cell_t)fopen(y+1, "rt");
-                if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
-                if (t1) { input_fp = t1; ClearTib; }
-                else { PRINT3("-noFile[",y+1,"]-"); }
-#endif
         NCASE QKEY: push(qKey());
         NCASE KEY:  push(key());
         NCASE REG_D: reg[*(pc++)+reg_base]--;
@@ -243,12 +233,13 @@ next:
         NCASE REG_RD: push(reg[*(pc++)+reg_base]--);
         NCASE REG_RI: push(reg[*(pc++)+reg_base]++);
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
-        NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
+        NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
+#include "sys-exec.inc"
         NCASE STOP: return;
         default: PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }

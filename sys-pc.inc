@@ -29,17 +29,19 @@ void getInput() {
 
 int main(int argc, char *argv[]) {
     init();
-    for (int i=1; (i<argc) && (!input_fp); i++) {
-        input_fp = (cell_t)fopen(argv[i],"rt");
-        if (!input_fp) {
+    output_fp = 0;
+    for (int i=1; i<argc; i++) {
+        FILE *fp = fopen(argv[i],"rt");
+        if (fp) { fileStk[++fileSp] = (cell_t)fp; }
+        else {
             char x[2] = {i+'0',0};
             ClearTib; SC(argv[i]); SC(" s"); SC(x);
             ParseLine(tib);
         }
     }
-    if (!input_fp) { input_fp = (cell_t)fopen("core.c3", "rt"); }
+    input_fp = (cell_t)fopen("core.c3", "rt");
     if (!input_fp) { input_fp = (cell_t)fopen("..\\core.c3", "rt"); }
-    output_fp = 0;
+    if (!input_fp && fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {
         getInput();
         ParseLine(tib);
