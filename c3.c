@@ -101,7 +101,6 @@ char isRegOp(const char *w) {
     return 0;
 }
 
-// ( --addr | <null> )
 int nextWord() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0; }
@@ -253,6 +252,17 @@ int doNum(const char *w) {
     return 1;
 }
 
+int doML(const char *w) {
+    if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
+    doCreate(0);
+    while (nextWord()) {
+        if (strEq(WD,"-MLX-",1)) { return 1; }
+        if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
+        CComma(pop());
+    }
+    return 1;
+}
+
 int doReg(const char *w) {
     char t = isRegOp(w);
     if (t == 0) { return 0; }
@@ -276,23 +286,12 @@ int doWord(const char *w) {
     return 1;
 }
 
-int doML(const char *w) {
-    if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
-    doCreate(0);
-    while (nextWord()) {
-        if (strEq(WD,"-MLX-",1)) { return 1; }
-        if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
-        CComma(pop());
-    }
-    return 1;
-}
-
 void ParseLine(char *x) {
     in = x;
     while ((state != ALL_DONE) && nextWord()) {
+        if (doNum(WD)) { continue; }
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
-        if (doNum(WD)) { continue; }
         if (doWord(WD)) { continue; }
         PRINT3("[", WD, "]??")
         if (state) { here = ToCP(last++); state = 0; }
