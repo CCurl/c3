@@ -68,8 +68,8 @@ int key() {
 #endif
 
 #ifndef NEEDS_ALIGN
-    inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
-    inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+    void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
+    cell_t Fetch(char *loc) { return *(cell_t*)loc; }
 #else
     #define S(x, y) (*(x)=((y)&0xFF))
     #define G(x, y) (*(x)<<y)

@@ -52,8 +52,8 @@ char mem[MEM_SZ], vars[VARS_SZ], tib[128], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
-inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
-inline cell_t pop() { return stk[sp--]; }
+void push(cell_t x) { stk[++sp] = (cell_t)(x); }
+cell_t pop() { return stk[sp--]; }
 
 void CComma(cell_t x) { *(here++) = (char)x; }
 void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
