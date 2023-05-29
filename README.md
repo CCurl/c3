@@ -6,7 +6,7 @@
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations.
 - c3 provides 10 temporary words, T0 thru T9.
-  - T0-T5 are normal words, T6-T8 are INLINE, and T9 is IMMEDIATE.
+  - T0-T5 are "normal" words, T6-T8 are INLINE, and T9 is IMMEDIATE.
 
 ## Goals
 The goals for c3 are:
@@ -50,7 +50,7 @@ To bootstrap, c3 has a simple "machine language parser" that can create words in
 -ML- DUP 12 3 -MLX- inline
 ...
 
-Note that this approach gives the user the ultimate flexibility. We don't HAVE to define opcode 12 to be "DUP", we could just as easily make it "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
+Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
 
 ## The dictionary
 - A dictionary entry looks like this:
@@ -63,14 +63,18 @@ Note that this approach gives the user the ultimate flexibility. We don't HAVE t
 - The default NAME_LEN is 13.
 - The default MEM_SZ is 128K (131,072) bytes.
 - The default VARS_SZ is 4MB (4,194,304) bytes.
-- The default stack size (STK_SZ) is 64 bytes.
-- The default loop stack size (LSTK_SZ) is 30 bytes.
-- These can be easily changed in the sys-io.inc file.
+- The default stack size (STK_SZ) is 64 CELLS.
+- The default loop stack size (LSTK_SZ) is 30 CELLS.
+- The default register stack size (REGS_SZ) is 100 CELLS.
+- These can be easily changed in the sys-init.inc file.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9.
+
+Note(s):
+- The support for registers is hard-coded into c3, so they do NOT show up in "WORDS".
+
 There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
-Note: the support for registers is build into c3, and they do NOT show up in "WORDS".
 - +regs   allocate 10 new registers.
 - r4      push register 4 to the stack.
 - r4+     push register 4 to the stack, then increment it.
@@ -94,7 +98,7 @@ c3 provides 10 temporary words, T0 thru T9.
 - Temporary words are intended to be helpful in factoring code.
 - A temporary word can be redefined as often as desired.
 - When redefined, code references to the previous definition are unchanged.
-- T0-T5 are normal words, T6-T8 are INLINE, and T9 is IMMEDIATE.
+- T0-T5 are "normal" words, T6-T8 are INLINE, and T9 is IMMEDIATE.
 
 An example usage of temporary words:
 ```

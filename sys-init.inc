@@ -61,14 +61,15 @@ int key() {
     #define VARS_SZ            96*1024
     #define STK_SZ             32
     #define LSTK_SZ            30
+    #define REGS_SZ           100
     #define NAME_LEN           13
     #define NEEDS_ALIGN
 
 #endif
 
 #ifndef NEEDS_ALIGN
-    inline void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
-    inline cell_t Fetch(char *loc) { return *(cell_t*)loc; }
+    void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
+    cell_t Fetch(char *loc) { return *(cell_t*)loc; }
 #else
     #define S(x, y) (*(x)=((y)&0xFF))
     #define G(x, y) (*(x)<<y)
@@ -81,6 +82,7 @@ int key() {
     #define VARS_SZ        4*1024*1024
     #define STK_SZ             64
     #define LSTK_SZ            30
+    #define REGS_SZ           100
     #define NAME_LEN           13
 #endif
 

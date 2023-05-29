@@ -47,32 +47,34 @@
 -ML- XOR        36 3 -MLX- inline
 -ML- EMIT       37 3 -MLX- inline
 -ML- TIMER      38 3 -MLX- inline
--ML- SYSTEM     39 3 -MLX- inline
--ML- KEY        40 3 -MLX- inline
--ML- ?KEY       41 3 -MLX- inline
-: (TYPE)        42 ;       inline
--ML- TYPE       42 3 -MLX- inline
--ML- TYPEZ      43 3 -MLX- inline
-\ (define)   is 44
-\ (end-word) is 45
--ML- CREATE     46 3 -MLX- inline
--ML- '          47 3 -MLX- inline
--ML- NEXT-WORD  48 3 -MLX- inline
--ML- FOPEN      49 3 -MLX- inline
--ML- FCLOSE     50 3 -MLX- inline
--ML- (load)     51 3 -MLX- inline
--ML- FREAD      52 3 -MLX- inline
--ML- FWRITE     53 3 -MLX- inline
-\ (iX)       is 54
-\ (dX)       is 55
-\ (rX)       is 56
-\ (rX-)      is 57
-\ (rX+)      is 58
-\ (sX)       is 59
--ML- +REGs      60 3 -MLX- inline
--ML- -REGS      61 3 -MLX- inline
-\ : INLINE      62 ;       inline
-\ : IMMEDIATE   63 ;       inline
+-ML- KEY        39 3 -MLX- inline
+-ML- ?KEY       40 3 -MLX- inline
+: (TYPE)        41 ;       inline
+-ML- TYPE       41 3 -MLX- inline
+-ML- TYPEZ      42 3 -MLX- inline
+\ (define)   is 43         \ defined in c3
+\ (end-word) is 44         \ defined in c3
+-ML- CREATE     45 3 -MLX- inline
+-ML- '          46 3 -MLX- inline
+-ML- NEXT-WORD  47 3 -MLX- inline
+\ (iX)       is 48         \ defined in c3
+\ (dX)       is 49         \ defined in c3
+\ (rX)       is 50         \ defined in c3
+\ (rX-)      is 51         \ defined in c3
+\ (rX+)      is 52         \ defined in c3
+\ (sX)       is 53         \ defined in c3
+-ML- +REGs      54 3 -MLX- inline
+-ML- -REGS      55 3 -MLX- inline
+\ : INLINE      56 ;       \ defined in c3
+\ : IMMEDIATE   57 ;       \ defined in c3
+
+\ Words for the PC version
+-ML- SYSTEM     58 3 -MLX- inline
+-ML- FOPEN      59 3 -MLX- inline
+-ML- FCLOSE     60 3 -MLX- inline
+-ML- FREAD      61 3 -MLX- inline
+-ML- FWRITE     62 3 -MLX- inline
+-ML- (load)     63 3 -MLX- inline
 
 \ ***********************************************
 \ OK ... now we can get things going
@@ -241,7 +243,7 @@ here mem -   . ." code bytes used, " last here - . ." bytes free." cr
 vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
 forget
 
-: benches forget s" benches.c3" (load) ;
+: benches forget s" benches.c3" dup count type (load) ;
 : sb forget s" sandbox.c3" (load) ;
 : work forget s" work.c3" (load) ;
 : ed forget s" editor.c3" (load) ;

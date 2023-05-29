@@ -8,7 +8,7 @@ typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
 
-#include "sys-io.inc"
+#include "sys-init.inc"
 
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
@@ -17,13 +17,14 @@ enum {
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR, EMIT, TIMER, SYSTEM, KEY, QKEY,
+    COM, AND, OR, XOR, EMIT, TIMER, KEY, QKEY,
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
-    FOPEN, FCLOSE, FLOAD, FREAD, FWRITE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
     REG_NEW, REG_FREE, INLINE, IMMEDIATE,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 82
+    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 83
 };
+
+#include "sys-enum.inc"
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -46,13 +47,13 @@ cell_t stk[STK_SZ+1], sp, rsp;
 char *rstk[STK_SZ+1];
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[100], reg_base, t1, n1;
+cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
 char mem[MEM_SZ], vars[VARS_SZ], tib[128], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
-inline void push(cell_t x) { stk[++sp] = (cell_t)(x); }
-inline cell_t pop() { return stk[sp--]; }
+void push(cell_t x) { stk[++sp] = (cell_t)(x); }
+cell_t pop() { return stk[sp--]; }
 
 void CComma(cell_t x) { *(here++) = (char)x; }
 void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
@@ -100,7 +101,6 @@ char isRegOp(const char *w) {
     return 0;
 }
 
-// ( --addr | <null> )
 int nextWord() {
     int len = 0;
     if (sp < 0) { PRINT1("-under-"); sp=0; }
@@ -224,17 +224,6 @@ next:
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
         NCASE COM: TOS = ~TOS;
-#ifdef isPC
-        NCASE SYSTEM: t1=pop(); system(ToCP(t1+1));
-        NCASE FOPEN:  t1=pop(); TOS=(cell_t)fopen(ToCP(TOS+1), ToCP(t1+1));
-        NCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
-        NCASE FREAD:  t1=pop(); n1=pop(); TOS =  fread(ToCP(TOS), 1, n1, (FILE*)t1);
-        NCASE FWRITE: t1=pop(); n1=pop(); TOS = fwrite(ToCP(TOS), 1, n1, (FILE*)t1);
-        NCASE FLOAD:  y=ToCP(pop()); t1=(cell_t)fopen(y+1, "rt");
-                if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
-                if (t1) { input_fp = t1; ClearTib; }
-                else { PRINT3("-noFile[",y+1,"]-"); }
-#endif
         NCASE QKEY: push(qKey());
         NCASE KEY:  push(key());
         NCASE REG_D: reg[*(pc++)+reg_base]--;
@@ -243,12 +232,13 @@ next:
         NCASE REG_RD: push(reg[*(pc++)+reg_base]--);
         NCASE REG_RI: push(reg[*(pc++)+reg_base]++);
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
-        NCASE REG_NEW: reg_base += (reg_base < 90) ? 10 : 0;
+        NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
+#include "sys-exec.inc"
         NCASE STOP: return;
         default: PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }
@@ -259,6 +249,17 @@ int doNum(const char *w) {
     if (state == 0) { return 1; }
     if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
     else { CComma(LIT4); Comma(pop()); }
+    return 1;
+}
+
+int doML(const char *w) {
+    if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
+    doCreate(0);
+    while (nextWord()) {
+        if (strEq(WD,"-MLX-",1)) { return 1; }
+        if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
+        CComma(pop());
+    }
     return 1;
 }
 
@@ -285,23 +286,12 @@ int doWord(const char *w) {
     return 1;
 }
 
-int doML(const char *w) {
-    if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
-    doCreate(0);
-    while (nextWord()) {
-        if (strEq(WD,"-MLX-",1)) { return 1; }
-        if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
-        CComma(pop());
-    }
-    return 1;
-}
-
 void ParseLine(char *x) {
     in = x;
     while ((state != ALL_DONE) && nextWord()) {
+        if (doNum(WD)) { continue; }
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
-        if (doNum(WD)) { continue; }
         if (doWord(WD)) { continue; }
         PRINT3("[", WD, "]??")
         if (state) { here = ToCP(last++); state = 0; }
