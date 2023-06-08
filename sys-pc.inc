@@ -2,8 +2,6 @@
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
-void loadStartupWords() { ParseLine(" : isPC 1 ;"); }
-enum { SYSTEM = IMMEDIATE+1, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
 void getInput() {
     ClearTib;
@@ -29,6 +27,8 @@ void getInput() {
     in = tib;
 }
 
+enum { SYSTEM = IMMEDIATE+1, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
+
 char *doUser(char *pc, int ir) {
     switch (ir) {
     case SYSTEM: t1=pop(); system(ToCP(t1+1));                                      return pc;
@@ -42,6 +42,10 @@ char *doUser(char *pc, int ir) {
             else { PRINT3("-noFile[",y+1,"]-"); }                                   return pc;
     default:                                                                        return 0;
     }
+}
+
+void loadStartupWords() {
+    ParseLine(" : isPC 1 ;");
 }
 
 int main(int argc, char *argv[]) {
