@@ -154,8 +154,6 @@
     <None Include="benches.c3" />
     <None Include="screen.c3" />
     <None Include="string.c3" />
-    <None Include="sys-enum.inc" />
-    <None Include="sys-exec.inc" />
     <None Include="sys-init.inc" />
     <None Include="sys-pc.inc" />
   </ItemGroup>

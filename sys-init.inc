@@ -4,6 +4,7 @@ extern void printString(const char *s);
 extern void printChar(const char c);
 extern void ParseLine(const char *s);
 extern void loadStartupWords();
+extern char *doUser(char *pc, int ir);
 
 #ifdef _MSC_VER
 

@@ -24,8 +24,6 @@ enum {
     STOP_LOAD = 99, ALL_DONE = 999, VERSION = 84
 };
 
-#include "sys-enum.inc"
-
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
@@ -238,9 +236,10 @@ next:
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-#include "sys-exec.inc"
         NCASE STOP: return;
-        default: PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
+        default: pc = doUser(pc, *(pc-1));
+            if (pc) { goto next; }
+            PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }
 }
 
