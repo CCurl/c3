@@ -1,3 +1,10 @@
+// System initialization logic for different types of systems
+
+extern void printString(const char *s);
+extern void printChar(const char c);
+extern void ParseLine(const char *s);
+extern void loadStartupWords();
+
 #ifdef _MSC_VER
 
     // Support for Windows
@@ -9,20 +16,21 @@
 #elif IS_LINUX
 
 // Support for Linux
-
 #include <unistd.h>
 #include <termios.h>
 #define isPC
+#define MD_NORMAL 0
+#define MD_RAW    1
 void ttyMode(int mode) {
     static struct termios origt, rawt;
     static int curMode = -1;
     if (curMode == -1) {
-        curMode = 0;
+        curMode = MD_NORMAL;
         tcgetattr( STDIN_FILENO, &origt);
         cfmakeraw(&rawt);
     }
     if (mode != curMode) {
-        if (mode) {
+        if (mode == MD_RAW) {
             tcsetattr( STDIN_FILENO, TCSANOW, &rawt);
         } else {
             tcsetattr( STDIN_FILENO, TCSANOW, &origt);
@@ -33,28 +41,28 @@ void ttyMode(int mode) {
 int qKey() {
     struct timeval tv;
     fd_set rdfs;
-    ttyMode(1);
+    ttyMode(MD_RAW);
     tv.tv_sec = 0;
     tv.tv_usec = 0;
     FD_ZERO(&rdfs);
     FD_SET(STDIN_FILENO, &rdfs);
     select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
     int x = FD_ISSET(STDIN_FILENO, &rdfs);
-    ttyMode(0);
+    ttyMode(MD_NORMAL);
     return x;
 }
 int key() {
-    ttyMode(1);
+    ttyMode(MD_RAW);
     int x = getchar();
-    ttyMode(0);
+    ttyMode(MD_NORMAL);
     return x;
 }
 
 #else
 
-    // Support for development boards
+    // Not Windows or Linux, must be a development board
+    #define isBOARD 1
 
-    // Dev board
     extern int qKey();
     extern int key();
     #define MEM_SZ             64*1024
@@ -85,6 +93,3 @@ int key() {
     #define REGS_SZ           100
     #define NAME_LEN           13
 #endif
-
-extern void printString(const char *s);
-extern void printChar(const char c);

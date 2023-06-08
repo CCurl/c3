@@ -2,6 +2,7 @@
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
+void loadStartupWords() { ParseLine(" : isPC 1 ;"); }
 
 void getInput() {
     ClearTib;

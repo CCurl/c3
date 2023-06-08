@@ -21,7 +21,7 @@ enum {
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
     REG_NEW, REG_FREE, INLINE, IMMEDIATE,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 83
+    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 84
 };
 
 #include "sys-enum.inc"
@@ -286,8 +286,8 @@ int doWord(const char *w) {
     return 1;
 }
 
-void ParseLine(char *x) {
-    in = x;
+void ParseLine(const char *x) {
+    in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
         if (doML(WD)) { continue; }
@@ -356,6 +356,7 @@ void init() {
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
+    loadStartupWords();
 }
 
 #ifdef isPC
