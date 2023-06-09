@@ -179,7 +179,7 @@ int isNum(const char *wd) {
 void Run(char *pc) {
 next:
     switch (*(pc++)) {
-        NCASE STOP: return;
+        case STOP: return;
         NCASE LIT1: push(*(pc++));
         NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
@@ -237,7 +237,7 @@ next:
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-        default: pc = doUser(pc, *(pc-1));
+        break; default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
             PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }
