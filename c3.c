@@ -179,13 +179,14 @@ int isNum(const char *wd) {
 void Run(char *pc) {
 next:
     switch (*(pc++)) {
+        NCASE STOP: return;
+        NCASE LIT1: push(*(pc++));
+        NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
         case  JMP: pc = CpAt(pc);
         NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE LIT1: push(*(pc++));
-        NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
         NCASE CSTORE: *ToCP(TOS) = (char)NOS; sp-=2;
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
@@ -195,48 +196,47 @@ next:
         NCASE OVER: push(NOS);
         NCASE DROP: if (--sp < 0) { sp = 0; }
         NCASE ADD:   t1=pop(); TOS += t1;
-        NCASE SUB:   t1=pop(); TOS -= t1;
         NCASE MULT:  t1=pop(); TOS *= t1;
         NCASE SLMOD: t1=TOS; TOS = (NOS/t1); NOS %= t1;
+        NCASE SUB:   t1=pop(); TOS -= t1;
+        NCASE INC: ++TOS;
+        NCASE DEC: --TOS;
         NCASE LT: t1=pop(); TOS = (TOS<t1);
         NCASE EQ: t1=pop(); TOS = (TOS==t1);
         NCASE GT: t1=pop(); TOS = (TOS>t1);
         NCASE NOT: TOS = (TOS==0);
-        NCASE EMIT: printChar((char)pop());
-        NCASE TIMER: push(clock());
-        NCASE INC: ++TOS;
-        NCASE DEC: --TOS;
-        NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
-        NCASE INDEX: push((cell_t)&L0);
-        NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
-        NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE RTO: rstk[++rsp] = ToCP(pop());
         NCASE RFETCH: push((cell_t)rstk[rsp]);
         NCASE RFROM: push((cell_t)rstk[rsp--]);
-        NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
-        NCASE DEFINE: doCreate(0); state=1;
-        NCASE CREATE: doCreate(0);
-        NCASE FIND: push(doFind(0));
-        NCASE ENDWORD: state=0; CComma(EXIT);
+        NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
+        NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE INDEX: push((cell_t)&L0);
+        NCASE COM: TOS = ~TOS;
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
-        NCASE COM: TOS = ~TOS;
-        NCASE QKEY: push(qKey());
+        NCASE EMIT: printChar((char)pop());
+        NCASE TIMER: push(clock());
         NCASE KEY:  push(key());
-        NCASE REG_D: reg[*(pc++)+reg_base]--;
+        NCASE QKEY: push(qKey());
+        NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
+        NCASE TYPEZ: PRINT1(ToCP(pop()));
+        NCASE DEFINE: doCreate(0); state=1;
+        NCASE ENDWORD: state=0; CComma(EXIT);
+        NCASE CREATE: doCreate(0);
+        NCASE FIND: push(doFind(0));
+        NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
+        NCASE REG_D: reg[*(pc++)+reg_base]--;
         NCASE REG_R:  push(reg[*(pc++)+reg_base]);
         NCASE REG_RD: push(reg[*(pc++)+reg_base]--);
         NCASE REG_RI: push(reg[*(pc++)+reg_base]++);
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
-        NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
-        NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-        NCASE STOP: return;
         default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
             PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
