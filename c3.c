@@ -222,10 +222,10 @@ next:
         NCASE QKEY: push(qKey());
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE TYPEZ: PRINT1(ToCP(pop()));
-        NCASE DEFINE: doCreate(0); state=1;
+        NCASE DEFINE: doCreate((char*)0); state=1;
         NCASE ENDWORD: state=0; CComma(EXIT);
-        NCASE CREATE: doCreate(0);
-        NCASE FIND: push(doFind(0));
+        NCASE CREATE: doCreate((char*)0);
+        NCASE FIND: push(doFind((char*)0));
         NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
         NCASE REG_D: reg[*(pc++)+reg_base]--;
@@ -253,7 +253,7 @@ int doNum(const char *w) {
 
 int doML(const char *w) {
     if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
-    doCreate(0);
+    doCreate((char*)0);
     while (nextWord()) {
         if (strEq(WD,"-MLX-",1)) { return 1; }
         if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
@@ -293,7 +293,7 @@ void ParseLine(const char *x) {
         if (doReg(WD)) { continue; }
         if (doWord(WD)) { continue; }
         PRINT3("[", WD, "]??")
-        if (state) { here = ToCP(last++); state = 0; }
+        if (state) { here = ToCP((last++)->xt); state = 0; }
         return;
     }
 }
