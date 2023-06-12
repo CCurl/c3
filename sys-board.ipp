@@ -11,8 +11,7 @@
 extern "C" {
     typedef long cell_t;
     enum { OPEN_INPUT = IMMEDIATE+1, OPEN_OUTPUT, OPEN_PULLUP,
-        PIN_READ, PIN_WRITE,
-        PIN_READA, PIN_WRITEA
+        PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
     };
     extern void push(cell_t);
     extern cell_t pop();
@@ -36,10 +35,17 @@ extern "C" {
     int key() { return 0; }
 #endif
 
-    cell_t sysTime() { return millis(); }
+    cell_t sysTime() { return micros(); }
 
     void loadStartupWords() {
-        ParseLine(" : isPC 0 ;");
+        ParseLine(": isPC 0 ;");
+        ParseLine("-ML- PIN-INPUT   58 3 -MLX- inline");
+        ParseLine("-ML- PIN-OUTPUT  59 3 -MLX- inline");
+        ParseLine("-ML- PIN-PULLUP  60 3 -MLX- inline");
+        ParseLine("-ML- DPIN@       61 3 -MLX- inline");
+        ParseLine("-ML- APIN@       62 3 -MLX- inline");
+        ParseLine("-ML- DPIN!       63 3 -MLX- inline");
+        ParseLine("-ML- APIN!       64 3 -MLX- inline");
     }
 
     char *doUser(char *pc, int ir) {
@@ -48,10 +54,10 @@ extern "C" {
         case OPEN_INPUT:  t = pop(); pinMode(t, INPUT);             return pc;
         case OPEN_OUTPUT: t = pop(); pinMode(t, OUTPUT);            return pc;
         case OPEN_PULLUP: t = pop(); pinMode(t, INPUT_PULLUP);      return pc;
-        case PIN_READ:   t = pop(); push(digitalRead(t));           return pc;
-        case PIN_WRITE:  t = pop(); n = pop(); digitalWrite(t,n);   return pc;
-        case PIN_READA:  t = pop(); push(analogRead(t));            return pc;
-        case PIN_WRITEA: t = pop(); n = pop(); analogWrite(t,n);    return pc;
+        case PIN_READ:    t = pop(); push(digitalRead(t));          return pc;
+        case PIN_READA:   t = pop(); push(analogRead(t));           return pc;
+        case PIN_WRITE:   t = pop(); n = pop(); digitalWrite(t,n);  return pc;
+        case PIN_WRITEA:  t = pop(); n = pop(); analogWrite(t,n);   return pc;
         default: return 0;
         }
     }
