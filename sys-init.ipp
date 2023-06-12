@@ -1,5 +1,5 @@
 // System initialization logic for different types of systems
-// NOTE: this is a *.ipp file because The Arduino IDE doesn't like *.inc filed
+// NOTE: this is a *.ipp file because the Arduino IDE doesn't like *.inc files
 
 extern void printString(const char *s);
 extern void printChar(const char c);

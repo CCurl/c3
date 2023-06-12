@@ -1,5 +1,5 @@
 // Support for PCs
-// NOTE: this is a *.ipp file because The Arduino IDE doesn't like *.inc filed
+// NOTE: this is a *.ipp file because the Arduino IDE doesn't like *.inc files
 #include <time.h>
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
