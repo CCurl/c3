@@ -154,11 +154,13 @@
     <None Include="benches.c3" />
     <None Include="screen.c3" />
     <None Include="string.c3" />
-    <None Include="sys-init.inc" />
-    <None Include="sys-pc.inc" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c3.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sys-init.ipp" />
+    <ClInclude Include="sys-pc.ipp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

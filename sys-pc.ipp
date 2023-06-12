@@ -1,7 +1,10 @@
 // Support for PCs
+// NOTE: this is a *.ipp file because The Arduino IDE doesn't like *.inc filed
+#include <time.h>
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
+cell_t sysTime() { return clock(); }
 
 void getInput() {
     ClearTib;
@@ -49,7 +52,7 @@ void loadStartupWords() {
 }
 
 int main(int argc, char *argv[]) {
-    init();
+    c3Init();
     output_fp = 0;
     for (int i=1; i<argc; i++) {
         FILE *fp = fopen(argv[i],"rt");

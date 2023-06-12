@@ -1,10 +1,12 @@
 // System initialization logic for different types of systems
+// NOTE: this is a *.ipp file because The Arduino IDE doesn't like *.inc filed
 
 extern void printString(const char *s);
 extern void printChar(const char c);
 extern void ParseLine(const char *s);
 extern void loadStartupWords();
 extern char *doUser(char *pc, int ir);
+extern cell_t sysTime();
 
 #ifdef _MSC_VER
 
@@ -83,7 +85,7 @@ int key() {
     #define S(x, y) (*(x)=((y)&0xFF))
     #define G(x, y) (*(x)<<y)
     void Store(char *l, cell_t v) { S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); }
-    cell_t Fetch(unsigned char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
+    cell_t Fetch(char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
 #endif
 
 #ifndef MEM_SZ

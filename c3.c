@@ -2,13 +2,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
 
-#include "sys-init.inc"
+#include "sys-init.ipp"
 
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
@@ -217,7 +216,7 @@ next:
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
         NCASE EMIT: printChar((char)pop());
-        NCASE TIMER: push(clock());
+        NCASE TIMER: push(sysTime());
         NCASE KEY:  push(key());
         NCASE QKEY: push(qKey());
         NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
@@ -342,7 +341,7 @@ void loadNum(const char *name, cell_t val, int isLit) {
     CComma(EXIT);
 }
 
-void init() {
+void c3Init() {
     here = &mem[0];
     vhere = &vars[0];
     last = (dict_t*)&mem[MEM_SZ];
@@ -359,5 +358,5 @@ void init() {
 }
 
 #ifdef isPC
-#include "sys-pc.inc"
+#include "sys-pc.ipp"
 #endif
