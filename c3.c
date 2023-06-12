@@ -2,13 +2,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
 
-#include "sys-init.inc"
+#include "sys-init.ipp"
 
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
@@ -21,10 +20,8 @@ enum {
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
     REG_NEW, REG_FREE, INLINE, IMMEDIATE,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 83
+    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 84
 };
-
-#include "sys-enum.inc"
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -181,13 +178,14 @@ int isNum(const char *wd) {
 void Run(char *pc) {
 next:
     switch (*(pc++)) {
+        case STOP: return;
+        NCASE LIT1: push(*(pc++));
+        NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
         case  JMP: pc = CpAt(pc);
         NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE LIT1: push(*(pc++));
-        NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
         NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
         NCASE CSTORE: *ToCP(TOS) = (char)NOS; sp-=2;
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
@@ -197,50 +195,50 @@ next:
         NCASE OVER: push(NOS);
         NCASE DROP: if (--sp < 0) { sp = 0; }
         NCASE ADD:   t1=pop(); TOS += t1;
-        NCASE SUB:   t1=pop(); TOS -= t1;
         NCASE MULT:  t1=pop(); TOS *= t1;
         NCASE SLMOD: t1=TOS; TOS = (NOS/t1); NOS %= t1;
+        NCASE SUB:   t1=pop(); TOS -= t1;
+        NCASE INC: ++TOS;
+        NCASE DEC: --TOS;
         NCASE LT: t1=pop(); TOS = (TOS<t1);
         NCASE EQ: t1=pop(); TOS = (TOS==t1);
         NCASE GT: t1=pop(); TOS = (TOS>t1);
         NCASE NOT: TOS = (TOS==0);
-        NCASE EMIT: printChar((char)pop());
-        NCASE TIMER: push(clock());
-        NCASE INC: ++TOS;
-        NCASE DEC: --TOS;
-        NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
-        NCASE INDEX: push((cell_t)&L0);
-        NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
-        NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE RTO: rstk[++rsp] = ToCP(pop());
         NCASE RFETCH: push((cell_t)rstk[rsp]);
         NCASE RFROM: push((cell_t)rstk[rsp--]);
-        NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
-        NCASE DEFINE: doCreate(0); state=1;
-        NCASE CREATE: doCreate(0);
-        NCASE FIND: push(doFind(0));
-        NCASE ENDWORD: state=0; CComma(EXIT);
+        NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
+        NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE INDEX: push((cell_t)&L0);
+        NCASE COM: TOS = ~TOS;
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
-        NCASE COM: TOS = ~TOS;
-        NCASE QKEY: push(qKey());
+        NCASE EMIT: printChar((char)pop());
+        NCASE TIMER: push(sysTime());
         NCASE KEY:  push(key());
-        NCASE REG_D: reg[*(pc++)+reg_base]--;
+        NCASE QKEY: push(qKey());
+        NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
+        NCASE TYPEZ: PRINT1(ToCP(pop()));
+        NCASE DEFINE: doCreate((char*)0); state=1;
+        NCASE ENDWORD: state=0; CComma(EXIT);
+        NCASE CREATE: doCreate((char*)0);
+        NCASE FIND: push(doFind((char*)0));
+        NCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
+        NCASE REG_D: reg[*(pc++)+reg_base]--;
         NCASE REG_R:  push(reg[*(pc++)+reg_base]);
         NCASE REG_RD: push(reg[*(pc++)+reg_base]--);
         NCASE REG_RI: push(reg[*(pc++)+reg_base]++);
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
-        NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
-        NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-#include "sys-exec.inc"
-        NCASE STOP: return;
-        default: PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
+        break; default: pc = doUser(pc, *(pc-1));
+            if (pc) { goto next; }
+            PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }
 }
 
@@ -254,7 +252,7 @@ int doNum(const char *w) {
 
 int doML(const char *w) {
     if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
-    doCreate(0);
+    doCreate((char*)0);
     while (nextWord()) {
         if (strEq(WD,"-MLX-",1)) { return 1; }
         if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
@@ -286,15 +284,15 @@ int doWord(const char *w) {
     return 1;
 }
 
-void ParseLine(char *x) {
-    in = x;
+void ParseLine(const char *x) {
+    in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
         if (doWord(WD)) { continue; }
         PRINT3("[", WD, "]??")
-        if (state) { here = ToCP(last++); state = 0; }
+        if (state) { here = ToCP((last++)->xt); state = 0; }
         return;
     }
 }
@@ -343,7 +341,7 @@ void loadNum(const char *name, cell_t val, int isLit) {
     CComma(EXIT);
 }
 
-void init() {
+void c3Init() {
     here = &mem[0];
     vhere = &vars[0];
     last = (dict_t*)&mem[MEM_SZ];
@@ -356,8 +354,9 @@ void init() {
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
+    loadStartupWords();
 }
 
 #ifdef isPC
-#include "sys-pc.inc"
+#include "sys-pc.ipp"
 #endif

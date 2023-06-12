@@ -1,7 +1,7 @@
-# c3 - A minimal Forth-like VM written in C.
+# c3 - A minimal, stack-based, VM written in C.
 
 ## What is c3?
-- c3 is a stack-based VM whose "CPU" has 64 opcodes.
+- c3 is a stack-based VM whose "CPU" does not have alot of opcodes.
 - c3 is a toolkit to create any environment the programmer desires.
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations.
@@ -20,7 +20,7 @@ The goals for c3 are:
 ## Notes about c3:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
-- There are 64 operations built into the base executable.
+- There are less than 64 operations built into the base executable.
 - Four of the operations are exposed as c3 words:
     - ':'         - define a c3 word
     - ';'         - end word definition
@@ -28,13 +28,13 @@ The goals for c3 are:
     - 'IMMEDIATE' - mark the last word as immediate
 - In addition to the above, c3 also defines some 'system' words (the addresses of system variables and sizes of buffers).
 - Everything else in c3 can be defined from those.
-- c3 loads file "core.c3" on startup, so that is where you put your bootstrap code.
-- The code I have put in core.c3 has a Forth feel to it, but it doesn't have to.
+- On startup, c3 tried to load file "core.c3"; that is where the bootstrap code can be found.
+- The default code I have put in core.c3 has a Forth feel to it, but it doesn't have to.
 - For example, the standard Forth IF/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
     - : then here swap ! ; immediate
-    - Since they are not built-in, I can change them if I want by modifying core.c3.
-- Counted strings are also null-terminated.
+    - Since they are not built-in, they can be changed by modifying core.c3.
+- Strings are both counted and null-terminated.
 - The dictionary starts at the end of the MEM area and grows down.
 - The VARIABLE space is separated from the MEM space.
 
@@ -59,14 +59,14 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
     - len:     byte
     - name:    char[NAME_LEN+1] (NULL terminated)
 
-## Default sizes
+## Default sizes for PC-based systems
 - The default NAME_LEN is 13.
-- The default MEM_SZ is 128K (131,072) bytes.
-- The default VARS_SZ is 4MB (4,194,304) bytes.
-- The default stack size (STK_SZ) is 64 CELLS.
-- The default loop stack size (LSTK_SZ) is 30 CELLS.
-- The default register stack size (REGS_SZ) is 100 CELLS.
-- These can be easily changed in the sys-init.inc file.
+- The default MEM_SZ is 128K bytes (code and distionary).
+- The default VARS_SZ is 4MB bytes (strings and variables).
+- The default STK_SZ is 64 CELLS (data and return stacks).
+- The default LSTK_SZ is 30 CELLS (loop stack, multiple of 3).
+- The default REGS_SZ is 100 CELLS (register stack, multiple of 10).
+- These can be easily changed in the sys-init.ipp file.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9.
@@ -108,21 +108,29 @@ An example usage of temporary words:
 ```
 
 ## Building c3:
-- Windows: there is a c3.sln file
-  - use the x86 configuration
+- Windows: there is a c3.sln file for Visual Studio
+  - Use the x86 configuration (32-bit)
 - Linux: there is a 'make' script
-  - it uses clang and builds a 64-bit version
-  - use -m32 to build a 32-bit version
-  - you can also use gcc if you desire
-- Apple: I do not have an Apple, so I cannot build for Apple
+  - It uses clang and builds a 64-bit version
+  - Use -m32 to build a 32-bit version
+  - You can also use gcc if you desire
+- Apple: I do not have an Apple, so I cannot build for Apples
   - But c3 is minimal enough that it should be easy to port to an Apple system
-- Arduino: there is a c3.ino file (FUTURE)
-  - I use the Arduino IDE v 1.8 or 2.0
+- Arduino: there is a c3.ino file
+  - I use the Arduino IDE v2.0
+  - Edit the section where isBOARD is defined to set the sizes for the board
+  - For the RPI Pico and Teensy 4.0, I use:
+    - MEM_SZ:    64K
+    - VARS_SZ:   96K
+    - STK_SZ:    32
+    - LSTK_SZ:   30
+    - REGS_SZ;  100
+    - NAME_LEN:  13
 
 ## c3 Base system reference
 When c3 starts, it can take a filename as the startup file/program.
 
-If no filename is given, it tries to open 'core.c3', then '../core.c3'.
+c3 tries to open 'core.c3', then '../core.c3'. If successful, it loads that first.
 
 NOTE: Most of these words are defined in 'core.c3'.
 - The below list is not complete.
@@ -156,13 +164,15 @@ key       (--C)            C: Next keyboard char, wait if no char available.
 ?key      (--F)            F: FALSE if no char available, else TRUE.
 
 *** FILES ***
+        NOTE: By default, these are defined in PC-based systems only.
+              Boards that support LittleFS can have them as well.
 fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
 fclose   (--fh)            fh: file-handle.
 fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
 fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
 (load)   (str--)           str: a counted string/filename to load
-(input-fp)  (--a)          a: address of the input-file pointer (PC only; used by "(load)").
-(output-fp) (--a)          a: address of the output-file pointer (PC only; redirects EMIT).
+(input-fp)  (--a)          a: address of the input-file pointer (used by "(load)").
+(output-fp) (--a)          a: address of the output-file pointer (redirects EMIT).
 
 *** LOGICAL ***
 =        (a b--f)          Equality.
