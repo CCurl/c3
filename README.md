@@ -153,7 +153,7 @@ swap     (a b--b a)        Swap TOS and NOS
 
 *** INPUT/OUTPUT ***
 [0-x]*    (--N)            Input N as a number in the current BASE.
-#[0-9]*   (--N)            Input N as a decimal number.
+\#[0-9]*   (--N)            Input N as a decimal number.
 $[0-f]*   (--N)            Input N as a hexadecimal number.
 %[0-1]*   (--N)            Input N as a binary number.
 'x'       (--N)            Input N as the ascii value of 'x'.
@@ -241,7 +241,12 @@ tib      (--a)   a: Address of TIB (text input buffer).
 cell     (--n)   n: size of a CELL in bytes.
 ```
 
-## Extending c3
-1. Add the new opcode to to the enum { ... } in beginning of c3.
-2. In Run(char \*pc), add a NCASE for your new opcode that implements the opcode's behavior.
-3. Edit core.c3 and add a -ML- in core.c3 to define your new opcode.
+## Adding new opcodes to c3
+If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. There might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
+- Define the new opcodes(s) to the enum in the *.ipp file for the target system.
+- Make sure they have values above the value for IMMEDIATE (57).
+- In doUser(), add cases for your new opcodes (also in the *.ipp file).
+- There are 2 ways to define them in the dictionary:
+  - Edit core.c3 and add a -ML- in core.c3 for each new opcode.
+  - Modify loadStartupWords() to add defines for the new opcodes.
+    - For example: to define opcode 67 as "NEWOP" ... ParseLine("-ML- NEWOP 67 3 -MLX- INLINE");
