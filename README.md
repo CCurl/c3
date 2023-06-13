@@ -153,7 +153,7 @@ swap     (a b--b a)        Swap TOS and NOS
 
 *** INPUT/OUTPUT ***
 [0-x]*    (--N)            Input N as a number in the current BASE.
-\#[0-9]*   (--N)            Input N as a decimal number.
+#[0-9]*   (--N)            Input N as a decimal number.
 $[0-f]*   (--N)            Input N as a hexadecimal number.
 %[0-1]*   (--N)            Input N as a binary number.
 'x'       (--N)            Input N as the ascii value of 'x'.
