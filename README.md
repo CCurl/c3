@@ -21,21 +21,23 @@ The goals for c3 are:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
 - There are less than 64 operations built into the base executable.
-- Four of the operations are exposed as c3 words:
-    - ':'         - define a c3 word
+- Four of the operations are pre-defined in the c3 dictionary:
+    - ':'         - define a new c3 word
     - ';'         - end word definition
     - 'INLINE'    - mark the last word as inline
     - 'IMMEDIATE' - mark the last word as immediate
 - In addition to the above, c3 also defines some 'system' words (the addresses of system variables and sizes of buffers).
-- Everything else in c3 can be defined from those.
-- On startup, c3 tried to load file "core.c3"; that is where the bootstrap code can be found.
+- Everything else in c3 is defined from those.
+- On startup, c3 tries to load file "core.c3"; that is where the bootstrap code can be found.
 - The default code I have put in core.c3 has a Forth feel to it, but it doesn't have to.
-- For example, the standard Forth IF/THEN is defined as follows:
+- For example, the standard Forth IF/ELSE/THEN is defined as follows:
     - : if (jmpz) c, here 0 , ; immediate
+    - : else  (jmp) c, here swap 0 , here swap ! ; immediate
     - : then here swap ! ; immediate
     - Since they are not built-in, they can be changed by modifying core.c3.
 - Strings are both counted and null-terminated.
 - The dictionary starts at the end of the MEM area and grows down.
+- The dictionary search is not case-sensitive.
 - The VARIABLE space is separated from the MEM space.
 
 ## Inline words
@@ -100,6 +102,7 @@ c3 provides 10 temporary words, T0 thru T9.
 - A temporary word can be redefined as often as desired.
 - When redefined, code references to the previous definition are unchanged.
 - T0-T5 are "normal" words, T6-T8 are INLINE, and T9 is IMMEDIATE.
+- The names of the temporary words is case-sensitive (T0-T9, not t0-t9).
 
 An example usage of temporary words:
 ```
@@ -133,9 +136,9 @@ When c3 starts, it can take a filename as the startup file/program.
 
 c3 tries to open 'core.c3', then '../core.c3'. If successful, it loads that first.
 
-NOTE: Most of these words are defined in 'core.c3'.
-- The below list is not complete.
-- See file core.c3 for full details.
+NOTES: On the PC, these words are defined in 'core.c3'.
+       The below list is not complete.
+       See file core.c3 for full details.
 ```
 *** MATH ***
 +        (a b--c)          Addition
@@ -192,19 +195,21 @@ c!       (b a--)           Store BYTE b to address a.
 c++      (A--)             Incement value of BYTE at A
 
 *** WORDS and FLOW CONTROL ***
-: word   (--)              Begin definition of word. 
-: T[0-9] (--)              Begin definition of a temporary word.
+: word    (--)             Begin definition of word (not case-sensitive).
+: T[0-9]  (--)             Begin definition of a temporary word (case-sensitive).
         NOTE: T0-T5 are normal, T6-T8 are INLINE, and T9 is IMMEDIATE.
-;        (--)              End current definition.
-create x (--)              Create a definition for word "x".
-for      (N--)             Begin a FOR loop. Set I = N.
-next     (--)              Decrement I. If I>0, jump to for.
-do       (T F--)           Begin DO/LOOP loop.
-i        (--n)             n: the loop index variable I.
-(i)      (--a)             a: address of the loop index variable I.
-loop     (--)              Increment I, Jump to DO if I < T.
--loop    (--)              Decrement I, Jump to DO if I > T.
-' xxx    (--xt fl f)       Find word 'xxx' in the dictionary.
+;         (--)             End current definition.
+create x  (--)             Add "x" to the dictionary.
+inline    (--)             Mark the last word in the dictionary as INLINE.
+immediate (--)             Mark the last word in the dictionary as IMMEDIATE.
+for       (N--)            Begin a FOR loop. Set I = N.
+next      (--)             Decrement I. If I>0, jump to for.
+do        (T F--)          Begin DO/LOOP loop.
+i         (--n)            n: the loop index variable I.
+(i)       (--a)            a: address of the loop index variable I.
+loop      (--)             Increment I, Jump to DO if I < T.
+-loop     (--)             Decrement I, Jump to DO if I > T.
+' xxx     (--xt fl f)      Find word 'xxx' in the dictionary.
         NOTE: Words like IF/THEN/EXIT and BEGIN/UNTIL are not in the base c3.
               They are just words that are defined in core.c3
 
@@ -219,6 +224,7 @@ dX       (--)              Decrement register #X.
 -regs    (--)              Restore the last saved registers (register-base -= 10).
         NOTES: 1. The registers are stored in an array/stack with a "register-base".
                2. +regs simply adds 10 to "register-base", so it is a very efficient operation.
+               3. Register names are case-sensitive.
 
 *** SYSTEM ***
 version  (--n)   n: c3 version*100 (e.g. - 147 => v1.47).
