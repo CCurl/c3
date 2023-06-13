@@ -20,7 +20,7 @@ enum {
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
     REG_NEW, REG_FREE, INLINE, IMMEDIATE,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 85
+    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 84
 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
