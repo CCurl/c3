@@ -44,11 +44,13 @@ In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copi
 ## Bootstrapping c3
 To bootstrap, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of core.c3, I define my aliases for the opcodes, like this:
 
+```
 ...
 -ML- EXIT 3 3 -MLX-
 ...
 -ML- DUP 12 3 -MLX- inline
 ...
+```
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
 
@@ -69,12 +71,10 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 - These can be easily changed in the sys-init.ipp file.
 
 ## Registers
-c3 exposes 10 "virtual registers", r0 thru r9.
+c3 exposes 10 "virtual registers", r0 thru r9. There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
 
-Note(s):
-- The support for registers is hard-coded into c3, so they do NOT show up in "WORDS".
+Note: The support for registers is built into c3, so they do NOT show up in "WORDS".
 
-There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
 - +regs   allocate 10 new registers.
 - r4      push register 4 to the stack.
 - r4+     push register 4 to the stack, then increment it.
@@ -86,10 +86,11 @@ There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
 
 Some example uses of registers:
 ```
-   : btw  ( n l h--f )  +regs s3 s2 s1  r2 r1 <   r1 r3 <  and -regs ;
-   : btwi ( n l h--f )  +regs s3 s2 s1  r2 r1 <=  r1 r3 <= and -regs ;
-   : rot ( a b c--b c a ) +regs s3 s2 s1  r2 r3 r1  -regs ;
-   : fill ( a c n-- ) +regs s3 s2 s1  r3 0 do r2 r1+ c! loop -regs ;
+   : btw  ( n l h--f )  +regs  s3 s2 s1  r2 r1 <   r1 r3 <  and  -regs ;
+   : btwi ( n l h--f )  +regs  s3 s2 s1  r2 r1 <=  r1 r3 <= and  -regs ;
+   : 2swap ( a b c d--c d a b )  +regs  s4 s3 s2 s1  r3 r4 r2 r1  -regs ;
+   : move ( f t n-- ) +regs  s3 s2 s1  r3 0 do  r1+ c@ r2+ c!  loop  -regs ;
+   : fill ( a c n-- ) +regs  s3 s2 s1  r3 0 do  r2 r1+ c!      loop  -regs ;
 ```
 
 ## Temporary words
