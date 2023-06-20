@@ -1,7 +1,8 @@
-# c3 - A minimal, stack-based, VM written in C.
+# c3 - A minimal stack-based VM written in C.
 
 ## What is c3?
 - c3 is a stack-based VM whose "CPU" does not have alot of opcodes.
+- Since c3 is stack-based, it is very well suited to a Forth-like environment.
 - c3 is a toolkit to create any environment the programmer desires.
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations.

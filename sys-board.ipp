@@ -35,20 +35,21 @@ extern "C" {
     int key() { return 0; }
 #endif
 
-    cell_t sysTime() { return micros(); }
+cell_t sysTime() { return micros(); }
 
-    void loadStartupWords() {
-        ParseLine(": isPC 0 ;");
-        ParseLine("-ML- PIN-INPUT   58 3 -MLX- inline");
-        ParseLine("-ML- PIN-OUTPUT  59 3 -MLX- inline");
-        ParseLine("-ML- PIN-PULLUP  60 3 -MLX- inline");
-        ParseLine("-ML- DPIN@       61 3 -MLX- inline");
-        ParseLine("-ML- APIN@       62 3 -MLX- inline");
-        ParseLine("-ML- DPIN!       63 3 -MLX- inline");
-        ParseLine("-ML- APIN!       64 3 -MLX- inline");
-    }
+void loadStartupWords() {
+    ParseLine(": isPC 0 ;");
+    #include "sys-load.ipp"
+    ParseLine("-ML- PIN-INPUT   58 3 -MLX- inline");
+    ParseLine("-ML- PIN-OUTPUT  59 3 -MLX- inline");
+    ParseLine("-ML- PIN-PULLUP  60 3 -MLX- inline");
+    ParseLine("-ML- DPIN@       61 3 -MLX- inline");
+    ParseLine("-ML- APIN@       62 3 -MLX- inline");
+    ParseLine("-ML- DPIN!       63 3 -MLX- inline");
+    ParseLine("-ML- APIN!       64 3 -MLX- inline");
+}
 
-    char *doUser(char *pc, int ir) {
+char *doUser(char *pc, int ir) {
         cell_t t, n;
         switch (ir) {
         case OPEN_INPUT:  t = pop(); pinMode(t, INPUT);             return pc;
