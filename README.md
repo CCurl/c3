@@ -132,6 +132,79 @@ An example usage of temporary words:
     - REGS_SZ;  100
     - NAME_LEN:  13
 
+## c3 Opcode reference
+|Opcode|Name|Stack|Description|
+|---|---|---|---|
+|0|(stop)|(--)|DESC|
+|1|(lit1)|(--)|DESC|
+|2|(lit4)|(--)|DESC|
+|3|EXIT|(--)|DESC|
+|3|(exit)|(--)|DESC|
+|4|(call)|(--)|DESC|
+|5|(jmp)|(--)|DESC|
+|6|(jmpz)|(--)|DESC|
+|7|(jmpnz)|(--)|DESC|
+|1)|(line|(--)|DESC|
+|9|c!|(--)|DESC|
+|2)|(line|(--)|DESC|
+|11|c@|(--)|DESC|
+|12|(dup)|(--)|DESC|
+|12|DUP|(--)|DESC|
+|13|SWAP|(--)|DESC|
+|14|OVER|(--)|DESC|
+|15|DROP|(--)|DESC|
+|16|+|(--)|DESC|
+|17|*|(--)|DESC|
+|18|/MOD|(--)|DESC|
+|19|-|(--)|DESC|
+|20|1+|(--)|DESC|
+|21|1-|(--)|DESC|
+|22|<|(--)|DESC|
+|23|=|(--)|DESC|
+|24|>|(--)|DESC|
+|25|0=|(--)|DESC|
+|26|>R|(--)|DESC|
+|27|R@|(--)|DESC|
+|28|R>|(--)|DESC|
+|29|DO|(--)|DESC|
+|30|LOOP|(--)|DESC|
+|31|-LOOP|(--)|DESC|
+|32|(I)|(--)|DESC|
+|33|COM|(--)|DESC|
+|34|AND|(--)|DESC|
+|35|OR|(--)|DESC|
+|36|XOR|(--)|DESC|
+|37|EMIT|(--)|DESC|
+|38|TIMER|(--)|DESC|
+|39|KEY|(--)|DESC|
+|40|?KEY|(--)|DESC|
+|41|(TYPE)|(--)|DESC|
+|41|TYPE|(--)|DESC|
+|42|TYPEZ|(--)|DESC|
+|43|(define)|(--)|DESC|
+|44|(end-word)|(--)|DESC|
+|45|CREATE|(--)|DESC|
+|46|'|(--)|DESC|
+|47|NEXT-WORD|(--)|DESC|
+|48|(iX)|(--)|DESC|
+|49|(dX)|(--)|DESC|
+|50|(rX)|(--)|DESC|
+|51|(rX-)|(--)|DESC|
+|52|(rX+)|(--)|DESC|
+|53|(sX)|(--)|DESC|
+|54|+REGs|(--)|DESC|
+|55|-REGS|(--)|DESC|
+|56|INLINE|(--)|DESC|
+|57|IMMEDIATE|(--)|DESC|
+||||Opcodes for PCs|
+|58|SYSTEM|(--)|DESC|
+|59|FOPEN|(--)|DESC|
+|60|FCLOSE|(--)|DESC|
+|61|FREAD|(--)|DESC|
+|62|FWRITE|(--)|DESC|
+|63|(load)|(--)|DESC|
+
+
 ## c3 Base system reference
 When c3 starts, it can take a filename as the startup file/program.
 
