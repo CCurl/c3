@@ -134,101 +134,100 @@ An example usage of temporary words:
 
 ## c3 Opcode reference
 |Opcode|Name|Stack|Description|
-|---|---|---|---|
-|0|(stop)|(--)|DESC|
-|1|(lit1)|(--)|DESC|
-|2|(lit4)|(--)|DESC|
-|3|EXIT|(--)|DESC|
-|3|(exit)|(--)|DESC|
-|4|(call)|(--)|DESC|
-|5|(jmp)|(--)|DESC|
-|6|(jmpz)|(--)|DESC|
-|7|(jmpnz)|(--)|DESC|
-|1)|(line|(--)|DESC|
-|9|c!|(--)|DESC|
-|2)|(line|(--)|DESC|
-|11|c@|(--)|DESC|
-|12|(dup)|(--)|DESC|
-|12|DUP|(--)|DESC|
-|13|SWAP|(--)|DESC|
-|14|OVER|(--)|DESC|
-|15|DROP|(--)|DESC|
-|16|+|(--)|DESC|
-|17|*|(--)|DESC|
-|18|/MOD|(--)|DESC|
-|19|-|(--)|DESC|
-|20|1+|(--)|DESC|
-|21|1-|(--)|DESC|
-|22|<|(--)|DESC|
-|23|=|(--)|DESC|
-|24|>|(--)|DESC|
-|25|0=|(--)|DESC|
-|26|>R|(--)|DESC|
-|27|R@|(--)|DESC|
-|28|R>|(--)|DESC|
-|29|DO|(--)|DESC|
-|30|LOOP|(--)|DESC|
-|31|-LOOP|(--)|DESC|
-|32|(I)|(--)|DESC|
-|33|COM|(--)|DESC|
-|34|AND|(--)|DESC|
-|35|OR|(--)|DESC|
-|36|XOR|(--)|DESC|
-|37|EMIT|(--)|DESC|
-|38|TIMER|(--)|DESC|
-|39|KEY|(--)|DESC|
-|40|?KEY|(--)|DESC|
-|41|(TYPE)|(--)|DESC|
-|41|TYPE|(--)|DESC|
-|42|TYPEZ|(--)|DESC|
-|43|(define)|(--)|DESC|
-|44|(end-word)|(--)|DESC|
-|45|CREATE|(--)|DESC|
-|46|'|(--)|DESC|
-|47|NEXT-WORD|(--)|DESC|
-|48|(iX)|(--)|DESC|
-|49|(dX)|(--)|DESC|
-|50|(rX)|(--)|DESC|
-|51|(rX-)|(--)|DESC|
-|52|(rX+)|(--)|DESC|
-|53|(sX)|(--)|DESC|
-|54|+REGs|(--)|DESC|
-|55|-REGS|(--)|DESC|
-|56|INLINE|(--)|DESC|
-|57|IMMEDIATE|(--)|DESC|
+|------|----|-----|-----------|
+|  0 | (stop)     | (--) | DESC|
+|  1 | (lit1)     | (--) | DESC|
+|  2 | (lit4)     | (--) | DESC|
+|  3 | EXIT       | (--) | DESC|
+|  3 | (exit)     | (--) | DESC|
+|  4 | (call)     | (--) | DESC|
+|  5 | (jmp)      | (--) | DESC|
+|  6 | (jmpz)     | (--) | DESC|
+|  7 | (jmpnz)    | (--) | DESC|
+|  8 | !          | (--) | DESC|
+|  9 | c!         | (--) | DESC|
+| 10 | @          | (--) | DESC|
+| 11 | c@         | (--) | DESC|
+| 12 | DUP        | (--) | DESC|
+| 15 | DROP       | (--) | DESC|
+| 13 | SWAP       | (--) | DESC|
+| 14 | OVER       | (--) | DESC|
+| 16 | +          | (--) | DESC|
+| 17 | *          | (--) | DESC|
+| 18 | /MOD       | (--) | DESC|
+| 19 | -          | (--) | DESC|
+| 20 | 1+         | (--) | DESC|
+| 21 | 1-         | (--) | DESC|
+| 22 | <          | (--) | DESC|
+| 23 | =          | (--) | DESC|
+| 24 | >          | (--) | DESC|
+| 25 | 0=         | (--) | DESC|
+| 26 | >R         | (--) | DESC|
+| 27 | R@         | (--) | DESC|
+| 28 | R>         | (--) | DESC|
+| 29 | DO         | (--) | DESC|
+| 30 | LOOP       | (--) | DESC|
+| 31 | -LOOP      | (--) | DESC|
+| 32 | (I)        | (--) | DESC|
+| 33 | COM        | (--) | DESC|
+| 34 | AND        | (--) | DESC|
+| 35 | OR         | (--) | DESC|
+| 36 | XOR        | (--) | DESC|
+| 37 | EMIT       | (--) | DESC|
+| 38 | TIMER      | (--) | DESC|
+| 39 | KEY        | (--) | DESC|
+| 40 | ?KEY       | (--) | DESC|
+| 41 | (TYPE)     | (--) | DESC|
+| 41 | TYPE       | (--) | DESC|
+| 42 | TYPEZ      | (--) | DESC|
+| 43 | (define)   | (--) | DESC|
+| 44 | (end-word) | (--) | DESC|
+| 45 | CREATE     | (--) | DESC|
+| 46 | '          | (--) | DESC|
+| 47 | NEXT-WORD  | (--) | DESC|
+| 48 | (iX)       | (--) | DESC|
+| 49 | (dX)       | (--) | DESC|
+| 50 | (rX)       | (--) | DESC|
+| 51 | (rX-)      | (--) | DESC|
+| 52 | (rX+)      | (--) | DESC|
+| 53 | (sX)       | (--) | DESC|
+| 54 | +REGs      | (--) | DESC|
+| 55 | -REGS      | (--) | DESC|
+| 56 | INLINE     | (--) | DESC|
+| 57 | IMMEDIATE  | (--) | DESC|
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Name|Stack|Description|
-|---|---|---|---|
-|58|SYSTEM|(--)|DESC|
-|59|FOPEN|(--)|DESC|
-|60|FCLOSE|(--)|DESC|
-|61|FREAD|(--)|DESC|
-|62|FWRITE|(--)|DESC|
-|63|(load)|(--)|DESC|
+|------|----|-----|-----------|
+| 58 | SYSTEM |(--) | DESC|
+| 59 | FOPEN  |(--) | DESC|
+| 60 | FCLOSE |(--) | DESC|
+| 61 | FREAD  |(--) | DESC|
+| 62 | FWRITE |(--) | DESC|
+| 63 | (load) |(--) | DESC|
 
 ### Opcodes for Development Boards
 |Opcode|Name|Stack|Description|
-|---|---|---|---|
-|58|SYSTEM|(--)|DESC|
-|59|FOPEN|(--)|DESC|
-|60|FCLOSE|(--)|DESC|
-|61|FREAD|(--)|DESC|
-|62|FWRITE|(--)|DESC|
-|63|(load)|(--)|DESC|
+|------|----|-----|-----------|
+| 58 | PIN-INPUT  | (n--)     | DESC|
+| 59 | PIN-OUTPUT | (n--)     | DESC|
+| 60 | PIN-PULLUP | (n--)     | DESC|
+| 61 | DPIN@      | (n1--n2)  | DESC|
+| 62 | APIN@      | (n1--n2)  | DESC|
+| 63 | DPIN!      | (n1 n2--) | DESC|
+| 64 | APIN!      | (n1 n2--) | DESC|
 
 ## c3 startup behavior
 When c3 starts:
-- It tries to open 'core.c3', then '../core.c3'.
-- If successful, c3 loads that first.
-- - See file "core.c3"" for c3's default definitions.
+- It tries to open 'core.c3', then '../core.c3'. If successful, c3 loads that file.
+  - See file 'core.c3' for definitions defined in that file.
 - For every parameter on the command line:
-- - If c3 can open the parameter as a file, load it.
-- - Else, set the (numeric only) value to a register based on the parameter's position.
+  - If c3 can open the parameter as a file, load it.
+  - Else, set the (numeric only) value to a register based on the parameter's position.
 
-## c3 System information words
+## c3 built-in system-information words
 |Word|Stack|Description|
-|--|--|--|
+|----|-----|-----------|
 | version  | (--n)   | n: c3 version*100 (e.g. - 147 => v1.47).|
 | mem      | (--a)   | a: Start address for the MEMORY area.|
 | mem-sz   | (--n)   | a: The size of the MEMORY area in bytes.|
