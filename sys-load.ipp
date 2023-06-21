@@ -209,7 +209,7 @@ ParseLine(".\" c3 - v\" .ver .\" - Chris Curl\" cr");
 ParseLine("here mem -   . .\" code bytes used, \" last here - . .\" bytes free.\" cr");
 ParseLine("vhere vars - . .\" variable bytes used, \" vars-end vhere - . .\" bytes free.\"");
 ParseLine("forget");
-ParseLine(": benches forget s\" benches.c3\" dup count type (load) ;");
+ParseLine(": benches forget s\" benches.c3\" (load) ;");
 ParseLine(": sb forget s\" sandbox.c3\" (load) ;");
 ParseLine(": work forget s\" work.c3\" (load) ;");
 ParseLine(": ed forget s\" editor.c3\" (load) ;");
