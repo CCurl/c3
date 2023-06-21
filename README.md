@@ -196,7 +196,10 @@ An example usage of temporary words:
 |55|-REGS|(--)|DESC|
 |56|INLINE|(--)|DESC|
 |57|IMMEDIATE|(--)|DESC|
-||||Opcodes for PCs|
+
+### Opcodes for PCs (Windows and Linux)
+|Opcode|Name|Stack|Description|
+|---|---|---|---|
 |58|SYSTEM|(--)|DESC|
 |59|FOPEN|(--)|DESC|
 |60|FCLOSE|(--)|DESC|
@@ -204,130 +207,58 @@ An example usage of temporary words:
 |62|FWRITE|(--)|DESC|
 |63|(load)|(--)|DESC|
 
+### Opcodes for Development Boards
+|Opcode|Name|Stack|Description|
+|---|---|---|---|
+|58|SYSTEM|(--)|DESC|
+|59|FOPEN|(--)|DESC|
+|60|FCLOSE|(--)|DESC|
+|61|FREAD|(--)|DESC|
+|62|FWRITE|(--)|DESC|
+|63|(load)|(--)|DESC|
 
-## c3 Base system reference
-When c3 starts, it can take a filename as the startup file/program.
+## c3 startup behavior
+When c3 starts:
+- It tries to open 'core.c3', then '../core.c3'.
+- If successful, c3 loads that first.
+- - See file "core.c3"" for c3's default definitions.
+- For every parameter on the command line:
+- - If c3 can open the parameter as a file, load it.
+- - Else, set the (numeric only) value to a register based on the parameter's position.
 
-c3 tries to open 'core.c3', then '../core.c3'. If successful, it loads that first.
-
-NOTES: On the PC, these words are defined in 'core.c3'.
-       The below list is not complete.
-       See file core.c3 for full details.
-```
-*** MATH ***
-+        (a b--c)          Addition
--        (a b--c)          Subtraction
-*        (a b--c)          Multiplication
-/mod     (a b--r q)        r: modulo(a,b), q: quotient(a,b)
-
-*** STACK ***
-1+       (a--b)            Increment TOS
-1-       (a--b)            Decrement TOS
-drop     (a b--a)          Drop TOS
-dup      (a--a a)          Duplicate TOS
-?dup     (a--a a?)         Duplicate TOS if TOS <> 0
-over     (a b--a b a)      Copy NOS
-swap     (a b--b a)        Swap TOS and NOS
-
-*** INPUT/OUTPUT ***
-[0-x]*    (--N)            Input N as a number in the current BASE.
-#[0-9]*   (--N)            Input N as a decimal number.
-$[0-f]*   (--N)            Input N as a hexadecimal number.
-%[0-1]*   (--N)            Input N as a binary number.
-'x'       (--N)            Input N as the ascii value of 'x'.
-number?   (S--N F|F)       Parse string S as a number. N: number if F=1.
-emit      (C--)            Output C as a character.
-next-word (--A L)          A: the next word from the input stream, L: length.
-key       (--C)            C: Next keyboard char, wait if no char available.
-?key      (--F)            F: FALSE if no char available, else TRUE.
-
-*** FILES ***
-        NOTE: By default, these are defined in PC-based systems only.
-              Boards that support LittleFS can have them as well.
-fopen    (n m--fh)         n: name, m: mode (eg - rt), fh: file-handle.
-fclose   (--fh)            fh: file-handle.
-fread    (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars read.
-fwrite   (a sz fh--n)      a: buf, sz: max size, fh: file-handle, n: num chars written.
-(load)   (str--)           str: a counted string/filename to load
-(input-fp)  (--a)          a: address of the input-file pointer (used by "(load)").
-(output-fp) (--a)          a: address of the output-file pointer (redirects EMIT).
-
-*** LOGICAL ***
-=        (a b--f)          Equality.
-<        (a b--f)          Less-than.
->        (a b--f)          Greater-than.
-0=       (n--f)            Logical NOT.
-
-*** MEMORY ***
-@        (a--n)            n: CELL at address a.
-c@       (a--b)            b: BYTE at address a.
-!        (n a--)           Store CELL n to address a.
-c!       (b a--)           Store BYTE b to address a.
-+!       (N A--)           Add N to CELL at A
-++       (A--)             Incement value of CELL at A
---       (A--)             Decement value of CELL at A
-c++      (A--)             Incement value of BYTE at A
-
-*** WORDS and FLOW CONTROL ***
-: word    (--)             Begin definition of word (not case-sensitive).
-: T[0-9]  (--)             Begin definition of a temporary word (case-sensitive).
-        NOTE: T0-T5 are normal, T6-T8 are INLINE, and T9 is IMMEDIATE.
-;         (--)             End current definition.
-create x  (--)             Add "x" to the dictionary.
-inline    (--)             Mark the last word in the dictionary as INLINE.
-immediate (--)             Mark the last word in the dictionary as IMMEDIATE.
-for       (N--)            Begin a FOR loop. Set I = N.
-next      (--)             Decrement I. If I>0, jump to for.
-do        (T F--)          Begin DO/LOOP loop.
-i         (--n)            n: the loop index variable I.
-(i)       (--a)            a: address of the loop index variable I.
-loop      (--)             Increment I, Jump to DO if I < T.
--loop     (--)             Decrement I, Jump to DO if I > T.
-' xxx     (--xt fl f)      Find word 'xxx' in the dictionary.
-        NOTE: Words like IF/THEN/EXIT and BEGIN/UNTIL are not in the base c3.
-              They are just words that are defined in core.c3
-
-*** REGISTERS ***
-+regs    (--)              Save the current registers (register-base += 10).
-rX       (--N)             N: the value of register #X.
-rX+      (--N)             N: the value of register #X. Then increment register X.
-rX-      (--N)             N: the value of register #X. Then decrement register X.
-sX       (N--)             Set register #X to N.
-iX       (--)              Increment register #X.
-dX       (--)              Decrement register #X.
--regs    (--)              Restore the last saved registers (register-base -= 10).
-        NOTES: 1. The registers are stored in an array/stack with a "register-base".
-               2. +regs simply adds 10 to "register-base", so it is a very efficient operation.
-               3. Register names are case-sensitive.
-
-*** SYSTEM ***
-version  (--n)   n: c3 version*100 (e.g. - 147 => v1.47).
-mem      (--a)   a: Start address for the MEMORY area.
-mem-sz   (--n)   a: The size of the MEMORY area in bytes.
-vars     (--a)   a: Start address for the VARIABLES area.
-vars-sz  (--n)   n: The size of the VARIABLES area in bytes.
-regs     (--a)   a: Start address for the REGISTERS (10 CELLs).
-(vhere)  (--a)   a: Address of the VHERE variable.
-(here)   (--a)   a: Address of the HERE variable.
-(last)   (--a)   a: Address of the LAST variable.
-(stk)    (--a)   a: Address of the stack.
-(sp)     (--a)   a: Address of the stack pointer.
-(rsp)    (--a)   a: Address of the return stack pointer.
-(lsp)    (--a)   a: Address of the loop stack pointer.
-word-sz  (--n)   n: The size of a dictionary entry in bytes.
-base     (--a)   a: Address of the BASE variable.
-state    (--a)   a: Address of the STATE variable.
-tib      (--a)   a: Address of TIB (text input buffer).
->in      (--a)   a: Address of >IN.
-cell     (--n)   n: size of a CELL in bytes.
-```
+## c3 System information words
+|Word|Stack|Description|
+|--|--|--|
+| version  | (--n)   | n: c3 version*100 (e.g. - 147 => v1.47).|
+| mem      | (--a)   | a: Start address for the MEMORY area.|
+| mem-sz   | (--n)   | a: The size of the MEMORY area in bytes.|
+| vars     | (--a)   | a: Start address for the VARIABLES area.|
+| vars-sz  | (--n)   | n: The size of the VARIABLES area in bytes.|
+| regs     | (--a)   | a: Start address for the REGISTERS (REGS_SZ CELLs).|
+| (vhere)  | (--a)   | a: Address of the VHERE variable.|
+| (here)   | (--a)   | a: Address of the HERE variable.|
+| (last)   | (--a)   | a: Address of the LAST variable.|
+| (stk)    | (--a)   | a: Address of the stack.|
+| (sp)     | (--a)   | a: Address of the stack pointer.|
+| (rsp)    | (--a)   | a: Address of the return stack pointer.|
+| (lsp)    | (--a)   | a: Address of the loop stack pointer.|
+| word-sz  | (--n)   | n: The size of a dictionary entry in bytes.|
+| base     | (--a)   | a: Address of the BASE variable.|
+| state    | (--a)   | a: Address of the STATE variable.|
+| tib      | (--a)   | a: Address of TIB (text input buffer).|
+| >in      | (--a)   | a: Address of >IN.|
+| cell     | (--n)   | n: size of a CELL in bytes.|
 
 ## Adding new opcodes to c3
-If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. There might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
+If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. 
+
+For example, there might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
+
+Here is the process I use:
 - Define the new opcodes(s) to the enum in the *.ipp file for the target system.
 - Make sure they have values above the value for IMMEDIATE (57).
 - In doUser(), add cases for your new opcodes (also in the *.ipp file).
 - There are 2 ways to define them in the dictionary:
-  - Edit core.c3 and add a -ML- in core.c3 for each new opcode.
-  - Modify loadStartupWords() to add defines for the new opcodes.
+  - edit core.c3 and add a -ML- in core.c3 for each new opcode.
+  - or, modify loadStartupWords() to add -ML- definitions for the new opcodes.
     - For example: to define opcode 67 as "NEWOP" ... ParseLine("-ML- NEWOP 67 3 -MLX- INLINE");
