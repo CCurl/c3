@@ -134,7 +134,7 @@ An example usage of temporary words:
 
 ## c3 Opcode reference
 |Opcode|Name|Stack|Description|
-|------|----|-----|-----------|
+| :-- | :-- | :-- | :-- |
 |  0 | STOP       | (--)         | Stops the runtime engine|
 |  1 | LIT1       | (--B)        | Pushes next BYTE onto the stack|
 |  3 | EXIT       | (--)         | Exit subroutine|
@@ -196,7 +196,7 @@ An example usage of temporary words:
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Name|Stack|Description|
-|------|----|-----|-----------|
+| :-- | :-- | :-- | :-- |
 | 58 | SYSTEM | (A--)     | Call system(a)|
 | 59 | FOPEN  | (N M--H)  | N: FileName, M: OpenMode (R/W/A), H: Handle|
 | 60 | FCLOSE | (H--)     | Close file with handle H|
@@ -206,7 +206,7 @@ An example usage of temporary words:
 
 ### Opcodes for Development Boards
 |Opcode|Name|Stack|Description|
-|------|----|-----|-----------|
+| :-- | :-- | :-- | :-- |
 | 58 | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
 | 59 | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
 | 60 | PIN-PULLUP | (P--)   | pinMode(P, INPUT_PULLUP)|
@@ -225,7 +225,7 @@ When c3 starts:
 
 ## c3 built-in system-information words
 |Word|Stack|Description|
-|----|-----|-----------|
+| :-- | :-- | :-- |
 | version     | (--N) | N: c3 version*100 (e.g. - 147 => v1.47).|
 | mem         | (--A) | A: Start address for the MEMORY area.|
 | mem-sz      | (--N) | A: The size of the MEMORY area in bytes.|
