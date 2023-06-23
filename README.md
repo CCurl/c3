@@ -135,87 +135,85 @@ An example usage of temporary words:
 ## c3 Opcode reference
 |Opcode|Name|Stack|Description|
 |------|----|-----|-----------|
-|  0 | (stop)     | (--) | DESC|
-|  1 | (lit1)     | (--) | DESC|
-|  2 | (lit4)     | (--) | DESC|
-|  3 | EXIT       | (--) | DESC|
-|  3 | (exit)     | (--) | DESC|
-|  4 | (call)     | (--) | DESC|
-|  5 | (jmp)      | (--) | DESC|
-|  6 | (jmpz)     | (--) | DESC|
-|  7 | (jmpnz)    | (--) | DESC|
-|  8 | !          | (--) | DESC|
-|  9 | c!         | (--) | DESC|
-| 10 | @          | (--) | DESC|
-| 11 | c@         | (--) | DESC|
-| 12 | DUP        | (--) | DESC|
-| 15 | DROP       | (--) | DESC|
-| 13 | SWAP       | (--) | DESC|
-| 14 | OVER       | (--) | DESC|
-| 16 | +          | (--) | DESC|
-| 17 | *          | (--) | DESC|
-| 18 | /MOD       | (--) | DESC|
-| 19 | -          | (--) | DESC|
-| 20 | 1+         | (--) | DESC|
-| 21 | 1-         | (--) | DESC|
-| 22 | <          | (--) | DESC|
-| 23 | =          | (--) | DESC|
-| 24 | >          | (--) | DESC|
-| 25 | 0=         | (--) | DESC|
-| 26 | >R         | (--) | DESC|
-| 27 | R@         | (--) | DESC|
-| 28 | R>         | (--) | DESC|
-| 29 | DO         | (--) | DESC|
-| 30 | LOOP       | (--) | DESC|
-| 31 | -LOOP      | (--) | DESC|
-| 32 | (I)        | (--) | DESC|
-| 33 | COM        | (--) | DESC|
-| 34 | AND        | (--) | DESC|
-| 35 | OR         | (--) | DESC|
-| 36 | XOR        | (--) | DESC|
-| 37 | EMIT       | (--) | DESC|
-| 38 | TIMER      | (--) | DESC|
-| 39 | KEY        | (--) | DESC|
-| 40 | ?KEY       | (--) | DESC|
-| 41 | (TYPE)     | (--) | DESC|
-| 41 | TYPE       | (--) | DESC|
-| 42 | TYPEZ      | (--) | DESC|
-| 43 | (define)   | (--) | DESC|
-| 44 | (end-word) | (--) | DESC|
-| 45 | CREATE     | (--) | DESC|
-| 46 | '          | (--) | DESC|
-| 47 | NEXT-WORD  | (--) | DESC|
-| 48 | (iX)       | (--) | DESC|
-| 49 | (dX)       | (--) | DESC|
-| 50 | (rX)       | (--) | DESC|
-| 51 | (rX-)      | (--) | DESC|
-| 52 | (rX+)      | (--) | DESC|
-| 53 | (sX)       | (--) | DESC|
-| 54 | +REGs      | (--) | DESC|
-| 55 | -REGS      | (--) | DESC|
-| 56 | INLINE     | (--) | DESC|
-| 57 | IMMEDIATE  | (--) | DESC|
+|  0 | (stop)     | (--)         | Stops the runtime engine|
+|  1 | (lit1)     | (--B)        | Pushes next BYTE onto the stack|
+|  3 | EXIT       | (--)         | Exit subroutine|
+|  2 | (lit4)     | (--N)        | Pushes next CELL onto the stack|
+|  4 | (call)     | (--)         | Call: next CELL is address, handles call-tail optimization|
+|  5 | (jmp)      | (--)         | Jump: next CELL is address|
+|  6 | (jmpz)     | (--)         | Jump if TOS==0: next CELL is address|
+|  7 | (jmpnz)    | (--)         | Jump if TOS!=0: next CELL is address|
+|  8 | !          | (N A--)      | Store CELL N to address A|
+|  9 | c!         | (B A--)      | Store BYTE B to address A|
+| 10 | @          | (--)         | Fetch CELL N FROM address A|
+| 11 | c@         | (--)         | Fetch BYTE B FROM address A|
+| 12 | DUP        | (N--N N)     | Duplicate TOS|
+| 15 | DROP       | (A B--A)     | Drop TOS|
+| 13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
+| 14 | OVER       | (A B--A B A) | Push a copy of NOS|
+| 16 | +          | (A B--C)     | Add A and B|
+| 17 | *          | (A B--C)     | Multiply A and B|
+| 18 | /MOD       | (A B--C D)   | C: A mod B, D: A divided by B|
+| 19 | -          | (A B--C)     | Subtract B from A|
+| 20 | 1+         | (A--B)       | Increment TOS|
+| 21 | 1-         | (A--B)       | Decrement TOS|
+| 22 | <          | (A B--F)     | If A<B, F=1, else F=0|
+| 23 | =          | (A B--F)     | If A=B, F=1, else F=0|
+| 24 | >          | (A B--F)     | If A>B, F=1, else F=0|
+| 25 | 0=         | (N--F)       | If A=0, B=1, else F=0|
+| 26 | >R         | (N--)        | Move TOS to return stack|
+| 27 | R@         | (--N)        | Copy top of return stack|
+| 28 | R>         | (--N)        | Move top of return stack|
+| 29 | DO         | (T F--)      | Begin a loop from F to T|
+| 30 | LOOP       | (--)         | Increment I, jump to beginning if I<T|
+| 31 | -LOOP      | (--)         | Decrement I, jump to beginning if I>T|
+| 32 | (I)        | (--)         | Address of I|
+| 33 | COM        | (A--B)       | B: Ones-complement of A|
+| 34 | AND        | (A B--C)     | C: A bitwise-and B|
+| 35 | OR         | (A B--C)     | C: A bitwise-or B|
+| 36 | XOR        | (A B--C)     | C: A bitwise-xor B|
+| 37 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
+| 38 | TIMER      | (--N)        | N: current system time|
+| 39 | KEY        | (--B)        | B: next keypress|
+| 40 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
+| 41 | TYPE       | (A N--)      | Output N chars at address A to (output_fp)|
+| 42 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
+| 43 | (define)   | (--)         | Execute CREATE and set STATE=1|
+| 44 | (end-word) | (--)         | Append EXIT to code, set STATE=0|
+| 45 | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
+| 46 | '          | (--)         | Execute NEXT-WORD, search the dictionary for A|
+| 47 | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
+| 48 | (iX)       | (--)         | Increment register X|
+| 49 | (dX)       | (--)         | Decrement register X|
+| 50 | (rX)       | (--N)        | N: value of register X|
+| 51 | (rX-)      | (--N)        | N: value of register X, then decrement it|
+| 52 | (rX+)      | (--N)        | N: value of register X, then increment it|
+| 53 | (sX)       | (N--)        | Set regiser X to TOS|
+| 54 | +REGs      | (--)         | Allocate 10 new registers|
+| 55 | -REGS      | (--)         | Restore last set of registers|
+| 56 | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
+| 57 | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Name|Stack|Description|
 |------|----|-----|-----------|
-| 58 | SYSTEM |(--) | DESC|
-| 59 | FOPEN  |(--) | DESC|
-| 60 | FCLOSE |(--) | DESC|
-| 61 | FREAD  |(--) | DESC|
-| 62 | FWRITE |(--) | DESC|
-| 63 | (load) |(--) | DESC|
+| 58 | SYSTEM |(A--)     | Call system(a)|
+| 59 | FOPEN  |(N M--H)  | N: FileName, M: OpenMode (R/W/A), H: Handle|
+| 60 | FCLOSE |(H--)     | Close file with handle H|
+| 61 | FREAD  |(A N H--) | Read N bytes from file H to address A|
+| 62 | FWRITE |(A N H--) | Write N bytes to file H to address A|
+| 63 | (load) |(A--)     | XXXXXXXXXX|
 
 ### Opcodes for Development Boards
 |Opcode|Name|Stack|Description|
 |------|----|-----|-----------|
-| 58 | PIN-INPUT  | (n--)     | DESC|
-| 59 | PIN-OUTPUT | (n--)     | DESC|
-| 60 | PIN-PULLUP | (n--)     | DESC|
-| 61 | DPIN@      | (n1--n2)  | DESC|
-| 62 | APIN@      | (n1--n2)  | DESC|
-| 63 | DPIN!      | (n1 n2--) | DESC|
-| 64 | APIN!      | (n1 n2--) | DESC|
+| 58 | PIN-INPUT  | (P--)     | pinMode(P, INPUT)|
+| 59 | PIN-OUTPUT | (P--)     | pinMode(P, OUTPUT)|
+| 60 | PIN-PULLUP | (P--)     | pinMode(P, INPUT_PULLUP)|
+| 61 | DPIN@      | (P--N)    | N = digitalRead(P)|
+| 62 | APIN@      | (P--N)    | N = analogRead(P)|
+| 63 | DPIN!      | (N P--)   | digitalWrite(P, N)|
+| 64 | APIN!      | (N P--)   | analogWrite(P, N)|
 
 ## c3 startup behavior
 When c3 starts:
@@ -228,25 +226,27 @@ When c3 starts:
 ## c3 built-in system-information words
 |Word|Stack|Description|
 |----|-----|-----------|
-| version  | (--n)   | n: c3 version*100 (e.g. - 147 => v1.47).|
-| mem      | (--a)   | a: Start address for the MEMORY area.|
-| mem-sz   | (--n)   | a: The size of the MEMORY area in bytes.|
-| vars     | (--a)   | a: Start address for the VARIABLES area.|
-| vars-sz  | (--n)   | n: The size of the VARIABLES area in bytes.|
-| regs     | (--a)   | a: Start address for the REGISTERS (REGS_SZ CELLs).|
-| (vhere)  | (--a)   | a: Address of the VHERE variable.|
-| (here)   | (--a)   | a: Address of the HERE variable.|
-| (last)   | (--a)   | a: Address of the LAST variable.|
-| (stk)    | (--a)   | a: Address of the stack.|
-| (sp)     | (--a)   | a: Address of the stack pointer.|
-| (rsp)    | (--a)   | a: Address of the return stack pointer.|
-| (lsp)    | (--a)   | a: Address of the loop stack pointer.|
-| word-sz  | (--n)   | n: The size of a dictionary entry in bytes.|
-| base     | (--a)   | a: Address of the BASE variable.|
-| state    | (--a)   | a: Address of the STATE variable.|
-| tib      | (--a)   | a: Address of TIB (text input buffer).|
-| >in      | (--a)   | a: Address of >IN.|
-| cell     | (--n)   | n: size of a CELL in bytes.|
+| version     | (--N) | N: c3 version*100 (e.g. - 147 => v1.47).|
+| mem         | (--A) | A: Start address for the MEMORY area.|
+| mem-sz      | (--N) | A: The size of the MEMORY area in bytes.|
+| vars        | (--A) | A: Start address for the VARIABLES area.|
+| vars-sz     | (--N) | N: The size of the VARIABLES area in bytes.|
+| regs        | (--A) | A: Start address for the REGISTERS (REGS_SZ CELLs).|
+| (vhere)     | (--A) | A: Address of the VHERE variable.|
+| (input_fp)  | (--A) | A: Address of the input file handle.|
+| (output_fp) | (--A) | A: Address of the output file handle.|
+| (here)      | (--A) | A: Address of the HERE variable.|
+| (last)      | (--A) | A: Address of the LAST variable.|
+| (stk)       | (--A) | A: Address of the stack.|
+| (sp)        | (--A) | A: Address of the stack pointer.|
+| (rsp)       | (--A) | A: Address of the return stack pointer.|
+| (lsp)       | (--A) | A: Address of the loop stack pointer.|
+| word-sz     | (--N) | N: The size of a dictionary entry in bytes.|
+| base        | (--A) | A: Address of the BASE variable.|
+| state       | (--A) | A: Address of the STATE variable.|
+| tib         | (--A) | A: Address of TIB (text input buffer).|
+| >in         | (--A) | A: Address of >IN.|
+| cell        | (--N) | N: size of a CELL in bytes.|
 
 ## Adding new opcodes to c3
 If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. 
