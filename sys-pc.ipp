@@ -48,12 +48,15 @@ char *doUser(char *pc, int ir) {
 }
 
 void loadStartupWords() {
-    ParseLine(" : isPC 1 ;");
+    ParseLine(": isPC 1 ;");
+    //#include "sys-load.ipp"
+    input_fp = (cell_t)fopen("core.c3", "rt");
+    if (!input_fp) { input_fp = (cell_t)fopen("..\\core.c3", "rt"); }
 }
 
 int main(int argc, char *argv[]) {
+    input_fp = output_fp = 0;
     c3Init();
-    output_fp = 0;
     for (int i=1; i<argc; i++) {
         FILE *fp = fopen(argv[i],"rt");
         if (fp) { fileStk[++fileSp] = (cell_t)fp; }
@@ -63,8 +66,6 @@ int main(int argc, char *argv[]) {
             ParseLine(tib);
         }
     }
-    input_fp = (cell_t)fopen("core.c3", "rt");
-    if (!input_fp) { input_fp = (cell_t)fopen("..\\core.c3", "rt"); }
     if (!input_fp && fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {
         getInput();

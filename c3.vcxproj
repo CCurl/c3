@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sys-init.ipp" />
+    <ClInclude Include="sys-load.ipp" />
     <ClInclude Include="sys-pc.ipp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
