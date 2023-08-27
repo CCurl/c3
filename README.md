@@ -197,12 +197,12 @@ An example usage of temporary words:
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Name|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 58 | SYSTEM | (A--)     | Call system(a)|
-| 59 | FOPEN  | (N M--H)  | N: FileName, M: OpenMode (R/W/A), H: Handle|
-| 60 | FCLOSE | (H--)     | Close file with handle H|
-| 61 | FREAD  | (A N H--) | Read N bytes from file H to address A|
-| 62 | FWRITE | (A N H--) | Write N bytes to file H to address A|
-| 63 | FLOAD  | (A--)     | Load from file A|
+| 58 | SYSTEM | (A--)       Call system(a)|
+| 59 | FOPEN  | (N M--H)   | N: FileName, M: OpenMode (R/W/A), H: Handle|
+| 60 | FCLOSE | (H--)      | Close file with handle H|
+| 61 | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
+| 62 | FWRITE | (A N H--)  | Write N bytes to file H to address A|
+| 63 | FLOAD  | (A--)      | Load from file A|
 
 ### Opcodes for Development Boards
 |Opcode|Name|Stack|Description|
