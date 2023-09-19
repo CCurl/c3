@@ -30,7 +30,7 @@ void getInput() {
     in = tib;
 }
 
-enum { SYSTEM = IMMEDIATE+1, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
+enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
 char *doUser(char *pc, int ir) {
     switch (ir) {

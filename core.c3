@@ -65,17 +65,18 @@
 \ (sX)       is 53         \ defined in c3
 -ML- +REGs      54 3 -MLX- inline
 -ML- -REGS      55 3 -MLX- inline
--ML- f.         56 3 -MLX- inline
+\ -ML- FLT_OPS  56 3 -MLX- inline
+\ -ML- SYS_OPS  57 3 -MLX- inline
 \ : INLINE      57 ;       \ defined in c3
 \ : IMMEDIATE   58 ;       \ defined in c3
 
 \ Words for the PC version
--ML- SYSTEM     58 3 -MLX- inline
--ML- FOPEN      59 3 -MLX- inline
--ML- FCLOSE     60 3 -MLX- inline
--ML- FREAD      61 3 -MLX- inline
--ML- FWRITE     62 3 -MLX- inline
--ML- (load)     63 3 -MLX- inline
+-ML- SYSTEM    100 3 -MLX- inline
+-ML- FOPEN     101 3 -MLX- inline
+-ML- FCLOSE    102 3 -MLX- inline
+-ML- FREAD     103 3 -MLX- inline
+-ML- FWRITE    104 3 -MLX- inline
+-ML- (load)    105 3 -MLX- inline
 
 \ ***********************************************
 \ OK ... now we can get things going

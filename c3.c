@@ -24,9 +24,11 @@ enum {
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
     REG_NEW, REG_FREE,
-    FDOT,
-    INLINE, IMMEDIATE,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 84
+    FLT_OPS, SYS_OPS,
+};
+enum { FADD=0, FSUB, FMUL, FDIV = 4, FDOT }; // skip #3
+enum { INLINE=0, IMMEDIATE, SYS2, SYS4 = 4,
+    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90
 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
@@ -38,7 +40,8 @@ enum {
 #define DSP           ds.sp
 #define TOS           (ds.stk[DSP].i)
 #define NOS           (ds.stk[DSP-1].i)
-#define FTOS          (rs.stk[DSP].f)
+#define FTOS          (ds.stk[DSP].f)
+#define FNOS          (ds.stk[DSP-1].f)
 #define RSP           rs.sp
 #define RTOS          (rs.stk[RSP].c)
 #define L0            lstk[lsp]
@@ -47,6 +50,7 @@ enum {
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
 #define NCASE         goto next; case
+#define RCASE         return pc; case
 #define PRINT1(a)     printString(a)
 #define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 
@@ -115,7 +119,9 @@ char isRegOp(const char *w) {
 
 int nextWord() {
     int len = 0;
-    if (DSP < 0) { PRINT1("-under-"); DSP=0; }
+    if (DSP < 0) {
+        PRINT1("-under-"); DSP=0;
+    }
     if (STK_SZ < DSP) { PRINT1("-over-"); DSP=0; }
     while (*in && (*in < 33)) { ++in; }
     while (32 < *in) { WD[len++] = *(in++); }
@@ -165,7 +171,7 @@ int isDecimal(const char *wd) {
     while (BTW(*wd, '0', '9')) { x = (x*10)+(*(wd++)-'0'); }
     if (*wd == 0) { push(isNeg ? -x : x); return 1; }
     if (*(wd++) != '.') { return 0; }
-    flt_t fx = x, f = 0, fy = 1;
+    flt_t fx = (flt_t)x, f = 0, fy = 1;
     while (BTW(*wd, '0', '9')) { f = (f*10)+(*(wd++)-'0'); fy*=10; }
     if (*wd) { return 0; }
     fx += f/fy;
@@ -196,7 +202,59 @@ int isNum(const char *wd) {
     return 1;
 }
 
+char *doSys(char *pc) {
+    switch(*pc++) {
+        case INLINE: last->f = IS_INLINE;
+        RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
+            return pc;
+        default: PRINT3("-sysOp: [", iToA((cell_t)*(pc-1)), "]?-")
+    }
+    return pc;
+}
+
+char *doFloat(char *pc) {
+    flt_t x;
+    switch(*pc++) {
+        case  FADD:  x = fpop(); FTOS += x;
+        RCASE FSUB:  x = fpop(); FTOS -= x;
+        RCASE FMUL:  x = fpop(); FTOS *= x;
+        RCASE FDIV:  x = fpop(); FTOS /= x;
+        RCASE FDOT: printf("%g", fpop());
+            return pc; 
+        default: PRINT3("-fltOp: [", iToA((cell_t)*(pc-1)), "]?-")
+    }
+    return pc;
+}
+
+void doType(const char *str) {
+    if (!str) {
+        t1=pop();
+        y=ToCP(pop());
+    } else {
+        y = str;
+        t1 = strLen(y);
+    }
+    for (int i = 0; i < t1; i++) {
+        char c = y[i];
+        if (c == '%') {
+            c = y[++i];
+            if (c=='f') { printf("%f", fpop()); }
+            else if (c=='g') { printf("%g", fpop()); }
+            else if (c=='c') { printChar((char)pop()); }
+            else if (c=='e') { printChar(27); }
+            else if (c=='d') { printf("%ld", pop()); }
+            else if (c=='x') { printf("%lx", pop()); }
+            // else if (c=='i') { printChar(27); }
+            // TODO: add more cases here
+            else { printChar(c); }
+        } else {
+            printChar(c);
+        }
+    }
+}
+
 void Run(char *pc) {
+    flt_t f1;
 next:
     switch (*(pc++)) {
         case STOP: return;
@@ -211,9 +269,9 @@ next:
         NCASE CSTORE: *ToCP(TOS) = (char)NOS; DSP-=2;
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
         NCASE CFETCH: TOS = *(byte*)(TOS);
-        NCASE DUP: push(TOS);
-        NCASE SWAP: t1 = TOS; TOS = NOS; NOS = t1;
-        NCASE OVER: push(NOS);
+        NCASE DUP: fpush(FTOS);
+        NCASE SWAP: f1 = FTOS; FTOS = FNOS; FNOS = f1;
+        NCASE OVER: fpush(FNOS);
         NCASE DROP: if (--DSP < 0) { DSP = 0; }
         NCASE ADD:   t1=pop(); TOS += t1;
         NCASE MULT:  t1=pop(); TOS *= t1;
@@ -240,7 +298,7 @@ next:
         NCASE TIMER: push(sysTime());
         NCASE KEY:  push(key());
         NCASE QKEY: push(qKey());
-        NCASE TYPE: t1=pop(); y=ToCP(pop()); for (int i=0; i<t1; i++) { printChar(*(y++)); }
+        NCASE TYPE: doType(0);
         NCASE TYPEZ: PRINT1(ToCP(pop()));
         NCASE DEFINE: doCreate((char*)0); state=1;
         NCASE ENDWORD: state=0; CComma(EXIT);
@@ -255,10 +313,10 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
-        NCASE FDOT: printf("%g", fpop());
-        NCASE INLINE: last->f = IS_INLINE;
-        NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-        break; default: pc = doUser(pc, *(pc-1));
+        NCASE FLT_OPS: pc = doFloat(pc);
+        NCASE SYS_OPS: pc = doSys(pc);
+            break; 
+        default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
             PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
     }
@@ -322,8 +380,6 @@ void ParseLine(const char *x) {
 struct { long op; const char *opName;  const char *c3Word; } prims[] = { 
     { DEFINE,             "",              ":" },
     { ENDWORD,            "",              ";" },
-    { INLINE,             "",              "INLINE" },
-    { IMMEDIATE,          "",              "IMMEDIATE" },
     { VERSION,            "VERSION",       "" },
     { (cell_t)&DSP,       "(sp)",          "" },
     { (cell_t)&RSP,       "(rsp)",         "" },
@@ -363,6 +419,12 @@ void loadNum(const char *name, cell_t val, int isLit) {
     CComma(EXIT);
 }
 
+void ML2(const char *name, char op1, char op2) {
+    doCreate((char*)name);
+    CComma(op1); CComma(op2); CComma(EXIT);
+    last->f = IS_INLINE;
+}
+
 void c3Init() {
     here = &mem[0];
     vhere = &vars[0];
@@ -373,10 +435,17 @@ void c3Init() {
         if (prims[i].opName[0]) { loadNum(prims[i].opName, prims[i].op, 1); }
         if (prims[i].c3Word[0]) { loadNum(prims[i].c3Word, prims[i].op, 0); }
     }
+    ML2("INLINE", SYS_OPS, INLINE);
+    ML2("IMMEDIATE", SYS_OPS, IMMEDIATE);
+    ML2("F+", FLT_OPS, FADD);
+    ML2("F-", FLT_OPS, FSUB);
+    ML2("F*", FLT_OPS, FMUL);
+    ML2("F/", FLT_OPS, FDIV);
+    ML2("F.", FLT_OPS, FDOT);
+    loadStartupWords();
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
-    loadStartupWords();
 }
 
 #ifdef isPC
