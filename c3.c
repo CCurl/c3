@@ -9,6 +9,10 @@ typedef unsigned char byte;
 
 #include "sys-init.ipp"
 
+typedef double flt_t;
+
+typedef union { flt_t f; cell_t i; char *c; } se_t;
+typedef union { se_t stk[STK_SZ+1]; int sp; } stk_t;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
@@ -19,7 +23,9 @@ enum {
     COM, AND, OR, XOR, EMIT, TIMER, KEY, QKEY,
     TYPE, TYPEZ, DEFINE, ENDWORD, CREATE, FIND, WORD,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
-    REG_NEW, REG_FREE, INLINE, IMMEDIATE,
+    REG_NEW, REG_FREE,
+    FDOT,
+    INLINE, IMMEDIATE,
     STOP_LOAD = 99, ALL_DONE = 999, VERSION = 84
 };
 
@@ -29,8 +35,12 @@ enum {
 #define ToCP(x)       (char*)(x)
 #define ClearTib      fill(tib, 0, sizeof(tib))
 #define SC(x)         strCat(tib, x)
-#define TOS           (stk[sp])
-#define NOS           (stk[sp-1])
+#define DSP           ds.sp
+#define TOS           (ds.stk[DSP].i)
+#define NOS           (ds.stk[DSP-1].i)
+#define FTOS          (rs.stk[DSP].f)
+#define RSP           rs.sp
+#define RTOS          (rs.stk[RSP].c)
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
 #define L2            lstk[lsp-2]
@@ -40,8 +50,7 @@ enum {
 #define PRINT1(a)     printString(a)
 #define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 
-cell_t stk[STK_SZ+1], sp, rsp;
-char *rstk[STK_SZ+1];
+stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
 cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
@@ -49,8 +58,14 @@ char mem[MEM_SZ], vars[VARS_SZ], tib[128], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
-void push(cell_t x) { stk[++sp] = (cell_t)(x); }
-cell_t pop() { return stk[sp--]; }
+void push(cell_t x) { ds.stk[++DSP].i = (cell_t)(x); }
+cell_t pop() { return ds.stk[DSP--].i; }
+
+void fpush(flt_t x) { ds.stk[++DSP].f = (x); }
+flt_t fpop() { return ds.stk[DSP--].f; }
+
+void rpush(char *x) { rs.stk[++RSP].c = (char *)(x); }
+char *rpop() { return rs.stk[RSP--].c; }
 
 void CComma(cell_t x) { *(here++) = (char)x; }
 void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
@@ -100,8 +115,8 @@ char isRegOp(const char *w) {
 
 int nextWord() {
     int len = 0;
-    if (sp < 0) { PRINT1("-under-"); sp=0; }
-    if (STK_SZ < sp) { PRINT1("-over-"); sp=0; }
+    if (DSP < 0) { PRINT1("-under-"); DSP=0; }
+    if (STK_SZ < DSP) { PRINT1("-over-"); DSP=0; }
     while (*in && (*in < 33)) { ++in; }
     while (32 < *in) { WD[len++] = *(in++); }
     WD[len] = 0;
@@ -146,9 +161,15 @@ int doFind(const char *nm) {
 int isDecimal(const char *wd) {
     cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
     if (isNeg && (*(++wd) == 0)) { return 0; }
-    while (BTW(*wd, '0', '9')) { x = (x * 10) + (*(wd++) - '0'); }
+    if (!BTW(*wd, '0', '9')) { return 0; }
+    while (BTW(*wd, '0', '9')) { x = (x*10)+(*(wd++)-'0'); }
+    if (*wd == 0) { push(isNeg ? -x : x); return 1; }
+    if (*(wd++) != '.') { return 0; }
+    flt_t fx = x, f = 0, fy = 1;
+    while (BTW(*wd, '0', '9')) { f = (f*10)+(*(wd++)-'0'); fy*=10; }
     if (*wd) { return 0; }
-    push(isNeg ? -x : x);
+    fx += f/fy;
+    fpush(isNeg ? -fx : fx);
     return 1;
 }
 
@@ -181,19 +202,19 @@ next:
         case STOP: return;
         NCASE LIT1: push(*(pc++));
         NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
-        NCASE EXIT: if (rsp<1) { rsp=0; return; } pc=rstk[rsp--];
-        NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rstk[++rsp]=y; }          // fall-thru
+        NCASE EXIT: if (RSP<1) { RSP=0; return; } pc=rpop();
+        NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rpush(y); }          // fall-thru
         case  JMP: pc = CpAt(pc);
         NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE STORE: Store(ToCP(TOS), NOS); sp-=2;
-        NCASE CSTORE: *ToCP(TOS) = (char)NOS; sp-=2;
+        NCASE STORE: Store(ToCP(TOS), NOS); DSP-=2;
+        NCASE CSTORE: *ToCP(TOS) = (char)NOS; DSP-=2;
         NCASE FETCH: TOS = Fetch(ToCP(TOS));
         NCASE CFETCH: TOS = *(byte*)(TOS);
         NCASE DUP: push(TOS);
         NCASE SWAP: t1 = TOS; TOS = NOS; NOS = t1;
         NCASE OVER: push(NOS);
-        NCASE DROP: if (--sp < 0) { sp = 0; }
+        NCASE DROP: if (--DSP < 0) { DSP = 0; }
         NCASE ADD:   t1=pop(); TOS += t1;
         NCASE MULT:  t1=pop(); TOS *= t1;
         NCASE SLMOD: t1=TOS; TOS = (NOS/t1); NOS %= t1;
@@ -204,9 +225,9 @@ next:
         NCASE EQ: t1=pop(); TOS = (TOS==t1);
         NCASE GT: t1=pop(); TOS = (TOS>t1);
         NCASE NOT: TOS = (TOS==0);
-        NCASE RTO: rstk[++rsp] = ToCP(pop());
-        NCASE RFETCH: push((cell_t)rstk[rsp]);
-        NCASE RFROM: push((cell_t)rstk[rsp--]);
+        NCASE RTO: rpush((char *)pop());
+        NCASE RFETCH: push((cell_t)RTOS);
+        NCASE RFROM: push((cell_t)rpop());
         NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
         NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
@@ -234,6 +255,7 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
+        NCASE FDOT: printf("%g", fpop());
         NCASE INLINE: last->f = IS_INLINE;
         NCASE IMMEDIATE: last->f = IS_IMMEDIATE;
         break; default: pc = doUser(pc, *(pc-1));
@@ -303,14 +325,14 @@ struct { long op; const char *opName;  const char *c3Word; } prims[] = {
     { INLINE,             "",              "INLINE" },
     { IMMEDIATE,          "",              "IMMEDIATE" },
     { VERSION,            "VERSION",       "" },
-    { (cell_t)&sp,        "(sp)",          "" },
-    { (cell_t)&rsp,       "(rsp)",         "" },
+    { (cell_t)&DSP,       "(sp)",          "" },
+    { (cell_t)&RSP,       "(rsp)",         "" },
     { (cell_t)&lsp,       "(lsp)",         "" },
     { (cell_t)&here,      "(here)",        "" },
     { (cell_t)&vhere,     "(vhere)",       "" },
     { (cell_t)&last,      "(last)",        "" },
-    { (cell_t)&stk[0],    "(stk)",         "" },
-    { (cell_t)&rstk[0],   "(rstk)",        "" },
+    { (cell_t)&ds.stk[0].i, "(stk)",         "" },
+    { (cell_t)&rs.stk[0].c, "(rstk)",        "" },
     { (cell_t)&tib[0],    "tib",           "" },
     { (cell_t)&in,        ">in",           "" },
     { (cell_t)&mem[0],    "mem",           "" },
@@ -346,7 +368,7 @@ void c3Init() {
     vhere = &vars[0];
     last = (dict_t*)&mem[MEM_SZ];
     base = 10;
-    sp = rsp = reg_base = 0;
+    DSP = RSP = reg_base = 0;
     for (int i = 0; prims[i].opName;i++) {
         if (prims[i].opName[0]) { loadNum(prims[i].opName, prims[i].op, 1); }
         if (prims[i].c3Word[0]) { loadNum(prims[i].c3Word, prims[i].op, 0); }

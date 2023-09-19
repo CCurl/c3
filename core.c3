@@ -65,8 +65,9 @@
 \ (sX)       is 53         \ defined in c3
 -ML- +REGs      54 3 -MLX- inline
 -ML- -REGS      55 3 -MLX- inline
-\ : INLINE      56 ;       \ defined in c3
-\ : IMMEDIATE   57 ;       \ defined in c3
+-ML- f.         56 3 -MLX- inline
+\ : INLINE      57 ;       \ defined in c3
+\ : IMMEDIATE   58 ;       \ defined in c3
 
 \ Words for the PC version
 -ML- SYSTEM     58 3 -MLX- inline
