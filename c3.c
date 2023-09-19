@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
@@ -52,7 +53,6 @@ enum { INLINE=0, IMMEDIATE, SYS2, SYS4 = 4,
 #define NCASE         goto next; case
 #define RCASE         return pc; case
 #define PRINT1(a)     printString(a)
-#define PRINT3(a,b,c) { PRINT1(a); PRINT1(b); PRINT1(c); }
 
 stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
@@ -88,6 +88,16 @@ int strEq(const char *d, const char *s, int caseSensitive) {
         s++; d++;
     }
     return -1;
+}
+
+void printStringF(const char *fmt, ...) {
+    char *buf = (char*)last;
+    buf -= 256;
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, 200, fmt, args);
+    va_end(args);
+    printString(buf);
 }
 
 char *iToA(byte N) {
@@ -202,12 +212,39 @@ int isNum(const char *wd) {
     return 1;
 }
 
+void doType(const char *str) {
+    if (!str) {
+        t1=pop();
+        y=ToCP(pop());
+    } else {
+        y = (char *)str;
+        t1 = strLen(y);
+    }
+    for (int i = 0; i < t1; i++) {
+        char c = y[i];
+        if (c == '%') {
+            c = y[++i];
+            if (c=='f') { printStringF("%f", fpop()); }
+            else if (c=='g') { printStringF("%g", fpop()); }
+            else if (c=='c') { printChar((char)pop()); }
+            else if (c=='e') { printChar(27); }
+            else if (c=='d') { printStringF("%ld", pop()); }
+            else if (c=='x') { printStringF("%lx", pop()); }
+            // else if (c=='i') { printChar(27); }
+            // TODO: add more cases here
+            else { printChar(c); }
+        } else {
+            printChar(c);
+        }
+    }
+}
+
 char *doSys(char *pc) {
     switch(*pc++) {
         case INLINE: last->f = IS_INLINE;
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
             return pc;
-        default: PRINT3("-sysOp: [", iToA((cell_t)*(pc-1)), "]?-")
+        default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
     return pc;
 }
@@ -219,38 +256,11 @@ char *doFloat(char *pc) {
         RCASE FSUB:  x = fpop(); FTOS -= x;
         RCASE FMUL:  x = fpop(); FTOS *= x;
         RCASE FDIV:  x = fpop(); FTOS /= x;
-        RCASE FDOT: printf("%g", fpop());
+        RCASE FDOT: printStringF("%g", fpop());
             return pc; 
-        default: PRINT3("-fltOp: [", iToA((cell_t)*(pc-1)), "]?-")
+        default: printStringF("-fltOp:[%d]?-", *(pc-1));
     }
     return pc;
-}
-
-void doType(const char *str) {
-    if (!str) {
-        t1=pop();
-        y=ToCP(pop());
-    } else {
-        y = str;
-        t1 = strLen(y);
-    }
-    for (int i = 0; i < t1; i++) {
-        char c = y[i];
-        if (c == '%') {
-            c = y[++i];
-            if (c=='f') { printf("%f", fpop()); }
-            else if (c=='g') { printf("%g", fpop()); }
-            else if (c=='c') { printChar((char)pop()); }
-            else if (c=='e') { printChar(27); }
-            else if (c=='d') { printf("%ld", pop()); }
-            else if (c=='x') { printf("%lx", pop()); }
-            // else if (c=='i') { printChar(27); }
-            // TODO: add more cases here
-            else { printChar(c); }
-        } else {
-            printChar(c);
-        }
-    }
 }
 
 void Run(char *pc) {
@@ -318,7 +328,7 @@ next:
             break; 
         default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
-            PRINT3("-[", iToA((cell_t)*(pc-1)), "]?-")
+            printStringF("-op:[%d]?-", *(pc-1));
     }
 }
 
@@ -335,7 +345,7 @@ int doML(const char *w) {
     doCreate((char*)0);
     while (nextWord()) {
         if (strEq(WD,"-MLX-",1)) { return 1; }
-        if (doNum(WD) == 0) { PRINT3("[",WD,"]?"); return 1; }
+        if (doNum(WD) == 0) { printStringF("[ml:%s]?", WD); return 1; }
         CComma(pop());
     }
     return 1;
@@ -371,7 +381,7 @@ void ParseLine(const char *x) {
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
         if (doWord(WD)) { continue; }
-        PRINT3("[", WD, "]??")
+        printStringF("-[word:%s]?-", WD);
         if (state) { here = ToCP((last++)->xt); state = 0; }
         return;
     }

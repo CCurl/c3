@@ -42,7 +42,7 @@ char *doUser(char *pc, int ir) {
     case FLOAD:  y=ToCP(pop()); t1=(cell_t)fopen(y+1, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; ClearTib; }
-            else { PRINT3("-noFile[",y+1,"]-"); }                                   return pc;
+            else { printStringF("-noFile[%s]-", y+1); }                                   return pc;
     default:                                                                        return 0;
     }
 }
