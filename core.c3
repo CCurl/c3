@@ -230,10 +230,10 @@ variable #bufp
 : load-abort #99 state ! ;
 : loaded? if 2drop load-abort then ;
 
-variable (fg) 2 cells allot
-: fg cells (fg) + ;
-: marker here 0 fg ! vhere 1 fg ! last 2 fg ! ;
-: forget 0 fg @ (here) ! 1 fg @ (vhere) ! 2 fg @ (last) ! ;
+variable T0 2 cells allot
+: T1 cells T0 + ;
+: marker here 0 T1 ! vhere 1 T1 ! last 2 T1 ! ;
+: forget 0 T1 @ (here) ! 1 T1 @ (vhere) ! 2 T1 @ (last) ! ;
 : forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
 : .ver version 100 /mod (.) '.' emit . ;
