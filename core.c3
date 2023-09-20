@@ -15,9 +15,7 @@
 : (jmp)          5 ;       inline
 : (jmpz)         6 ;       inline
 : (jmpnz)        7 ;       inline
-\ !   (line 1)   8         \ defined above
 -ML- c!          9 3 -MLX- inline
-\ @   (line 2)  10         \ defined above
 -ML- c@         11 3 -MLX- inline
 : (dup)         12 ;       inline
 -ML- DUP        12 3 -MLX- inline
@@ -45,30 +43,10 @@
 -ML- AND        34 3 -MLX- inline
 -ML- OR         35 3 -MLX- inline
 -ML- XOR        36 3 -MLX- inline
-\ -ML- EMIT       37 3 -MLX- inline
-\ -ML- TIMER      38 3 -MLX- inline
-\ -ML- KEY        39 3 -MLX- inline
-\ -ML- ?KEY       40 3 -MLX- inline
 : (TYPE)        41 ;       inline
 -ML- TYPE       41 3 -MLX- inline
-\ -ML- TYPEZ      42 3 -MLX- inline
-\ (define)   is 43         \ defined in c3
-\ (end-word) is 44         \ defined in c3
-\ -ML- CREATE     45 3 -MLX- inline
-\ -ML- '          46 3 -MLX- inline
-\ -ML- NEXT-WORD  47 3 -MLX- inline
-\ (iX)       is 48         \ defined in c3
-\ (dX)       is 49         \ defined in c3
-\ (rX)       is 50         \ defined in c3
-\ (rX-)      is 51         \ defined in c3
-\ (rX+)      is 52         \ defined in c3
-\ (sX)       is 53         \ defined in c3
 -ML- +REGs      54 3 -MLX- inline
 -ML- -REGS      55 3 -MLX- inline
-\ -ML- FLT_OPS  56 3 -MLX- inline
-\ -ML- SYS_OPS  57 3 -MLX- inline
-\ : INLINE      57 ;       \ defined in c3
-\ : IMMEDIATE   58 ;       \ defined in c3
 
 \ Words for the PC version
 -ML- SYSTEM    100 3 -MLX- inline
@@ -87,8 +65,6 @@
 
 : last (last) @ ;
 : here (here) @ ;
-: c, here c! here 1+     (here) ! ;
-: ,  here !  here cell + (here) ! ;
 
 : mem-end   mem  mem-sz  + ;
 : vars-end  vars vars-sz + ;
@@ -236,15 +212,11 @@ variable T0 2 cells allot
 : forget 0 T1 @ (here) ! 1 T1 @ (vhere) ! 2 T1 @ (last) ! ;
 : forget-1 last @ (here) ! last word-sz + (last) ! ;
 marker
-: .ver version 100 /mod (.) '.' emit . ;
 
-." c3 - v" .ver ." - Chris Curl" cr
-here mem -   . ." code bytes used, " last here - . ." bytes free." cr
-vhere vars - . ." variable bytes used, " vars-end vhere - . ." bytes free."
-forget
+version 100 /mod ." c3 - v%d.%d - Chris Curl%n"
+here mem - ." %d code bytes used, " last here - ." %d bytes free.%n"
+vhere vars - ." %d variable bytes used, " vars-end vhere - ." %d bytes free."
 
 : benches forget s" benches.c3" (load) ;
 : sb forget s" sandbox.c3" (load) ;
-: work forget s" work.c3" (load) ;
-: ed forget s" editor.c3" (load) ;
 marker

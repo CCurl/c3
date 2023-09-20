@@ -49,7 +49,6 @@ char *doUser(char *pc, int ir) {
 
 void loadStartupWords() {
     ParseLine(": isPC 1 ;");
-    //#include "sys-load.ipp"
     input_fp = (cell_t)fopen("core.c3", "rt");
     if (!input_fp) { input_fp = (cell_t)fopen("..\\core.c3", "rt"); }
 }

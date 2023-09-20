@@ -22,17 +22,18 @@ enum {
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
     COM, AND, OR, XOR,
-    // xEMIT, xTIMER, KEY = 39, QKEY, TYPE, TYPEZ,
-    TYPE = 41,
-    STR_OPS,
-    REG_I = 48, REG_D, REG_R, REG_RD, REG_RI, REG_S, 
+    TYPE = 41, STR_OPS = 47,
+    REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
     FLT_OPS, SYS_OPS,
 };
-enum { FADD=0, FSUB, FMUL, FDIV = 4, FDOT }; // skip #3
-enum { TRUNC=0, STRCPY, STRCAT, STRLEN = 4,  }; // skip #3
+
+// Remember to skip #3 (EXIT)
+enum { FADD=0, FSUB, FMUL, FDIV = 4, FDOT };
+enum { TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI };
 enum { INLINE=0, IMMEDIATE, DOT, ITOA = 4,
     DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
+    CCOMMA, COMMA,
     KEY, QKEY, EMIT, TYPEZ,
     STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90
 };
@@ -245,6 +246,7 @@ void doType(const char *str) {
             else if (c=='d') { printString(iToA(pop(), 10)); }
             else if (c=='i') { printString(iToA(pop(), base)); }
             else if (c=='x') { printString(iToA(pop(), 16)); }
+            else if (c=='n') { printString("\n\r"); }
             // else if (c=='i') { printChar(27); }
             // TODO: add more cases here
             else { printChar(c); }
@@ -257,10 +259,12 @@ void doType(const char *str) {
 char *doString(char *pc) {
     char *d, *s;
     switch(*pc++) {
-        case TRUNC: d=ToCP(pop()); d[0] = 0;
+        case TRUNC:   d=ToCP(pop()); d[0] = 0;
         RCASE STRCPY: s=ToCP(pop()); d=ToCP(pop()); strCpy(d, s);
         RCASE STRCAT: s=ToCP(pop()); d=ToCP(pop()); strCat(d, s);
         RCASE STRLEN: d=ToCP(TOS); TOS=strLen(d);
+        RCASE STREQ:  s=ToCP(pop()); d=ToCP(TOS); TOS=strEq(d, s, 0);
+        RCASE STREQI: s=ToCP(pop()); d=ToCP(TOS); TOS=strEq(d, s, 1);
         return pc; default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
     return pc;
@@ -278,6 +282,8 @@ char *doSys(char *pc) {
         RCASE FIND: push(doFind((char*)0));
         RCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         RCASE TIMER: push(sysTime());
+        RCASE CCOMMA: CComma(pop());
+        RCASE COMMA: Comma(pop());
         RCASE KEY:  push(key());
         RCASE QKEY: push(qKey());
         RCASE EMIT: printChar((char)pop());
@@ -416,51 +422,44 @@ void ParseLine(const char *x) {
     }
 }
 
-struct { long op; const char *opName;  const char *c3Word; } prims[] = { 
-    { VERSION,            "VERSION",       "" },
-    { (cell_t)&DSP,       "(sp)",          "" },
-    { (cell_t)&RSP,       "(rsp)",         "" },
-    { (cell_t)&lsp,       "(lsp)",         "" },
-    { (cell_t)&here,      "(here)",        "" },
-    { (cell_t)&vhere,     "(vhere)",       "" },
-    { (cell_t)&last,      "(last)",        "" },
-    { (cell_t)&ds.stk[0].i, "(stk)",         "" },
-    { (cell_t)&rs.stk[0].c, "(rstk)",        "" },
-    { (cell_t)&tib[0],    "tib",           "" },
-    { (cell_t)&in,        ">in",           "" },
-    { (cell_t)&mem[0],    "mem",           "" },
-    { MEM_SZ,             "mem-sz",        "" },
-    { (cell_t)&vars[0],   "vars",          "" },
-    { VARS_SZ,            "vars-sz",       "" },
-    { (cell_t)&reg[0],    "regs",          "" },
-    { (cell_t)&output_fp, "(output_fp)",   "" },
-    { (cell_t)&input_fp,  "(input_fp)",    "" },
-    { (cell_t)&state,     "state",         "" },
-    { sizeof(dict_t),     "word-sz",       "" },
-    { CELL_SZ,            "CELL",          "" },
-    { (cell_t)&base,      "base",          "" },
-    { 0, 0, 0 }
+struct { long op; const char *opName; } words[] = {
+    { VERSION,               "VERSION"     },
+    { (cell_t)&DSP,          "(sp)"        },
+    { (cell_t)&RSP,          "(rsp)"       },
+    { (cell_t)&lsp,          "(lsp)"       },
+    { (cell_t)&here,         "(here)"      },
+    { (cell_t)&vhere,        "(vhere)"     },
+    { (cell_t)&last,         "(last)",     },
+    { (cell_t)&ds.stk[0].i, "(stk)"        },
+    { (cell_t)&rs.stk[0].c, "(rstk)"       },
+    { (cell_t)&tib[0],       "tib"         },
+    { (cell_t)&in,           ">in"         },
+    { (cell_t)&mem[0],       "mem"         },
+    { MEM_SZ,                "mem-sz"      },
+    { (cell_t)&vars[0],      "vars"        },
+    { VARS_SZ,               "vars-sz"     },
+    { (cell_t)&reg[0],       "regs"        },
+    { (cell_t)&output_fp,    "(output_fp)" },
+    { (cell_t)&input_fp,     "(input_fp)"  },
+    { (cell_t)&state,        "state"       },
+    { sizeof(dict_t),        "word-sz"     },
+    { CELL_SZ,               "CELL"        },
+    { (cell_t)&base,         "base"        },
+    { 0, 0 }
 };
 
-void loadNum(const char *name, cell_t val, int isLit) {
+void loadNum(const char *name, cell_t val) {
     doCreate((char*)name);
-    if (isLit) { 
-        if (BTW(val,1,127)) {
-            last->f = IS_INLINE;
-            CComma(LIT1); CComma(val);
-        } else { CComma(LIT4); Comma(val); }
+    if (BTW(val, 1, 127)) {
+        last->f = IS_INLINE;
+        CComma(LIT1); CComma(val);
     } else {
-        last->f = (val==ENDWORD) ? IS_IMMEDIATE : IS_INLINE;
-        CComma(val);
+        CComma(LIT4); Comma(val);
     }
     CComma(EXIT);
 }
 
-void ML2(const char *name, char op1, char op2) {
-    doCreate((char*)name);
-    CComma(op1); CComma(op2); CComma(EXIT);
-    last->f = (op2 == ENDWORD) ? IS_IMMEDIATE : IS_INLINE;
-}
+#include "sys-load.ipp"
 
 void c3Init() {
     here = &mem[0];
@@ -468,37 +467,14 @@ void c3Init() {
     last = (dict_t*)&mem[MEM_SZ];
     base = 10;
     DSP = RSP = reg_base = 0;
-    for (int i = 0; prims[i].opName;i++) {
-        if (prims[i].opName[0]) { loadNum(prims[i].opName, prims[i].op, 1); }
-        if (prims[i].c3Word[0]) { loadNum(prims[i].c3Word, prims[i].op, 0); }
+    for (int i = 0; words[i].opName;i++) {
+        if (words[i].opName[0]) { loadNum(words[i].opName, words[i].op); }
     }
-    ML2("INLINE",    SYS_OPS, INLINE);
-    ML2("IMMEDIATE", SYS_OPS, IMMEDIATE);
-    ML2("(.)",       SYS_OPS, DOT);
-    ML2("ITOA",      SYS_OPS, ITOA);
-    ML2(":",         SYS_OPS, DEFINE);
-    ML2(";",         SYS_OPS, ENDWORD);
-    ML2("CREATE",    SYS_OPS, CREATE);
-    ML2("'",         SYS_OPS, FIND);
-    ML2("NEXT-WORD", SYS_OPS, WORD);
-    ML2("TIMER",     SYS_OPS, TIMER);
-    ML2("KEY",       SYS_OPS, KEY);
-    ML2("?KEY",      SYS_OPS, QKEY);
-    ML2("EMIT",      SYS_OPS, EMIT);
-    ML2("TYPEZ",     SYS_OPS, TYPEZ);
-    ML2("S-TRUNC",   STR_OPS, TRUNC);
-    ML2("S-CPY",     STR_OPS, STRCPY);
-    ML2("S-CAT",     STR_OPS, STRCAT);
-    ML2("S-LEN",     STR_OPS, STRLEN);
-    ML2("F+", FLT_OPS, FADD);
-    ML2("F-", FLT_OPS, FSUB);
-    ML2("F*", FLT_OPS, FMUL);
-    ML2("F/", FLT_OPS, FDIV);
-    ML2("F.", FLT_OPS, FDOT);
-    loadStartupWords();
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
+    sysLoad();
+    loadStartupWords();
 }
 
 #ifdef isPC
