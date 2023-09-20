@@ -45,18 +45,18 @@
 -ML- AND        34 3 -MLX- inline
 -ML- OR         35 3 -MLX- inline
 -ML- XOR        36 3 -MLX- inline
--ML- EMIT       37 3 -MLX- inline
--ML- TIMER      38 3 -MLX- inline
--ML- KEY        39 3 -MLX- inline
--ML- ?KEY       40 3 -MLX- inline
+\ -ML- EMIT       37 3 -MLX- inline
+\ -ML- TIMER      38 3 -MLX- inline
+\ -ML- KEY        39 3 -MLX- inline
+\ -ML- ?KEY       40 3 -MLX- inline
 : (TYPE)        41 ;       inline
 -ML- TYPE       41 3 -MLX- inline
--ML- TYPEZ      42 3 -MLX- inline
+\ -ML- TYPEZ      42 3 -MLX- inline
 \ (define)   is 43         \ defined in c3
 \ (end-word) is 44         \ defined in c3
--ML- CREATE     45 3 -MLX- inline
--ML- '          46 3 -MLX- inline
--ML- NEXT-WORD  47 3 -MLX- inline
+\ -ML- CREATE     45 3 -MLX- inline
+\ -ML- '          46 3 -MLX- inline
+\ -ML- NEXT-WORD  47 3 -MLX- inline
 \ (iX)       is 48         \ defined in c3
 \ (dX)       is 49         \ defined in c3
 \ (rX)       is 50         \ defined in c3
@@ -162,6 +162,7 @@
 : tab  #9 emit ; inline
 : cr  #13 emit #10 emit ; inline
 : space bl emit ; inline
+: . (.) bl emit ; inline
 
 : negate  com 1+ ; inline
 : abs  dup 0 < if negate then ;
@@ -173,19 +174,6 @@
 : j  (i) 3 cells - @ ;
 : +i (i) +! ;
 : unloop (lsp) @ 3 - 0 max (lsp) ! ;
-
-variable (neg)
-variable #bufp
-: hold #bufp -- #bufp @ c! ;          \ ( c -- )
-: #digit dup 9 > if 7 + then '0' + ;  \ ( n -- c )
-: >neg dup 0 < (neg) ! abs ;          \ ( n1 -- u1 )
-: <# here #66 + #bufp ! 0 hold >neg ; \ ( n1 -- u1 )
-: # base @ /mod swap #digit hold ;    \ ( u1 -- u2 )
-: #S begin # dup 0= until drop ;      \ ( u1 -- )
-: #> (neg) @ if '-' hold then ;       \ ( -- )
-: #P #bufp @ typez ;                  \ ( -- )
-: (.) <# #S #> #P ;
-: . (.) space ;
 
 : 0sp 0 (sp) ! ;
 : depth (sp) @ 1- ;
@@ -205,12 +193,22 @@ variable #bufp
         r1   r8+ c!   r9 c++
     again ;
 
-: s" ( --str ) T2 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate
+: s" ( --cstr ) T2 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate
 
 : ." ( -- ) T2 state @ 0= if drop count type exit then
     (vhere) ! (lit4) c, ,
     (call) c, [ (lit4) c, ' count drop drop , ] ,
     (type) c, ;  immediate
+
+: T3 ( --zstr end )   +regs   >in ++
+    vhere dup s8 s9
+    begin >in @ c@ s1
+        r1 if >in ++ then
+        r1 0= r1 '"' = or
+        if 0 r8+ c!   r9 r8 -regs   exit then
+        r1   r8+ c!
+    again ;
+: z" ( --zstr ) T3 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate
 
 : .word cell + 1+ count type ;
 : words +regs 0 s1 0 s3 last s2 begin

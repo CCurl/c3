@@ -24,7 +24,7 @@ load memory.c3
 : s-scatc ( c str-- )   swap s-catc ;
 : s-catd ( str d-- )    #digit + s-catc ;
 : s-catn ( str n-- ) 
-    +regs <# #s #> #bufp @ s2 s1
+    +regs itoa s2 s1
     begin r2+ c@ ?dup while r1 s-scatc repeat
     -regs ;
 : s-scatn ( n str-- )   swap s-catn ;

@@ -14,7 +14,7 @@ void getInput() {
         state = 0;
     }
     if (input_fp) {
-        in = fgets(tib, sizeof(tib), (FILE*)input_fp);
+        in = fgets(tib, 190, (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
             input_fp = (0 < fileSp) ? fileStk[fileSp--] : 0;
