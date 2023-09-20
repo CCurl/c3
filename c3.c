@@ -7,12 +7,11 @@
 typedef long cell_t;
 typedef unsigned long ucell_t;
 typedef unsigned char byte;
+typedef double flt_t;
 
 #include "sys-init.ipp"
 
-typedef double flt_t;
-
-typedef union { flt_t f; cell_t i; char *c; } se_t;
+typedef union { cell_t i; flt_t f; char *c; } se_t;
 typedef union { se_t stk[STK_SZ+1]; int sp; } stk_t;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
@@ -49,6 +48,7 @@ enum { INLINE=0, IMMEDIATE, DOT, ITOA = 4,
 #define NOS           (ds.stk[DSP-1].i)
 #define FTOS          (ds.stk[DSP].f)
 #define FNOS          (ds.stk[DSP-1].f)
+#define CTOS          (ds.stk[DSP].c)
 #define RSP           rs.sp
 #define RTOS          (rs.stk[RSP].c)
 #define L0            lstk[lsp]
@@ -70,11 +70,12 @@ dict_t tempWords[10], *last;
 
 void push(cell_t x) { ds.stk[++DSP].i = (cell_t)(x); }
 cell_t pop() { return ds.stk[DSP--].i; }
+char *cpop() { return ds.stk[DSP--].c; }
 
 void fpush(flt_t x) { ds.stk[++DSP].f = (x); }
 flt_t fpop() { return ds.stk[DSP--].f; }
 
-void rpush(char *x) { rs.stk[++RSP].c = (char *)(x); }
+void rpush(char *x) { rs.stk[++RSP].c = (x); }
 char *rpop() { return rs.stk[RSP--].c; }
 
 void CComma(cell_t x) { *(here++) = (char)x; }
@@ -93,7 +94,7 @@ int strEq(const char *d, const char *s, int caseSensitive) {
         else { if (lower(*s) != lower(*d)) return 0; }
         s++; d++;
     }
-    return -1;
+    return 1;
 }
 
 void printStringF(const char *fmt, ...) {
@@ -189,7 +190,7 @@ int doFind(const char *nm) {
 }
 
 // ( --n | <null> )
-int isDecimal(const char *wd) {
+int isBase10(const char *wd) {
     cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
     if (isNeg && (*(++wd) == 0)) { return 0; }
     if (!BTW(*wd, '0', '9')) { return 0; }
@@ -212,7 +213,7 @@ int isNum(const char *wd) {
     if (*wd == '$') { b = 16;  ++wd; }
     if (*wd == '%') { b =  2;  ++wd; }
     if (*wd == 0) { return 0; }
-    if (b == 10) { return isDecimal(wd); }
+    if (b == 10) { return isBase10(wd); }
     if (b < 10) { lastCh = '0' + b - 1; }
     cell_t x = 0;
     while (*wd) {
@@ -230,7 +231,7 @@ int isNum(const char *wd) {
 void doType(const char *str) {
     if (!str) {
         t1=pop();
-        y=ToCP(pop());
+        y=cpop();
     } else {
         y = (char *)str;
         t1 = strLen(y);
@@ -259,12 +260,12 @@ void doType(const char *str) {
 char *doString(char *pc) {
     char *d, *s;
     switch(*pc++) {
-        case TRUNC:   d=ToCP(pop()); d[0] = 0;
-        RCASE STRCPY: s=ToCP(pop()); d=ToCP(pop()); strCpy(d, s);
-        RCASE STRCAT: s=ToCP(pop()); d=ToCP(pop()); strCat(d, s);
-        RCASE STRLEN: d=ToCP(TOS); TOS=strLen(d);
-        RCASE STREQ:  s=ToCP(pop()); d=ToCP(TOS); TOS=strEq(d, s, 0);
-        RCASE STREQI: s=ToCP(pop()); d=ToCP(TOS); TOS=strEq(d, s, 1);
+        case TRUNC:   d=cpop(); d[0] = 0;
+        RCASE STRCPY: s=cpop(); d=cpop(); strCpy(d, s);
+        RCASE STRCAT: s=cpop(); d=cpop(); strCat(d, s);
+        RCASE STRLEN: d=CTOS; TOS=strLen(d);
+        RCASE STREQ:  s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
+        RCASE STREQI: s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
         return pc; default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
     return pc;
@@ -287,7 +288,7 @@ char *doSys(char *pc) {
         RCASE KEY:  push(key());
         RCASE QKEY: push(qKey());
         RCASE EMIT: printChar((char)pop());
-        RCASE TYPEZ: printString(ToCP(pop()));
+        RCASE TYPEZ: printString(cpop());
         // RCASE TYPE: doType(0);
         return pc; default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
@@ -320,9 +321,9 @@ next:
         case  JMP: pc = CpAt(pc);
         NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
-        NCASE STORE: Store(ToCP(TOS), NOS); DSP-=2;
-        NCASE CSTORE: *ToCP(TOS) = (char)NOS; DSP-=2;
-        NCASE FETCH: TOS = Fetch(ToCP(TOS));
+        NCASE STORE:  Store(CTOS, NOS);  DSP-=2; if (DSP < 1) { DSP = 0; }
+        NCASE CSTORE: *CTOS = (char)NOS; DSP-=2; if (DSP < 1) { DSP = 0; }
+        NCASE FETCH: TOS = Fetch(CTOS);
         NCASE CFETCH: TOS = *(byte*)(TOS);
         NCASE DUP: fpush(FTOS);
         NCASE SWAP: f1 = FTOS; FTOS = FNOS; FNOS = f1;
@@ -400,7 +401,7 @@ int doReg(const char *w) {
 int doWord(const char *w) {
     if (doFind(w)==0) { return 0; }
     cell_t f = pop();
-    char *xt = ToCP(pop());
+    char *xt = cpop();
     if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
     if (f & IS_INLINE) {
         CComma(*(xt++));
@@ -410,6 +411,7 @@ int doWord(const char *w) {
 }
 
 void ParseLine(const char *x) {
+    if (DSP < 1) { DSP = 0; }
     in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
