@@ -20,22 +20,22 @@ enum {
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR,
-    TYPE, STR_OPS,
+    COM, AND, OR, XOR, TYPE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
-    FLT_OPS, SYS_OPS,
+    STR_OPS, FLT_OPS, SYS_OPS,
 };
 
-// Remember to skip #3 (EXIT)
+// NB: skipping #3 (EXIT), so these can be INLINEd
 enum { FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT };
 enum { TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI };
-enum { INLINE=0, IMMEDIATE, DOT, ITOA = 4,
+enum {
+    INLINE=0, IMMEDIATE, DOT, ITOA = 4,
     DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
     CCOMMA, COMMA,
-    KEY, QKEY, EMIT, TYPEZ,
-    STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90
+    KEY, QKEY, EMIT, TYPEZ
 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -58,7 +58,6 @@ enum { INLINE=0, IMMEDIATE, DOT, ITOA = 4,
 #define IS_INLINE     2
 #define NCASE         goto next; case
 #define RCASE         return pc; case
-#define PRINT1(a)     printString(a)
 
 stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
@@ -145,10 +144,8 @@ char isRegOp(const char *w) {
 
 int nextWord() {
     int len = 0;
-    if (DSP < 0) {
-        PRINT1("-under-"); DSP=0;
-    }
-    if (STK_SZ < DSP) { PRINT1("-over-"); DSP=0; }
+    if (DSP < 0) { printString("-under-"); DSP=0; }
+    if (STK_SZ < DSP) { printString("-over-"); DSP=STK_SZ; }
     while (*in && (*in < 33)) { ++in; }
     while (32 < *in) { WD[len++] = *(in++); }
     WD[len] = 0;
@@ -160,7 +157,7 @@ void doCreate(char *nm) {
     if (isTempWord(nm)) { tempWords[nm[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(nm);
     --last;
-    if (NAME_LEN < l) { l=NAME_LEN; nm[l]=0; PRINT1("-name-trunc-"); }
+    if (NAME_LEN < l) { l=NAME_LEN; nm[l]=0; printString("-nameTrunc-"); }
     strCpy(last->name, nm);
     last->len = l;
     last->xt = (cell_t)here;
@@ -266,7 +263,8 @@ char *doStringOp(char *pc) {
         RCASE STRLEN: d=CTOS; TOS=strLen(d);
         RCASE STREQ:  s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
         RCASE STREQI: s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
-        return pc; default: printStringF("-strOp:[%d]?-", *(pc-1));
+            return pc;
+        default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
     return pc;
 }
@@ -308,7 +306,7 @@ char *doFloatOp(char *pc) {
         RCASE FGT:   x = fpop(); TOS = (x < FTOS);
         RCASE F2I:   TOS = (cell_t)FTOS;
         RCASE I2F:   FTOS = (flt_t)TOS;
-        RCASE FDOT: printStringF("%g", fpop());
+        RCASE FDOT:  printStringF("%g", fpop());
             return pc; 
         default: printStringF("-fltOp:[%d]?-", *(pc-1));
     }
@@ -349,7 +347,7 @@ next:
         NCASE RFETCH: push((cell_t)RTOS);
         NCASE RFROM: push((cell_t)rpop());
         NCASE DO: lsp+=3; L2=(cell_t)pc; L0=pop(); L1=pop();
-        NCASE LOOP: if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
+        NCASE LOOP:  if (++L0<L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE INDEX: push((cell_t)&L0);
         NCASE COM: TOS = ~TOS;
@@ -357,7 +355,6 @@ next:
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
         NCASE TYPE: doType(0);
-        NCASE STR_OPS: pc = doStringOp(pc);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
         NCASE REG_D: reg[*(pc++)+reg_base]--;
         NCASE REG_R:  push(reg[*(pc++)+reg_base]);
@@ -366,9 +363,11 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
+        NCASE STR_OPS: pc = doStringOp(pc);
         NCASE FLT_OPS: pc = doFloatOp(pc);
         NCASE SYS_OPS: pc = doSysOp(pc);
-        goto next; default: pc = doUser(pc, *(pc-1));
+            goto next;
+        default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
             printStringF("-op:[%d]?-", *(pc-1));
     }
@@ -377,7 +376,7 @@ next:
 int doNum(const char *w) {
     if (isNum(w) == 0) { return 0; }
     if (state == 0) { return 1; }
-    if (BTW(TOS,0,127)) { CComma(LIT1); CComma(pop()); }
+    if (BTW(TOS, 0, 127)) { CComma(LIT1); CComma(pop()); }
     else { CComma(LIT4); Comma(pop()); }
     return 1;
 }
@@ -387,7 +386,7 @@ int doML(const char *w) {
     doCreate((char*)0);
     while (nextWord()) {
         if (strEq(WD,"-MLX-",1)) { return 1; }
-        if (doNum(WD) == 0) { printStringF("[ml:%s]?", WD); return 1; }
+        if (doNum(WD) == 0) { printStringF("-ML:[%s]?-", WD); return 1; }
         CComma(pop());
     }
     return 1;
@@ -436,7 +435,6 @@ void parseF(const char *fmt, ...) {
     va_start(args, fmt);
     vsnprintf(buf, 128, fmt, args);
     va_end(args);
-    // printf("%s\n", buf);
     ParseLine(buf);
 }
 

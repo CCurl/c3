@@ -1,9 +1,9 @@
 # c3 - A minimal stack-based VM written in C.
 
 ## What is c3?
-- c3 is a stack-based VM whose "CPU" does not have alot of opcodes.
-- Since c3 is stack-based, it is very well suited to a Forth-like environment.
-- c3 is a toolkit to create any environment the programmer desires.
+- c3 is a stack-based VM whose "Virtual CPU" does not have alot of opcodes.
+- c3's opcodes implement many of the Forth primitives.
+- c3 supports IEEE 754 double-precision (64-bit) floating point numbers.
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations.
 - c3 provides 10 temporary words, T0 thru T9.
@@ -11,12 +11,10 @@
 
 ## Goals
 The goals for c3 are:
-- To have an implementation that is as minimal as possible.
-- To have an implementation that is "intuitively obvious upon casual inspection".
-- To to be very easy to extend as desired.
+- To have an implementation that is minimal and "intuitively obvious upon casual inspection".
+- To be very easy to extend as desired.
 - To provide as much flexibility to the programmer as possible.
-- To be able to run on Windows and Linux (and Apple).
-- To be deployable to development boards via the Arduino IDE.
+- To be able to run on Windows, Linux, Apple, and development boards via the Arduino IDE.
 
 ## Notes about c3:
 - This is NOT an ANSI-standard Forth system.
@@ -28,7 +26,7 @@ The goals for c3 are:
     - 'INLINE'    - mark the last word as inline
     - 'IMMEDIATE' - mark the last word as immediate
 - In addition to the above, c3 also defines some 'system' words (the addresses of system variables and sizes of buffers).
-- Everything else in c3 is defined from those.
+- Everything else in c3 can defined from those.
 - On startup, c3 tries to load file "core.c3"; that is where the bootstrap code can be found.
 - The default code I have put in core.c3 has a Forth feel to it, but it doesn't have to.
 - For example, the standard Forth IF/ELSE/THEN is defined as follows:
