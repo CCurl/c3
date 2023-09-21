@@ -170,37 +170,72 @@ An example usage of temporary words:
 | 34 | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35 | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
-| 38 | TIMER      | (--N)        | N: current system time|
-| 39 | KEY        | (--B)        | B: next keypress, wait if necessary|
-| 40 | QKEY       | (--F)        | If key was pressed, F=1, else F=0|
-| 41 | TYPE       | (A N--)      | Output N chars at address A to (output_fp)|
-| 42 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
-| 43 | DEFINE     | (--)         | Execute CREATE and set STATE=1|
-| 44 | END-DEF    | (--)         | Append EXIT to code, set STATE=0|
-| 45 | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
-| 46 | FIND-WORD  | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
-| 47 | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
-| 48 | INC-REG    | (--)         | Increment register X|
-| 49 | DEC-REG    | (--)         | Decrement register X|
-| 50 | REG        | (--N)        | N: value of register X|
-| 51 | REG-INC    | (--N)        | N: value of register X, then decrement it|
-| 52 | REG-DEC    | (--N)        | N: value of register X, then increment it|
-| 53 | SET-REG    | (N--)        | Set regiser X to TOS|
-| 54 | NEW-REGS   | (--)         | Allocate 10 new registers|
-| 55 | FREE-REGS  | (--)         | Restore last set of registers|
-| 56 | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
-| 57 | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
+| 37 | TYPE       | (A N--)      | Output N chars at address A to (output_fp)|
+| 38 | INC-REG    | (--)         | Increment register X|
+| 39 | DEC-REG    | (--)         | Decrement register X|
+| 40 | REG        | (--N)        | N: value of register X|
+| 41 | REG-INC    | (--N)        | N: value of register X, then decrement it|
+| 42 | REG-DEC    | (--N)        | N: value of register X, then increment it|
+| 43 | SET-REG    | (N--)        | Set regiser X to TOS|
+| 44 | NEW-REGS   | (--)         | Allocate 10 new registers|
+| 45 | FREE-REGS  | (--)         | Restore last set of registers|
+
+### String opcodes are 2-bytes, starting with 46
+|Opcode|Name|Stack|Description|
+| :-- | :-- | :-- | :-- |
+| 46,0  | XXXXX      | (B--)        | XXXXX|
+| 46,1  | XXXXX      | (B--)        | XXXXX|
+| 46,2  | XXXXX      | (B--)        | XXXXX|
+| 46,3  | **UNUSED** | (B--)        | XXXXX|
+| 46,4  | XXXXX      | (B--)        | XXXXX|
+| 46,5  | XXXXX      | (B--)        | XXXXX|
+| 46,6  | XXXXX      | (B--)        | XXXXX|
+
+### Floating point opcodes are 2-bytes, starting with 47
+|Opcode|Name|Stack|Description|
+| :-- | :-- | :-- | :-- |
+| 47,0  | FADD       | (F1 F2--F3)  | Add F1 and F2, leaving F3|
+| 47,1  | FSUB       | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
+| 47,2  | FMULT      | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
+| 47,3  | **UNUSED** | (B--)        | XXXXX|
+| 47,4  | FDIV       | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
+| 47,5  | F=         | (F1 F2--F3)  | XXXXX|
+| 47,6  | F<         | (F1 F2--F3)  | XXXXX|
+| 47,7  | F>         | (F1 F2--F3)  | XXXXX|
+| 47,8  | F2I        | (F1--F2)     | XXXXX|
+| 47,9  | I2F        | (F1--F2)     | XXXXX|
+| 47,10 | F.         | (F1--)       | XXXXX|
+
+### System opcodes are 2-bytes, starting with 48
+|Opcode|Name|Stack|Description|
+| :-- | :-- | :-- | :-- |
+| 48,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
+| 48,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
+| 48,2  | DOT        | (B--)        | XXXXX|
+| 48,3  | **UNUSED** | (B--)        | XXXXX|
+| 48,4  | ITOA       | (B--)        | XXXXX|
+| 48,5  | DEFINE     | (--)         | Execute CREATE and set STATE=1|
+| 48,6  | ENDWORD    | (--)         | Append EXIT to code, set STATE=0|
+| 48,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
+| 48,8  | FIND       | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
+| 48,9  | WORD       | (--A)        | A: Address of the next word from the input stream|
+| 48,10 | TIMER      | (--N)        | N: current system time|
+| 48,11 | CCOMMA     | (C--)        | XXXXX|
+| 48,12 | COMMA      | (N--)        | XXXXX|
+| 48,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
+| 48,14 | QKEY       | (--F)        | If key was pressed, F=1, else F=0|
+| 48,15 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
+| 48,16 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Name|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 58 | SYSTEM | (A--)       Call system(a)|
-| 59 | FOPEN  | (N M--H)   | N: FileName, M: OpenMode (R/W/A), H: Handle|
-| 60 | FCLOSE | (H--)      | Close file with handle H|
-| 61 | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
-| 62 | FWRITE | (A N H--)  | Write N bytes to file H to address A|
-| 63 | FLOAD  | (A--)      | Load from file A|
+| 100 | SYSTEM | (A--)       Call system(a)|
+| 101 | FOPEN  | (N M--H)   | N: FileName, M: OpenMode (R/W/A), H: Handle|
+| 102 | FCLOSE | (H--)      | Close file with handle H|
+| 103 | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
+| 104 | FWRITE | (A N H--)  | Write N bytes to file H to address A|
+| 105 | FLOAD  | (A--)      | Load from file A|
 
 ### Opcodes for Development Boards
 |Opcode|Name|Stack|Description|

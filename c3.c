@@ -26,14 +26,19 @@ enum {
     STR_OPS, FLT_OPS, SYS_OPS,
 };
 
-// NB: skipping #3 (EXIT), so these can be INLINEd
-enum { FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT };
-enum { TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI };
-enum {
+// NB: these skip #3 (EXIT), so they can be marked as INLINE
+enum { // Floating point opcdes
+    FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT
+};
+
+                enum { // String opcodes
+    TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI
+};
+
+enum { // System opcodes
     INLINE=0, IMMEDIATE, DOT, ITOA = 4,
     DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
-    CCOMMA, COMMA,
-    KEY, QKEY, EMIT, TYPEZ
+    CCOMMA, COMMA, KEY, QKEY, EMIT, TYPEZ
 };
 enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90 };
 
