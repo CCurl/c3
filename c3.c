@@ -290,7 +290,8 @@ char *doSys(char *pc) {
         RCASE EMIT: printChar((char)pop());
         RCASE TYPEZ: printString(cpop());
         // RCASE TYPE: doType(0);
-        return pc; default: printStringF("-sysOp:[%d]?-", *(pc-1));
+            return pc; 
+        default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
     return pc;
 }
@@ -424,7 +425,16 @@ void ParseLine(const char *x) {
     }
 }
 
-struct { long op; const char *opName; } words[] = {
+void parseF(const char *fmt, ...) {
+    char buf[128];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, 200, fmt, args);
+    va_end(args);
+    ParseLine(buf);
+}
+
+struct { cell_t val; const char *opName; } words[] = {
     { VERSION,               "VERSION"     },
     { (cell_t)&DSP,          "(sp)"        },
     { (cell_t)&RSP,          "(rsp)"       },
@@ -445,21 +455,9 @@ struct { long op; const char *opName; } words[] = {
     { (cell_t)&input_fp,     "(input_fp)"  },
     { (cell_t)&state,        "state"       },
     { sizeof(dict_t),        "word-sz"     },
-    { CELL_SZ,               "CELL"        },
     { (cell_t)&base,         "base"        },
     { 0, 0 }
 };
-
-void loadNum(const char *name, cell_t val) {
-    doCreate((char*)name);
-    if (BTW(val, 1, 127)) {
-        last->f = IS_INLINE;
-        CComma(LIT1); CComma(val);
-    } else {
-        CComma(LIT4); Comma(val);
-    }
-    CComma(EXIT);
-}
 
 #include "sys-load.ipp"
 
@@ -469,14 +467,21 @@ void c3Init() {
     last = (dict_t*)&mem[MEM_SZ];
     base = 10;
     DSP = RSP = reg_base = 0;
+    sysLoad();
+
     for (int i = 0; words[i].opName;i++) {
-        if (words[i].opName[0]) { loadNum(words[i].opName, words[i].op); }
+        if (words[i].opName[0]) { parseF(": %s %d ;", words[i].opName, words[i].val); }
     }
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
-    sysLoad();
-    loadStartupWords();
+
+    ParseLine("version 100 /mod .\" c3 - v%d.%d - Chris Curl%n\"");
+    ParseLine("here mem - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
+    ParseLine("vhere vars - .\" %d variable bytes used, \" vars-end vhere - .\" %d bytes free.\"");
+    ParseLine(": benches forget s\" benches.c3\" (load) ;");
+    ParseLine(": sb forget s\" sandbox.c3\" (load) ;");
+    ParseLine("marker");
 }
 
 #ifdef isPC

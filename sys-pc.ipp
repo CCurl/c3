@@ -49,8 +49,12 @@ char *doUser(char *pc, int ir) {
 
 void loadStartupWords() {
     ParseLine(": isPC 1 ;");
-    input_fp = (cell_t)fopen("core.c3", "rt");
-    if (!input_fp) { input_fp = (cell_t)fopen("..\\core.c3", "rt"); }
+    parseF("-ML- SYSTEM %d 3 -MLX- inline", SYSTEM);
+    parseF("-ML- FOPEN  %d 3 -MLX- inline", FOPEN);
+    parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
+    parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
+    parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
+    parseF("-ML- (load) %d 3 -MLX- inline", FLOAD);
 }
 
 int main(int argc, char *argv[]) {

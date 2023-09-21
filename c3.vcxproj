@@ -147,7 +147,6 @@
     <None Include=".gitignore" />
     <None Include="c3.ino" />
     <None Include="sys-board.ipp" />
-    <None Include="core.c3" />
     <None Include="file.c3" />
     <None Include="LICENSE" />
     <None Include="make" />
