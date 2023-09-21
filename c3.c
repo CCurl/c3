@@ -21,14 +21,14 @@ enum {
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
     COM, AND, OR, XOR,
-    TYPE = 41, STR_OPS = 47,
+    TYPE, STR_OPS,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
     FLT_OPS, SYS_OPS,
 };
 
 // Remember to skip #3 (EXIT)
-enum { FADD=0, FSUB, FMUL, FDIV = 4, FDOT };
+enum { FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT };
 enum { TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI };
 enum { INLINE=0, IMMEDIATE, DOT, ITOA = 4,
     DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
@@ -244,11 +244,11 @@ void doType(const char *str) {
             else if (c=='g') { printStringF("%g", fpop()); }
             else if (c=='c') { printChar((char)pop()); }
             else if (c=='e') { printChar(27); }
+            else if (c=='b') { printString(iToA(pop(), 2)); }
             else if (c=='d') { printString(iToA(pop(), 10)); }
             else if (c=='i') { printString(iToA(pop(), base)); }
             else if (c=='x') { printString(iToA(pop(), 16)); }
             else if (c=='n') { printString("\n\r"); }
-            // else if (c=='i') { printChar(27); }
             // TODO: add more cases here
             else { printChar(c); }
         } else {
@@ -257,7 +257,7 @@ void doType(const char *str) {
     }
 }
 
-char *doString(char *pc) {
+char *doStringOp(char *pc) {
     char *d, *s;
     switch(*pc++) {
         case TRUNC:   d=cpop(); d[0] = 0;
@@ -271,7 +271,7 @@ char *doString(char *pc) {
     return pc;
 }
 
-char *doSys(char *pc) {
+char *doSysOp(char *pc) {
     switch(*pc++) {
         case INLINE: last->f = IS_INLINE;
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
@@ -296,13 +296,18 @@ char *doSys(char *pc) {
     return pc;
 }
 
-char *doFloat(char *pc) {
+char *doFloatOp(char *pc) {
     flt_t x;
     switch(*pc++) {
         case  FADD:  x = fpop(); FTOS += x;
         RCASE FSUB:  x = fpop(); FTOS -= x;
         RCASE FMUL:  x = fpop(); FTOS *= x;
         RCASE FDIV:  x = fpop(); FTOS /= x;
+        RCASE FEQ:   x = fpop(); TOS = (x == FTOS);
+        RCASE FLT:   x = fpop(); TOS = (x > FTOS);
+        RCASE FGT:   x = fpop(); TOS = (x < FTOS);
+        RCASE F2I:   TOS = (cell_t)FTOS;
+        RCASE I2F:   FTOS = (flt_t)TOS;
         RCASE FDOT: printStringF("%g", fpop());
             return pc; 
         default: printStringF("-fltOp:[%d]?-", *(pc-1));
@@ -352,7 +357,7 @@ next:
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
         NCASE TYPE: doType(0);
-        NCASE STR_OPS: pc = doString(pc);
+        NCASE STR_OPS: pc = doStringOp(pc);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
         NCASE REG_D: reg[*(pc++)+reg_base]--;
         NCASE REG_R:  push(reg[*(pc++)+reg_base]);
@@ -361,8 +366,8 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
-        NCASE FLT_OPS: pc = doFloat(pc);
-        NCASE SYS_OPS: pc = doSys(pc);
+        NCASE FLT_OPS: pc = doFloatOp(pc);
+        NCASE SYS_OPS: pc = doSysOp(pc);
         goto next; default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
             printStringF("-op:[%d]?-", *(pc-1));
@@ -429,35 +434,11 @@ void parseF(const char *fmt, ...) {
     char buf[128];
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buf, 200, fmt, args);
+    vsnprintf(buf, 128, fmt, args);
     va_end(args);
+    // printf("%s\n", buf);
     ParseLine(buf);
 }
-
-struct { cell_t val; const char *opName; } words[] = {
-    { VERSION,               "VERSION"     },
-    { (cell_t)&DSP,          "(sp)"        },
-    { (cell_t)&RSP,          "(rsp)"       },
-    { (cell_t)&lsp,          "(lsp)"       },
-    { (cell_t)&here,         "(here)"      },
-    { (cell_t)&vhere,        "(vhere)"     },
-    { (cell_t)&last,         "(last)",     },
-    { (cell_t)&ds.stk[0].i, "(stk)"        },
-    { (cell_t)&rs.stk[0].c, "(rstk)"       },
-    { (cell_t)&tib[0],       "tib"         },
-    { (cell_t)&in,           ">in"         },
-    { (cell_t)&mem[0],       "mem"         },
-    { MEM_SZ,                "mem-sz"      },
-    { (cell_t)&vars[0],      "vars"        },
-    { VARS_SZ,               "vars-sz"     },
-    { (cell_t)&reg[0],       "regs"        },
-    { (cell_t)&output_fp,    "(output_fp)" },
-    { (cell_t)&input_fp,     "(input_fp)"  },
-    { (cell_t)&state,        "state"       },
-    { sizeof(dict_t),        "word-sz"     },
-    { (cell_t)&base,         "base"        },
-    { 0, 0 }
-};
 
 #include "sys-load.ipp"
 
@@ -469,9 +450,6 @@ void c3Init() {
     DSP = RSP = reg_base = 0;
     sysLoad();
 
-    for (int i = 0; words[i].opName;i++) {
-        if (words[i].opName[0]) { parseF(": %s %d ;", words[i].opName, words[i].val); }
-    }
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
