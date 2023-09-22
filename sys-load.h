@@ -1,14 +1,19 @@
+// Load the base c3 system
+// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
+
 void sysLoad() {
     char *m1i = "-ML- %s %d 3 -MLX- INLINE";
     char *m2n = "-ML- %s %d %d 3 -MLX-";
     char *m2i = "-ML- %s %d %d 3 -MLX- INLINE";
     char *lit = ": %s %d ; INLINE";
 
+    // Bootstrap ...
     parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
     parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
     parseF(m2i, ":", SYS_OPS, DEFINE);
     parseF(m2n, ";", SYS_OPS, ENDWORD); last->f = IS_IMMEDIATE;
 
+    // Opcodes ...
     parseF(lit, "(LIT4)", LIT4);
     parseF(m1i, "EXIT", EXIT);
     parseF(lit, "(EXIT)", EXIT); last->f = 0;
@@ -56,6 +61,7 @@ void sysLoad() {
     parseF(m1i, "FLT_OPS", FLT_OPS);
     parseF(m1i, "SYS_OPS", SYS_OPS);
 
+    // System opcodes ...
     parseF(m2i, "(.)",       SYS_OPS, DOT);
     parseF(m2i, "ITOA",      SYS_OPS, ITOA);
     parseF(m2i, "CREATE",    SYS_OPS, CREATE);
@@ -69,15 +75,17 @@ void sysLoad() {
     parseF(m2i, "EMIT",      SYS_OPS, EMIT);
     parseF(m2i, "TYPEZ",     SYS_OPS, TYPEZ);
 
-    parseF(m2i, "S-TRUNC",   STR_OPS, TRUNC);
-    parseF(m2i, "S-CPY",     STR_OPS, STRCPY);
-    parseF(m2i, "S-CAT",     STR_OPS, STRCAT);
-    parseF(m2i, "S-LEN",     STR_OPS, STRLEN);
-    parseF(m2i, "S-EQ",      STR_OPS, STREQ);
-    parseF(m2i, "S-EQ-I",    STR_OPS, STREQI);
-    parseF(m2i, "LCASE",     STR_OPS, LCASE);
-    parseF(m2i, "UCASE",     STR_OPS, UCASE);
+    // String opcodes ...
+    parseF(m2i, "S-TRUNC", STR_OPS, TRUNC);
+    parseF(m2i, "S-CPY",   STR_OPS, STRCPY);
+    parseF(m2i, "S-CAT",   STR_OPS, STRCAT);
+    parseF(m2i, "S-LEN",   STR_OPS, STRLEN);
+    parseF(m2i, "S-EQ",    STR_OPS, STREQ);
+    parseF(m2i, "S-EQ-I",  STR_OPS, STREQI);
+    parseF(m2i, "LCASE",   STR_OPS, LCASE);
+    parseF(m2i, "UCASE",   STR_OPS, UCASE);
 
+    // Float opcodes ...
     parseF(m2i, "F+",  FLT_OPS, FADD);
     parseF(m2i, "F-",  FLT_OPS, FSUB);
     parseF(m2i, "F*",  FLT_OPS, FMUL);
@@ -115,6 +123,7 @@ void sysLoad() {
     parseF(": bye %d state ! ;", ALL_DONE);
     parseF(": CELL %d ; inline", CELL_SZ);
 
+    // Main system
     ParseLine(": \\ 0 >in @ ! ; immediate");
     ParseLine(": [ 0 state ! ; immediate");
     ParseLine(": ] 1 state ! ;");
@@ -236,5 +245,8 @@ void sysLoad() {
     ParseLine(": marker here 0 T1 ! vhere 1 T1 ! last 2 T1 ! ;");
     ParseLine(": forget 0 T1 @ (here) ! 1 T1 @ (vhere) ! 2 T1 @ (last) ! ;");
     ParseLine(": forget-1 last @ (here) ! last word-sz + (last) ! ;");
+
+    loadUserWords();
+
     ParseLine("marker");
 }

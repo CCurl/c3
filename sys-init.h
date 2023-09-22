@@ -1,10 +1,11 @@
 // System initialization logic for different types of systems
-// NOTE: this is a *.ipp file because the Arduino IDE doesn't like *.inc files
+// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
 extern void printString(const char *s);
 extern void printChar(const char c);
 extern void ParseLine(const char *s);
 extern void loadStartupWords();
+extern void loadUserWords();
 extern char *doUser(char *pc, int ir);
 extern cell_t sysTime();
 
@@ -22,42 +23,38 @@ extern cell_t sysTime();
 #include <unistd.h>
 #include <termios.h>
 #define isPC
-#define MD_NORMAL 0
-#define MD_RAW    1
-void ttyMode(int mode) {
-    static struct termios origt, rawt;
-    static int curMode = -1;
-    if (curMode == -1) {
-        curMode = MD_NORMAL;
-        tcgetattr( STDIN_FILENO, &origt);
-        cfmakeraw(&rawt);
-    }
-    if (mode != curMode) {
-        if (mode == MD_RAW) {
-            tcsetattr( STDIN_FILENO, TCSANOW, &rawt);
-        } else {
-            tcsetattr( STDIN_FILENO, TCSANOW, &origt);
-        }
-        curMode = mode;
-    }
+static struct termios normT, rawT;
+static int isTtyInit = 0;
+void ttyInit() {
+    tcgetattr( STDIN_FILENO, &normT);
+    cfmakeraw(&rawT);
+    isTtyInit = 1;
+}
+void ttyModeNorm() {
+    if (!isTtyInit) { ttyInit(); }
+    tcsetattr( STDIN_FILENO, TCSANOW, &normT);
+}
+void ttyModeRaw() {
+    if (!isTtyInit) { ttyInit(); }
+    tcsetattr( STDIN_FILENO, TCSANOW, &rawT);
 }
 int qKey() {
     struct timeval tv;
     fd_set rdfs;
-    ttyMode(MD_RAW);
+    ttyModeRaw();
     tv.tv_sec = 0;
     tv.tv_usec = 0;
     FD_ZERO(&rdfs);
     FD_SET(STDIN_FILENO, &rdfs);
     select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
     int x = FD_ISSET(STDIN_FILENO, &rdfs);
-    ttyMode(MD_NORMAL);
+    ttyModeNorm();
     return x;
 }
 int key() {
-    ttyMode(MD_RAW);
+    ttyModeRaw();
     int x = getchar();
-    ttyMode(MD_NORMAL);
+    ttyModeNorm();
     return x;
 }
 

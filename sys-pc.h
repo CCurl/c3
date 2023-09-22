@@ -1,5 +1,5 @@
 // Support for PCs
-// NOTE: this is a *.ipp file because the Arduino IDE doesn't like *.inc files
+// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 #include <time.h>
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
@@ -56,6 +56,8 @@ void loadStartupWords() {
     parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
     parseF("-ML- (load) %d 3 -MLX- inline", FLOAD);
 }
+
+void loadUserWords() { }
 
 int main(int argc, char *argv[]) {
     input_fp = output_fp = 0;

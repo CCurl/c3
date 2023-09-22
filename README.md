@@ -19,48 +19,37 @@ The goals for c3 are:
 ## Notes about c3:
 - This is NOT an ANSI-standard Forth system.
 - This is a byte-coded implementation.
-- There are less than 64 operations built into the base executable.
-- Four of the operations are pre-defined in the c3 dictionary:
-    - ':'         - define a new c3 word
-    - ';'         - end word definition
-    - 'INLINE'    - mark the last word as inline
-    - 'IMMEDIATE' - mark the last word as immediate
-- In addition to the above, c3 also defines some 'system' words (the addresses of system variables and sizes of buffers).
-- Everything else in c3 can defined from those.
-- On startup, c3 tries to load file "core.c3"; that is where the bootstrap code can be found.
-- The default code I have put in core.c3 has a Forth feel to it, but it doesn't have to.
-- For example, the standard Forth IF/ELSE/THEN is defined as follows:
-    - : if (jmpz) c, here 0 , ; immediate
-    - : else  (jmp) c, here swap 0 , here swap ! ; immediate
-    - : then here swap ! ; immediate
-    - Since they are not built-in, they can be changed by modifying core.c3.
-- Strings are both counted and null-terminated.
+- Counted strings are also null-terminated.
 - The dictionary starts at the end of the MEM area and grows down.
 - The dictionary search is not case-sensitive.
 - The VARIABLE space is separated from the MEM space.
 
 ## Inline words
-In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too (especially on a 64-bit system, where the CELL size is 8). Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.
+In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.**
 
 ## Bootstrapping c3
-To bootstrap, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of core.c3, I define my aliases for the opcodes, like this:
+To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-init.h, I define aliases for the opcodes.
 
-```
-...
--ML- EXIT 3 3 -MLX-
-...
--ML- DUP 12 3 -MLX- inline
-...
-```
+- The first four words defined in c3 are:
+  - 'INLINE'    - mark the last word as inline
+  - 'IMMEDIATE' - mark the last word as immediate
+  - ':'         - define a new c3 word
+  - ';'         - end word definition
+
+c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
+
+Everything in c3 can defined from those.
+
+See the sys-load.h file for details.
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
 
 ## The dictionary
 - A dictionary entry looks like this:
-    - xt:      cell_t
-    - flags:   byte (IMMEDIATE=0x01, INLINE=0x02)
-    - len:     byte
-    - name:    char[NAME_LEN+1] (NULL terminated)
+  - xt:      cell_t
+  - flags:   byte (IMMEDIATE=0x01, INLINE=0x02)
+  - len:     byte
+  - name:    char[NAME_LEN+1] (NULL terminated)
 
 ## Default sizes for PC-based systems
 - The default NAME_LEN is 13.
@@ -69,7 +58,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 - The default STK_SZ is 64 CELLS (data and return stacks).
 - The default LSTK_SZ is 30 CELLS (loop stack, multiple of 3).
 - The default REGS_SZ is 100 CELLS (register stack, multiple of 10).
-- These can be easily changed in the sys-init.ipp file.
+- These can be easily changed in the sys-init.h file.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9. There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
@@ -288,11 +277,17 @@ If for some reason, there is a need/desire to add more opcodes to c3, this descr
 
 For example, there might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
 
-Here is the process I use:
-- Define the new opcodes(s) to the enum in the *.ipp file for the target system.
-- Make sure they have values above the value for IMMEDIATE (57).
-- In doUser(), add cases for your new opcodes (also in the *.ipp file).
-- There are 2 ways to define them in the dictionary:
-  - edit core.c3 and add a -ML- in core.c3 for each new opcode.
-  - or, modify loadStartupWords() to add -ML- definitions for the new opcodes.
-    - For example: to define opcode 67 as "NEWOP" ... ParseLine("-ML- NEWOP 67 3 -MLX- INLINE");
+Here is the process:
+
+- Global opcode:
+  - In c3.c, define the new opcode(s) to the appropriate enum.
+  - In c3.c, add a NCASE to run() to for each new opcode.
+  - In sys-load.h, add a "-ML-" line to LoadStartupWords() for each new opcode.
+
+- Target-specific opcode:
+  - All work is done in the target's *.h file (e.g. - sys-pc.h).
+  - Define the new opcodes(s) to the enum.
+  - These opcodes should have values above 100.
+  - Edit LoadStartupWords() and add a "-ML-" line for each new opcode.
+  - For example: to define opcode 67 as "NEWOP" ... ParseLine("-ML- NEWOP 67 3 -MLX- INLINE");
+  - In doUser(), add cases for the new opcode(s).

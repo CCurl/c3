@@ -9,7 +9,7 @@ typedef unsigned long ucell_t;
 typedef unsigned char byte;
 typedef double flt_t;
 
-#include "sys-init.ipp"
+#include "sys-init.h"
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;
 typedef union { se_t stk[STK_SZ+1]; int sp; } stk_t;
@@ -446,7 +446,7 @@ void parseF(const char *fmt, ...) {
     ParseLine(buf);
 }
 
-#include "sys-load.ipp"
+#include "sys-load.h"
 
 void c3Init() {
     here = &mem[0];
@@ -455,6 +455,7 @@ void c3Init() {
     base = 10;
     DSP = RSP = reg_base = 0;
     sysLoad();
+    loadUserWords();
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
@@ -469,5 +470,5 @@ void c3Init() {
 }
 
 #ifdef isPC
-#include "sys-pc.ipp"
+#include "sys-pc.h"
 #endif
