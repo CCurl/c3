@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <math.h>
 
 typedef long cell_t;
 typedef unsigned long ucell_t;
@@ -38,7 +39,8 @@ enum { // String opcodes
 };
 
 enum { // Floating point opcdes
-    FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT
+    FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT,
+    SQRT, TANH
 };
 
 enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90 };
@@ -317,6 +319,8 @@ char *doFloatOp(char *pc) {
         RCASE F2I:   TOS = (cell_t)FTOS;
         RCASE I2F:   FTOS = (flt_t)TOS;
         RCASE FDOT:  printStringF("%g", fpop());
+        RCASE SQRT:  FTOS = sqrt(FTOS);
+        RCASE TANH:  FTOS = tanh(FTOS);
             return pc; 
         default: printStringF("-fltOp:[%d]?-", *(pc-1));
     }

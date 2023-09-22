@@ -90,16 +90,18 @@ void sysLoad() {
     parseF(m2i, "UCASE",   STR_OPS, UCASE);
 
     // Float opcodes ...
-    parseF(m2i, "F+",  FLT_OPS, FADD);
-    parseF(m2i, "F-",  FLT_OPS, FSUB);
-    parseF(m2i, "F*",  FLT_OPS, FMUL);
-    parseF(m2i, "F/",  FLT_OPS, FDIV);
-    parseF(m2i, "F=",  FLT_OPS, FEQ);
-    parseF(m2i, "F<",  FLT_OPS, FLT);
-    parseF(m2i, "F>",  FLT_OPS, FGT);
-    parseF(m2i, "F2I", FLT_OPS, F2I);
-    parseF(m2i, "I2F", FLT_OPS, I2F);
-    parseF(m2i, "F.",  FLT_OPS, FDOT);
+    parseF(m2i, "F+",   FLT_OPS, FADD);
+    parseF(m2i, "F-",   FLT_OPS, FSUB);
+    parseF(m2i, "F*",   FLT_OPS, FMUL);
+    parseF(m2i, "F/",   FLT_OPS, FDIV);
+    parseF(m2i, "F=",   FLT_OPS, FEQ);
+    parseF(m2i, "F<",   FLT_OPS, FLT);
+    parseF(m2i, "F>",   FLT_OPS, FGT);
+    parseF(m2i, "F2I",  FLT_OPS, F2I);
+    parseF(m2i, "I2F",  FLT_OPS, I2F);
+    parseF(m2i, "F.",   FLT_OPS, FDOT);
+    parseF(m2i, "SQRT", FLT_OPS, SQRT);
+    parseF(m2i, "TANH", FLT_OPS, TANH);
 
     loadStartupWords();
 

@@ -233,6 +233,8 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 49,8  | F2I        | (F1--N)      | Convert double F1 into an integer N|
 | 49,9  | I2F        | (N--F1)      | Convert integer N into a double F1|
 | 49,10 | F.         | (F1--)       | Output F1 using the "%g" C format string|
+| 49,11 | SQRT       | (F1--F2)     | F2: the square root of F1
+| 49,12 | TANH       | (F1--F2)     | F2: the hyperbolic tangent of F1
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Word|Stack|Description|
