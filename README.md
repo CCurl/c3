@@ -174,7 +174,7 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 34 | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35 | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37 | COUNT      | (A1--A3 N)   | Standard Forth COUNT|
+| 37 | COUNT      | (A1--A2 N)   | Standard Forth COUNT|
 | 38 | TYPE       | (A N--)      | Output N formatted chars at address A to (output_fp)|
 | 39 | iX         | (--)         | Increment register X|
 | 30 | dX         | (--)         | Decrement register X|
