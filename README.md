@@ -1,11 +1,11 @@
 # c3 - A minimal stack-based VM written in C.
 
 ## What is c3?
-- c3 is a stack-based VM whose "Virtual CPU" does not have alot of opcodes.
-- c3's opcodes implement many of the Forth primitives.
+- c3 is a stack-based, byte-coded VM whose "Virtual CPU" does not have alot of opcodes.
+- c3's opcodes implement many of the standard Forth operations.
 - c3 supports IEEE 754 double-precision (64-bit) floating point numbers.
 - c3 provides 10 "virtual registers", r0 thru r9.
-  - Each register has 6 operations.
+  - Each register has 6 operations: rX, sX, iX, dX, rX+, and rX-.
 - c3 provides 10 temporary words, T0 thru T9.
   - T0-T5 are "normal" words, T6-T8 are INLINE, and T9 is IMMEDIATE.
 
@@ -17,48 +17,11 @@ The goals for c3 are:
 - To be able to run on Windows, Linux, Apple, and development boards via the Arduino IDE.
 
 ## Notes about c3:
-- This is NOT an ANSI-standard Forth system.
-- This is a byte-coded implementation.
+- c3 is NOT an ANSI-standard Forth system.
 - Counted strings are also null-terminated.
 - The dictionary starts at the end of the MEM area and grows down.
 - The dictionary search is not case-sensitive.
 - The VARIABLE space is separated from the MEM space.
-
-## Inline words
-In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.**
-
-## Bootstrapping c3
-To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-init.h, I define aliases for the opcodes.
-
-- The first four words defined in c3 are:
-  - 'INLINE'    - mark the last word as inline
-  - 'IMMEDIATE' - mark the last word as immediate
-  - ':'         - define a new c3 word
-  - ';'         - end word definition
-
-c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
-
-Everything in c3 can defined from those.
-
-See the sys-load.h file for details.
-
-Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
-
-## The dictionary
-- A dictionary entry looks like this:
-  - xt:      cell_t
-  - flags:   byte (IMMEDIATE=0x01, INLINE=0x02)
-  - len:     byte
-  - name:    char[NAME_LEN+1] (NULL terminated)
-
-## Default sizes for PC-based systems
-- The default NAME_LEN is 13.
-- The default MEM_SZ is 128K bytes (code and distionary).
-- The default VARS_SZ is 4MB bytes (strings and variables).
-- The default STK_SZ is 64 CELLS (data and return stacks).
-- The default LSTK_SZ is 30 CELLS (loop stack, multiple of 3).
-- The default REGS_SZ is 100 CELLS (register stack, multiple of 10).
-- These can be easily changed in the sys-init.h file.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9. There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
@@ -98,6 +61,58 @@ An example usage of temporary words:
 : T0 ( n--sqrt ) dup 4 / begin >r dup r@ / r@ + 2 / dup r> - 0= until nip ;
 : sqrt ( n--0|sqrt ) dup 0 > if T0 else drop 0 then ;
 ```
+
+## Inline words
+In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.**
+
+## Bootstrapping c3
+To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-init.h, I define aliases for the opcodes.
+
+- The first four words defined in c3 are:
+  - 'INLINE'    - mark the last word as inline
+  - 'IMMEDIATE' - mark the last word as immediate
+  - ':'         - define a new c3 word
+  - ';'         - end word definition
+
+c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
+
+Everything in c3 can defined from those.
+
+See the sys-load.h file for details.
+
+Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
+
+## The dictionary
+- A dictionary entry looks like this:
+  - xt:     cell_t
+  - flags:  byte (IMMEDIATE=$01, INLINE=$02)
+  - len:    byte
+  - name:   char[NAME_LEN+1] (NULL terminated)
+
+## Notes on output formatting in TYPE (aka - ."):
+- %b: output TOS as a binary number
+- %c: output TOS as a character
+- %d: output TOS as an integer (base 10)
+- %e: output an ESCAPE (27)
+- %f: output FTOS as a floating point number
+- %g: output FTOS as a scientific number
+- %i: output TOS as an integer (current base)
+- %n: output a CR/LF (13,10)
+- %q: output the quote (") character
+- %s: output TOS as a string (null terminated, no count byte)
+- %t: output a TAB (9)
+- %x: output TOS as a hex number
+
+For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
+
+## Default sizes for PC-based systems
+- The default NAME_LEN is 13.
+- The default MEM_SZ is 128K bytes (code and distionary).
+- The default VARS_SZ is 4MB bytes (strings and variables).
+- The default STK_SZ is 64 CELLS (data and return stacks).
+- The default LSTK_SZ is 30 CELLS (loop stack, multiple of 3).
+- The default REGS_SZ is 100 CELLS (register stack, multiple of 10).
+- These can be easily changed in the sys-init.h file.
 
 ## Building c3:
 - Windows: there is a c3.sln file for Visual Studio
@@ -147,19 +162,19 @@ An example usage of temporary words:
 | 22 | <          | (A B--F)     | If A<B, F=1, else F=0|
 | 23 | =          | (A B--F)     | If A=B, F=1, else F=0|
 | 24 | >          | (A B--F)     | If A>B, F=1, else F=0|
-| 25 | 0= , NOT   | (N--F)       | If A=0, B=1, else F=0|
+| 25 | 0= , NOT   | (N--F)       | If N=0, F=1, else F=0|
 | 26 | >R         | (N--)        | Move N to return stack|
 | 27 | R@         | (--N)        | N: Copy of top of return stack|
 | 28 | R>         | (--N)        | N: Top of return stack (popped)|
 | 29 | DO         | (T F--)      | Begin a loop from F to T, set I = F|
 | 30 | LOOP       | (--)         | Increment I. Jump to beginning if I<T|
 | 31 | -LOOP      | (--)         | Decrement I. Jump to beginning if I>T|
-| 32 | (I)        | (--)         | Address of I|
+| 32 | (I)        | (--)         | Address of I, the loop index|
 | 33 | COM        | (A--B)       | B: Ones-complement of A|
 | 34 | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35 | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37 | TYPE       | (A N--)      | Output N chars at address A to (output_fp)|
+| 37 | TYPE       | (A N--)      | Output N formatted chars at address A to (output_fp)|
 | 38 | iX         | (--)         | Increment register X|
 | 39 | dX         | (--)         | Decrement register X|
 | 40 | rX         | (--N)        | N: value of register X|
