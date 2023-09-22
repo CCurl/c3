@@ -58,18 +58,20 @@ void sysLoad() {
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
     parseF(m1i, "+REGS", REG_NEW);
     parseF(m1i, "-REGS", REG_FREE);
-    parseF(m1i, "FLT_OPS", FLT_OPS);
-    parseF(m1i, "SYS_OPS", SYS_OPS);
+    // parseF(m1i, "SYS_OPS", SYS_OPS);
+    // parseF(lit, "STR_OPS", STR_OPS);
+    // parseF(lit, "FLT_OPS", FLT_OPS);
 
     // System opcodes ...
+    // INLINE and IMMEDIATE are defined above
     parseF(m2i, "(.)",       SYS_OPS, DOT);
     parseF(m2i, "ITOA",      SYS_OPS, ITOA);
     parseF(m2i, "CREATE",    SYS_OPS, CREATE);
     parseF(m2i, "'",         SYS_OPS, FIND);
     parseF(m2i, "NEXT-WORD", SYS_OPS, WORD);
     parseF(m2i, "TIMER",     SYS_OPS, TIMER);
-    parseF(m2i, ",",         SYS_OPS, COMMA);
     parseF(m2i, "C,",        SYS_OPS, CCOMMA);
+    parseF(m2i, ",",         SYS_OPS, COMMA);
     parseF(m2i, "KEY",       SYS_OPS, KEY);
     parseF(m2i, "?KEY",      SYS_OPS, QKEY);
     parseF(m2i, "EMIT",      SYS_OPS, EMIT);
@@ -99,29 +101,30 @@ void sysLoad() {
 
     loadStartupWords();
 
-    parseF(": VERSION %ld ;", VERSION);
-    parseF(": (sp) $%lx ;", &DSP);
-    parseF(": (rsp) $%lx ;", &RSP);
-    parseF(": (lsp) $%lx ;", &lsp);
-    parseF(": (here) $%lx ;", &here);
-    parseF(": (vhere) $%lx ;", &vhere);
-    parseF(": (last) $%lx ;", &last);
-    parseF(": (stk) $%lx ;", &ds.stk[0].i);
-    parseF(": (rstk) $%lx ;", &rs.stk[0].c);
-    parseF(": tib $%lx ;", &tib[0]);
-    parseF(": >in $%lx ;", &in);
-    parseF(": mem $%lx ;", &mem[0]);
-    parseF(": mem-sz %ld ;", MEM_SZ);
-    parseF(": vars $%lx ;", &vars[0]);
-    parseF(": vars-sz %ld ;", VARS_SZ);
-    parseF(": regs $%lx ;", &reg[0]);
-    parseF(": (output_fp) $%lx ;", &output_fp);
-    parseF(": (input_fp) $%lx ;", &input_fp);
-    parseF(": state $%lx ;", &state);
-    parseF(": word-sz %ld ;", sizeof(dict_t));
-    parseF(": base $%lx ;", &base);
-    parseF(": bye %d state ! ;", ALL_DONE);
-    parseF(": CELL %d ; inline", CELL_SZ);
+    // System information words
+    parseF(": VERSION     %ld ;",  VERSION);
+    parseF(": (SP)        $%lx ;", &DSP);
+    parseF(": (RSP)       $%lx ;", &RSP);
+    parseF(": (LSP)       $%lx ;", &lsp);
+    parseF(": (HERE)      $%lx ;", &here);
+    parseF(": (LAST)      $%lx ;", &last);
+    parseF(": (STK)       $%lx ;", &ds.stk[0].i);
+    parseF(": (RSTK)      $%lx ;", &rs.stk[0].c);
+    parseF(": TIB         $%lx ;", &tib[0]);
+    parseF(": >IN         $%lx ;", &in);
+    parseF(": MEM         $%lx ;", &mem[0]);
+    parseF(": MEM-SZ      %ld ;",  MEM_SZ);
+    parseF(": VARS        $%lx ;", &vars[0]);
+    parseF(": VARS-SZ     %ld ;",  VARS_SZ);
+    parseF(": (VHERE)     $%lx ;", &vhere);
+    parseF(": (REGS)      $%lx ;", &reg[0]);
+    parseF(": (OUTPUT_FP) $%lx ;", &output_fp);
+    parseF(": (INPUT_FP)  $%lx ;", &input_fp);
+    parseF(": STATE       $%lx ;", &state);
+    parseF(": BASE        $%lx ;", &base);
+    parseF(": WORD-SZ     %ld ;",  sizeof(dict_t));
+    parseF(": BYE %d STATE ! ;",   ALL_DONE);
+    parseF(": CELL %d ; inline",   CELL_SZ);
 
     // Main system
     ParseLine(": \\ 0 >in @ ! ; immediate");

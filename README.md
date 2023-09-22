@@ -119,8 +119,8 @@ An example usage of temporary words:
     - REGS_SZ;  100
     - NAME_LEN:  13
 
-## c3 Opcode reference
-|Opcode|Name|Stack|Description|
+## c3 Opcode / Word reference
+|Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
 |  0 | STOP       | (--)         | Stops the runtime engine|
 |  1 | LIT1       | (--B)        | Pushes next BYTE onto the stack|
@@ -132,25 +132,25 @@ An example usage of temporary words:
 |  7 | JUMP-NZ    | (N--N)       | Jump if TOS!=0: next CELL is address|
 |  8 | STORE      | (N A--)      | Store CELL N to address A|
 |  9 | CSTORE     | (B A--)      | Store BYTE B to address A|
-| 10 | FETCH      | (--)         | Fetch CELL N FROM address A|
-| 11 | CFETCH     | (--)         | Fetch BYTE B FROM address A|
+| 10 | @          | (--)         | Fetch CELL N FROM address A|
+| 11 | C@         | (--)         | Fetch BYTE B FROM address A|
 | 12 | DUP        | (N--N N)     | Duplicate TOS|
 | 15 | DROP       | (A B--A)     | Drop TOS|
 | 13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
 | 14 | OVER       | (A B--A B A) | Push a copy of NOS|
 | 16 | ADD        | (A B--C)     | C: A + B|
 | 17 | MULT       | (A B--C)     | C: A * B|
-| 18 | SLASHMOD   | (A B--C D)   | C: A mod B, D: A divided by B|
+| 18 | /MOD       | (A B--C D)   | C: A modulo B, D: A divided by B|
 | 19 | SUB        | (A B--C)     | C: A - B|
-| 20 | INC        | (A--B)       | Increment TOS|
-| 21 | DEC        | (A--B)       | Decrement TOS|
-| 22 | LESS-THAN  | (A B--F)     | If A<B, F=1, else F=0|
-| 23 | EQUALS     | (A B--F)     | If A=B, F=1, else F=0|
-| 24 | GRT-THAN   | (A B--F)     | If A>B, F=1, else F=0|
-| 25 | LOG-NOT    | (N--F)       | If A=0, B=1, else F=0|
-| 26 | R-TO       | (N--)        | Move N to return stack|
-| 27 | R-FETCH    | (--N)        | N: Copy of top of return stack|
-| 28 | R-FROM     | (--N)        | N: Top of return stack (popped)|
+| 20 | 1+         | (A--B)       | Increment TOS|
+| 21 | 1-         | (A--B)       | Decrement TOS|
+| 22 | <          | (A B--F)     | If A<B, F=1, else F=0|
+| 23 | =          | (A B--F)     | If A=B, F=1, else F=0|
+| 24 | >          | (A B--F)     | If A>B, F=1, else F=0|
+| 25 | 0= , NOT   | (N--F)       | If A=0, B=1, else F=0|
+| 26 | >R         | (N--)        | Move N to return stack|
+| 27 | R@         | (--N)        | N: Copy of top of return stack|
+| 28 | R>         | (--N)        | N: Top of return stack (popped)|
 | 29 | DO         | (T F--)      | Begin a loop from F to T, set I = F|
 | 30 | LOOP       | (--)         | Increment I. Jump to beginning if I<T|
 | 31 | -LOOP      | (--)         | Decrement I. Jump to beginning if I>T|
@@ -160,76 +160,76 @@ An example usage of temporary words:
 | 35 | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
 | 37 | TYPE       | (A N--)      | Output N chars at address A to (output_fp)|
-| 38 | INC-REG    | (--)         | Increment register X|
-| 39 | DEC-REG    | (--)         | Decrement register X|
-| 40 | REG        | (--N)        | N: value of register X|
-| 41 | REG-INC    | (--N)        | N: value of register X, then decrement it|
-| 42 | REG-DEC    | (--N)        | N: value of register X, then increment it|
-| 43 | SET-REG    | (N--)        | Set regiser X to TOS|
-| 44 | NEW-REGS   | (--)         | Allocate 10 new registers|
-| 45 | FREE-REGS  | (--)         | Restore last set of registers|
+| 38 | iX         | (--)         | Increment register X|
+| 39 | dX         | (--)         | Decrement register X|
+| 40 | rX         | (--N)        | N: value of register X|
+| 41 | rX+        | (--N)        | N: value of register X, then decrement it|
+| 42 | rX-        | (--N)        | N: value of register X, then increment it|
+| 43 | sX         | (N--)        | Set regiser X to TOS|
+| 44 | +REGS      | (--)         | Allocate 10 new registers|
+| 45 | -REGS      | (--)         | Restore last set of registers|
 
-### String opcodes are 2-bytes, starting with 46
-|Opcode|Name|Stack|Description|
+### System opcodes are 2-bytes, starting with 46
+|Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 46,0  | XXXXX      | (B--)        | XXXXX|
-| 46,1  | XXXXX      | (B--)        | XXXXX|
-| 46,2  | XXXXX      | (B--)        | XXXXX|
-| 46,3  | **UNUSED** | (B--)        | XXXXX|
-| 46,4  | XXXXX      | (B--)        | XXXXX|
-| 46,5  | XXXXX      | (B--)        | XXXXX|
-| 46,6  | XXXXX      | (B--)        | XXXXX|
-| 46,7  | LCASE      | (B--)        | XXXXX|
-| 46,8  | UCASE      | (B--)        | XXXXX|
+| 46,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
+| 46,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
+| 46,2  | (.)        | (N--)        | Perform ITOA on N, then TYPEZ it (no trailing space)|
+| 46,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
+| 46,4  | ITOA       | (N--A)       | Convert N into a string version of N in the current BASE|
+| 46,5  | :          | (--)         | Execute CREATE, then set STATE=1|
+| 46,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
+| 46,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
+| 46,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
+| 46,9  | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
+| 46,10 | TIMER      | (--N)        | N: current system time|
+| 46,11 | C,         | (C--)        | Standard Forth "C,"|
+| 46,12 | ,          | (N--)        | Standard Forth ","|
+| 46,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
+| 46,14 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
+| 46,15 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
+| 46,16 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
 
-### Floating point opcodes are 2-bytes, starting with 47
-|Opcode|Name|Stack|Description|
+### String opcodes are 2-bytes, starting with 47
+|Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 47,0  | FADD       | (F1 F2--F3)  | Add F1 and F2, leaving F3|
-| 47,1  | FSUB       | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
-| 47,2  | FMULT      | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
-| 47,3  | **UNUSED** | (B--)        | XXXXX|
-| 47,4  | FDIV       | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
-| 47,5  | F=         | (F1 F2--F3)  | XXXXX|
-| 47,6  | F<         | (F1 F2--F3)  | XXXXX|
-| 47,7  | F>         | (F1 F2--F3)  | XXXXX|
-| 47,8  | F2I        | (F1--F2)     | XXXXX|
-| 47,9  | I2F        | (F1--F2)     | XXXXX|
-| 47,10 | F.         | (F1--)       | XXXXX|
+| 47,0  | TRUNC      | (S--)        | Truncate string S|
+| 47,1  | STRCPY     | (S --)       | Copy string S to string D|
+| 47,2  | STRCAT     | (S D--)      | Concatenate string S to string D|
+| 47,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
+| 47,4  | STRLEN     | (S--N)       | N: length of string S|
+| 47,5  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
+| 47,6  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
+| 47,7  | LCASE      | (C1--C2)     | Convert C1 to lowercase|
+| 47,8  | UCASE      | (C1--C2)     | Convert C1 to uppercase|
 
-### System opcodes are 2-bytes, starting with 48
-|Opcode|Name|Stack|Description|
+### Floating point opcodes are 2-bytes, starting with 48
+|Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 48,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
-| 48,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
-| 48,2  | DOT        | (B--)        | XXXXX|
-| 48,3  | **UNUSED** | (B--)        | XXXXX|
-| 48,4  | ITOA       | (B--)        | XXXXX|
-| 48,5  | DEFINE     | (--)         | Execute CREATE and set STATE=1|
-| 48,6  | ENDWORD    | (--)         | Append EXIT to code, set STATE=0|
-| 48,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
-| 48,8  | FIND       | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
-| 48,9  | WORD       | (--A)        | A: Address of the next word from the input stream|
-| 48,10 | TIMER      | (--N)        | N: current system time|
-| 48,11 | CCOMMA     | (C--)        | XXXXX|
-| 48,12 | COMMA      | (N--)        | XXXXX|
-| 48,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
-| 48,14 | QKEY       | (--F)        | If key was pressed, F=1, else F=0|
-| 48,15 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
-| 48,16 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
+| 48,0  | F+         | (F1 F2--F3)  | Add F1 and F2, leaving F3|
+| 48,1  | F-         | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
+| 48,2  | F*         | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
+| 48,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
+| 48,4  | F/         | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
+| 48,5  | F=         | (F1 F2--FL)  | FL: 1 if F1 = F2, else 0|
+| 48,6  | F<         | (F1 F2--FL)  | FL: 1 if F1 < F2, else 0|
+| 48,7  | F>         | (F1 F2--FL)  | FL: 1 if F1 > F2, else 0|
+| 48,8  | F2I        | (F1--N)      | Convert double F1 into an integer N|
+| 48,9  | I2F        | (N--F1)      | Convert integer N into a double F1|
+| 48,10 | F.         | (F1--)       | Output F1 using the "%g" C format string|
 
 ### Opcodes for PCs (Windows and Linux)
-|Opcode|Name|Stack|Description|
+|Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 100 | SYSTEM | (A--)       Call system(a)|
+| 100 | SYSTEM | (A--)      | Call system(A)|
 | 101 | FOPEN  | (N M--H)   | N: FileName, M: OpenMode (R/W/A), H: Handle|
 | 102 | FCLOSE | (H--)      | Close file with handle H|
 | 103 | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
 | 104 | FWRITE | (A N H--)  | Write N bytes to file H to address A|
-| 105 | FLOAD  | (A--)      | Load from file A|
+| 105 | (LOAD) | (A--)      | Load from file A|
 
 ### Opcodes for Development Boards
-|Opcode|Name|Stack|Description|
+|Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
 | 58 | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
 | 59 | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
@@ -239,38 +239,36 @@ An example usage of temporary words:
 | 63 | DPIN!      | (N P--) | digitalWrite(P, N)|
 | 64 | APIN!      | (N P--) | analogWrite(P, N)|
 
+## Built-in c3 system-information words
+|Word|Stack|Description|
+| :-- | :-- | :-- |
+| VERSION       | (--N)    | N: c3 version*100 (e.g. - 147 => v1.47).|
+| MEM           | (--A)    | A: Start address for the MEMORY area.|
+| MEM-SZ        | (--N)    | A: The size of the MEMORY area in bytes.|
+| VARS          | (--A)    | A: Start address for the VARIABLES area.|
+| VARS-SZ       | (--N)    | N: The size of the VARIABLES area in bytes.|
+| (REGS)        | (--A)    | A: Start address for the REGISTERS (REGS_SZ CELLs).|
+| (INPUT_FP)    | (--A)    | A: Address of the input file handle.|
+| (OUTPUT_FP)   | (--A)    | A: Address of the output file handle.|
+| (HERE)        | (--A)    | A: Address of the HERE variable.|
+| (LAST)        | (--A)    | A: Address of the LAST variable.|
+| (VHERE)       | (--A)    | A: Address of the VHERE variable.|
+| (STK)         | (--A)    | A: Address of the stack.|
+| (SP)          | (--A)    | A: Address of the stack pointer.|
+| (RSP)         | (--A)    | A: Address of the return stack pointer.|
+| (LSP)         | (--A)    | A: Address of the loop stack pointer.|
+| BASE          | (--A)    | A: Address of the BASE variable.|
+| STATE         | (--A)    | A: Address of the STATE variable.|
+| TIB           | (--A)    | A: Address of TIB (text input buffer).|
+| >IN           | (--A)    | A: Address of >IN.|
+| WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
+| CELL          | (--N)    | N: size of a CELL in bytes.|
+
 ## c3 startup behavior
 When c3 starts:
-- It tries to open 'core.c3', then '../core.c3'. If successful, c3 loads that file.
-  - See file 'core.c3' for definitions defined in that file.
 - For every parameter on the command line:
   - If c3 can open the parameter as a file, load it.
   - Else, set the (numeric only) value to a register based on the parameter's position.
-
-## c3 built-in system-information words
-|Word|Stack|Description|
-| :-- | :-- | :-- |
-| version     | (--N) | N: c3 version*100 (e.g. - 147 => v1.47).|
-| mem         | (--A) | A: Start address for the MEMORY area.|
-| mem-sz      | (--N) | A: The size of the MEMORY area in bytes.|
-| vars        | (--A) | A: Start address for the VARIABLES area.|
-| vars-sz     | (--N) | N: The size of the VARIABLES area in bytes.|
-| regs        | (--A) | A: Start address for the REGISTERS (REGS_SZ CELLs).|
-| (vhere)     | (--A) | A: Address of the VHERE variable.|
-| (input_fp)  | (--A) | A: Address of the input file handle.|
-| (output_fp) | (--A) | A: Address of the output file handle.|
-| (here)      | (--A) | A: Address of the HERE variable.|
-| (last)      | (--A) | A: Address of the LAST variable.|
-| (stk)       | (--A) | A: Address of the stack.|
-| (sp)        | (--A) | A: Address of the stack pointer.|
-| (rsp)       | (--A) | A: Address of the return stack pointer.|
-| (lsp)       | (--A) | A: Address of the loop stack pointer.|
-| word-sz     | (--N) | N: The size of a dictionary entry in bytes.|
-| base        | (--A) | A: Address of the BASE variable.|
-| state       | (--A) | A: Address of the STATE variable.|
-| tib         | (--A) | A: Address of TIB (text input buffer).|
-| >in         | (--A) | A: Address of >IN.|
-| cell        | (--N) | N: size of a CELL in bytes.|
 
 ## Adding new opcodes to c3
 If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. 

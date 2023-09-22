@@ -54,7 +54,7 @@ void loadStartupWords() {
     parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
     parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
     parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
-    parseF("-ML- (load) %d 3 -MLX- inline", FLOAD);
+    parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
 }
 
 void loadUserWords() { }

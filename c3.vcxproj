@@ -146,7 +146,6 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="c3.ino" />
-    <None Include="sys-board.ipp" />
     <None Include="file.c3" />
     <None Include="LICENSE" />
     <None Include="make" />
@@ -160,9 +159,10 @@
     <ClCompile Include="c3.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sys-init.ipp" />
-    <ClInclude Include="sys-load.ipp" />
-    <ClInclude Include="sys-pc.ipp" />
+    <ClInclude Include="sys-board.h" />
+    <ClInclude Include="sys-init.h" />
+    <ClInclude Include="sys-load.h" />
+    <ClInclude Include="sys-pc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

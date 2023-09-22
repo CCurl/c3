@@ -23,10 +23,16 @@ enum {
     COM, AND, OR, XOR, TYPE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
-    STR_OPS, FLT_OPS, SYS_OPS,
+    SYS_OPS, STR_OPS, FLT_OPS
 };
 
 // NB: these skip #3 (EXIT), so they can be marked as INLINE
+enum { // System opcodes
+    INLINE=0, IMMEDIATE, DOT, ITOA = 4,
+    DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
+    CCOMMA, COMMA, KEY, QKEY, EMIT, TYPEZ
+};
+
 enum { // String opcodes
     TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI, LCASE, UCASE
 };
@@ -35,11 +41,6 @@ enum { // Floating point opcdes
     FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT
 };
 
-enum { // System opcodes
-    INLINE=0, IMMEDIATE, DOT, ITOA = 4,
-    DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
-    CCOMMA, COMMA, KEY, QKEY, EMIT, TYPEZ
-};
 enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
@@ -371,9 +372,9 @@ next:
         NCASE REG_S: reg[*(pc++)+reg_base] = pop();
         NCASE REG_NEW: reg_base += (reg_base < (REGS_SZ-10)) ? 10 : 0;
         NCASE REG_FREE: reg_base -= (9 < reg_base) ? 10 : 0;
+        NCASE SYS_OPS: pc = doSysOp(pc);
         NCASE STR_OPS: pc = doStringOp(pc);
         NCASE FLT_OPS: pc = doFloatOp(pc);
-        NCASE SYS_OPS: pc = doSysOp(pc);
             goto next;
         default: pc = doUser(pc, *(pc-1));
             if (pc) { goto next; }
