@@ -190,6 +190,8 @@ An example usage of temporary words:
 | 46,4  | XXXXX      | (B--)        | XXXXX|
 | 46,5  | XXXXX      | (B--)        | XXXXX|
 | 46,6  | XXXXX      | (B--)        | XXXXX|
+| 46,7  | LCASE      | (B--)        | XXXXX|
+| 46,8  | UCASE      | (B--)        | XXXXX|
 
 ### Floating point opcodes are 2-bytes, starting with 47
 |Opcode|Name|Stack|Description|

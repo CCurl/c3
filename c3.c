@@ -27,12 +27,12 @@ enum {
 };
 
 // NB: these skip #3 (EXIT), so they can be marked as INLINE
-enum { // Floating point opcdes
-    FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT
+enum { // String opcodes
+    TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI, LCASE, UCASE
 };
 
-                enum { // String opcodes
-    TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI
+enum { // Floating point opcdes
+    FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT
 };
 
 enum { // System opcodes
@@ -91,6 +91,7 @@ void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); }
 void strCpy(char *d, const char *s) { *d = 0; strCat(d, s); }
 int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
+int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
 
 int strEq(const char *d, const char *s, int caseSensitive) {
     while (*s || *d) {
@@ -268,6 +269,8 @@ char *doStringOp(char *pc) {
         RCASE STRLEN: d=CTOS; TOS=strLen(d);
         RCASE STREQ:  s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
         RCASE STREQI: s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
+        RCASE LCASE:  TOS = lower((int)TOS);
+        RCASE UCASE:  TOS = upper((int)TOS);
             return pc;
         default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
@@ -280,10 +283,10 @@ char *doSysOp(char *pc) {
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
         RCASE DOT: printString(iToA(pop(), base));
         RCASE ITOA: t1 = pop(); TOS = (cell_t)iToA(TOS, t1);
-        RCASE DEFINE: doCreate((char*)0); state=1;
+        RCASE DEFINE: doCreate(ToCP(0)); state=1;
         RCASE ENDWORD: state=0; CComma(EXIT);
-        RCASE CREATE: doCreate((char*)0);
-        RCASE FIND: push(doFind((char*)0));
+        RCASE CREATE: doCreate(ToCP(0));
+        RCASE FIND: push(doFind(ToCP(0)));
         RCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
         RCASE TIMER: push(sysTime());
         RCASE CCOMMA: CComma(pop());
