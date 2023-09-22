@@ -54,7 +54,6 @@ void sysLoad() {
     parseF(m1i, "XOR", XOR);
     parseF(m1i, "TYPE", TYPE);
     parseF(lit, "(TYPE)", TYPE);
-    parseF(m1i, "STR_OPS", STR_OPS);
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
     parseF(m1i, "+REGS", REG_NEW);
     parseF(m1i, "-REGS", REG_FREE);
@@ -62,8 +61,9 @@ void sysLoad() {
     // parseF(lit, "STR_OPS", STR_OPS);
     // parseF(lit, "FLT_OPS", FLT_OPS);
 
-    // System opcodes ...
-    // INLINE and IMMEDIATE are defined above
+    // System opcodes ...(INLINE and IMMEDIATE) were defined above
+    // parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
+    // parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
     parseF(m2i, "(.)",       SYS_OPS, DOT);
     parseF(m2i, "ITOA",      SYS_OPS, ITOA);
     parseF(m2i, "CREATE",    SYS_OPS, CREATE);
