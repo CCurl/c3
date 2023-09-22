@@ -248,6 +248,7 @@ void doType(const char *str) {
             else if (c=='g') { printStringF("%g", fpop()); }
             else if (c=='c') { printChar((char)pop()); }
             else if (c=='e') { printChar(27); }
+            else if (c=='q') { printChar(34); }
             else if (c=='b') { printString(iToA(pop(), 2)); }
             else if (c=='d') { printString(iToA(pop(), 10)); }
             else if (c=='i') { printString(iToA(pop(), base)); }
