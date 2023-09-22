@@ -174,64 +174,65 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 34 | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35 | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37 | TYPE       | (A N--)      | Output N formatted chars at address A to (output_fp)|
-| 38 | iX         | (--)         | Increment register X|
-| 39 | dX         | (--)         | Decrement register X|
-| 40 | rX         | (--N)        | N: value of register X|
-| 41 | rX+        | (--N)        | N: value of register X, then decrement it|
-| 42 | rX-        | (--N)        | N: value of register X, then increment it|
-| 43 | sX         | (N--)        | Set regiser X to TOS|
-| 44 | +REGS      | (--)         | Allocate 10 new registers|
-| 45 | -REGS      | (--)         | Restore last set of registers|
+| 37 | COUNT      | (A1--A3 N)   | Standard Forth COUNT|
+| 38 | TYPE       | (A N--)      | Output N formatted chars at address A to (output_fp)|
+| 39 | iX         | (--)         | Increment register X|
+| 30 | dX         | (--)         | Decrement register X|
+| 41 | rX         | (--N)        | N: value of register X|
+| 42 | rX+        | (--N)        | N: value of register X, then decrement it|
+| 43 | rX-        | (--N)        | N: value of register X, then increment it|
+| 44 | sX         | (N--)        | Set regiser X to TOS|
+| 45 | +REGS      | (--)         | Allocate 10 new registers|
+| 46 | -REGS      | (--)         | Restore last set of registers|
 
-### System opcodes are 2-bytes, starting with 46
+### System opcodes are 2-bytes, starting with 47
 |Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 46,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
-| 46,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
-| 46,2  | (.)        | (N--)        | Perform ITOA on N, then TYPEZ it (no trailing space)|
-| 46,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
-| 46,4  | ITOA       | (N--A)       | Convert N into a string version of N in the current BASE|
-| 46,5  | :          | (--)         | Execute CREATE, then set STATE=1|
-| 46,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
-| 46,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
-| 46,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
-| 46,9  | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
-| 46,10 | TIMER      | (--N)        | N: current system time|
-| 46,11 | C,         | (C--)        | Standard Forth "C,"|
-| 46,12 | ,          | (N--)        | Standard Forth ","|
-| 46,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
-| 46,14 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
-| 46,15 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
-| 46,16 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
-
-### String opcodes are 2-bytes, starting with 47
-|Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
-| 47,0  | TRUNC      | (S--)        | Truncate string S|
-| 47,1  | STRCPY     | (S --)       | Copy string S to string D|
-| 47,2  | STRCAT     | (S D--)      | Concatenate string S to string D|
+| 47,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
+| 47,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
+| 47,2  | (.)        | (N--)        | Perform ITOA on N, then TYPEZ it (no trailing space)|
 | 47,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
-| 47,4  | STRLEN     | (S--N)       | N: length of string S|
-| 47,5  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
-| 47,6  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
-| 47,7  | LCASE      | (C1--C2)     | Convert C1 to lowercase|
-| 47,8  | UCASE      | (C1--C2)     | Convert C1 to uppercase|
+| 47,4  | ITOA       | (N--A)       | Convert N into a string version of N in the current BASE|
+| 47,5  | :          | (--)         | Execute CREATE, then set STATE=1|
+| 47,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
+| 47,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
+| 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
+| 47,9  | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
+| 47,10 | TIMER      | (--N)        | N: current system time|
+| 47,11 | C,         | (C--)        | Standard Forth "C,"|
+| 47,12 | ,          | (N--)        | Standard Forth ","|
+| 47,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
+| 47,14 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
+| 47,15 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
+| 47,16 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
 
-### Floating point opcodes are 2-bytes, starting with 48
+### String opcodes are 2-bytes, starting with 48
 |Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 48,0  | F+         | (F1 F2--F3)  | Add F1 and F2, leaving F3|
-| 48,1  | F-         | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
-| 48,2  | F*         | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
+| 48,0  | TRUNC      | (S--)        | Truncate string S|
+| 48,1  | STRCPY     | (S --)       | Copy string S to string D|
+| 48,2  | STRCAT     | (S D--)      | Concatenate string S to string D|
 | 48,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
-| 48,4  | F/         | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
-| 48,5  | F=         | (F1 F2--FL)  | FL: 1 if F1 = F2, else 0|
-| 48,6  | F<         | (F1 F2--FL)  | FL: 1 if F1 < F2, else 0|
-| 48,7  | F>         | (F1 F2--FL)  | FL: 1 if F1 > F2, else 0|
-| 48,8  | F2I        | (F1--N)      | Convert double F1 into an integer N|
-| 48,9  | I2F        | (N--F1)      | Convert integer N into a double F1|
-| 48,10 | F.         | (F1--)       | Output F1 using the "%g" C format string|
+| 48,4  | STRLEN     | (S--N)       | N: length of string S|
+| 48,5  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
+| 48,6  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
+| 48,7  | LCASE      | (C1--C2)     | Convert C1 to lowercase|
+| 48,8  | UCASE      | (C1--C2)     | Convert C1 to uppercase|
+
+### Floating point opcodes are 2-bytes, starting with 49
+|Opcode|Word|Stack|Description|
+| :-- | :-- | :-- | :-- |
+| 49,0  | F+         | (F1 F2--F3)  | Add F1 and F2, leaving F3|
+| 49,1  | F-         | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
+| 49,2  | F*         | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
+| 49,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
+| 49,4  | F/         | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
+| 49,5  | F=         | (F1 F2--FL)  | FL: 1 if F1 = F2, else 0|
+| 49,6  | F<         | (F1 F2--FL)  | FL: 1 if F1 < F2, else 0|
+| 49,7  | F>         | (F1 F2--FL)  | FL: 1 if F1 > F2, else 0|
+| 49,8  | F2I        | (F1--N)      | Convert double F1 into an integer N|
+| 49,9  | I2F        | (N--F1)      | Convert integer N into a double F1|
+| 49,10 | F.         | (F1--)       | Output F1 using the "%g" C format string|
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Word|Stack|Description|
