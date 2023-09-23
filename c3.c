@@ -17,7 +17,7 @@ typedef union { se_t stk[STK_SZ+1]; int sp; } stk_t;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
-    STOP = 0, LIT1, LIT4, EXIT, CALL, JMP, JMPZ, JMPNZ,
+    STOP = 0, LIT1, LIT, EXIT, CALL, JMP, JMPZ, JMPNZ,
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
@@ -256,7 +256,6 @@ void doType(const char *str) {
             else if (c=='i') { printString(iToA(pop(), base)); }
             else if (c=='x') { printString(iToA(pop(), 16)); }
             else if (c=='n') { printString("\n\r"); }
-            // TODO: add more cases here
             else { printChar(c); }
         } else {
             printChar(c);
@@ -299,7 +298,6 @@ char *doSysOp(char *pc) {
         RCASE QKEY: push(qKey());
         RCASE EMIT: printChar((char)pop());
         RCASE TYPEZ: printString(cpop());
-        // RCASE TYPE: doType(0);
             return pc; 
         default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
@@ -309,18 +307,18 @@ char *doSysOp(char *pc) {
 char *doFloatOp(char *pc) {
     flt_t x;
     switch(*pc++) {
-        case  FADD:  x = fpop(); FTOS += x;
-        RCASE FSUB:  x = fpop(); FTOS -= x;
-        RCASE FMUL:  x = fpop(); FTOS *= x;
-        RCASE FDIV:  x = fpop(); FTOS /= x;
-        RCASE FEQ:   x = fpop(); TOS = (x == FTOS);
-        RCASE FLT:   x = fpop(); TOS = (x > FTOS);
-        RCASE FGT:   x = fpop(); TOS = (x < FTOS);
-        RCASE F2I:   TOS = (cell_t)FTOS;
-        RCASE I2F:   FTOS = (flt_t)TOS;
-        RCASE FDOT:  printStringF("%g", fpop());
-        RCASE SQRT:  FTOS = sqrt(FTOS);
-        RCASE TANH:  FTOS = tanh(FTOS);
+        case  FADD: x = fpop(); FTOS += x;
+        RCASE FSUB: x = fpop(); FTOS -= x;
+        RCASE FMUL: x = fpop(); FTOS *= x;
+        RCASE FDIV: x = fpop(); FTOS /= x;
+        RCASE FEQ:  x = fpop(); TOS = (x == FTOS);
+        RCASE FLT:  x = fpop(); TOS = (x > FTOS);
+        RCASE FGT:  x = fpop(); TOS = (x < FTOS);
+        RCASE F2I:  TOS = (cell_t)FTOS;
+        RCASE I2F:  FTOS = (flt_t)TOS;
+        RCASE FDOT: printStringF("%g", fpop());
+        RCASE SQRT: FTOS = sqrt(FTOS);
+        RCASE TANH: FTOS = tanh(FTOS);
             return pc; 
         default: printStringF("-fltOp:[%d]?-", *(pc-1));
     }
@@ -333,7 +331,7 @@ next:
     switch (*(pc++)) {
         case STOP: return;
         NCASE LIT1: push(*(pc++));
-        NCASE LIT4: push(Fetch(pc)); pc += CELL_SZ;
+        NCASE LIT: push(Fetch(pc)); pc += CELL_SZ;
         NCASE EXIT: if (RSP<1) { RSP=0; return; } pc=rpop();
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rpush(y); }          // fall-thru
         case  JMP: pc = CpAt(pc);
@@ -392,7 +390,7 @@ int doNum(const char *w) {
     if (isNum(w) == 0) { return 0; }
     if (state == 0) { return 1; }
     if (BTW(TOS, 0, 127)) { CComma(LIT1); CComma(pop()); }
-    else { CComma(LIT4); Comma(pop()); }
+    else { CComma(LIT); Comma(pop()); }
     return 1;
 }
 
@@ -412,8 +410,9 @@ int doReg(const char *w) {
     if (t == 0) { return 0; }
     if (state) { CComma(t); CComma(w[1]-'0'); }
     else {
-        tib[120]=t; tib[121]=w[1]-'0'; tib[122]=EXIT;
-        Run(&tib[120]);
+        int h=245;
+        tib[h]=t; tib[h+1]=w[1]-'0'; tib[h+2]=EXIT;
+        Run(&tib[h]);
     }
     return 1;
 }

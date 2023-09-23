@@ -65,30 +65,6 @@ An example usage of temporary words:
 ## Inline words
 In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.**
 
-## Bootstrapping c3
-To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-init.h, I define aliases for the opcodes.
-
-- The first four words defined in c3 are:
-  - 'INLINE'    - mark the last word as inline
-  - 'IMMEDIATE' - mark the last word as immediate
-  - ':'         - define a new c3 word
-  - ';'         - end word definition
-
-c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
-
-Everything in c3 can defined from those.
-
-See the sys-load.h file for details.
-
-Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(A--AA)" (or "foo--foo/foo", or "WTF??", or whatever). But DUP is clear and concise, so that is what is used. :)
-
-## The dictionary
-- A dictionary entry looks like this:
-  - xt:     cell_t
-  - flags:  byte (IMMEDIATE=$01, INLINE=$02)
-  - len:    byte
-  - name:   char[NAME_LEN+1] (NULL terminated)
-
 ## Notes on output formatting in TYPE (aka - ."):
 - %b: output TOS as a binary number
 - %c: output TOS as a character
@@ -104,6 +80,30 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 - %x: output TOS as a hex number
 
 For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
+
+## Bootstrapping c3
+To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-load.h, I define aliases for the opcodes.
+
+- The first four words defined in c3 are:
+  - 'INLINE'    - mark the last word as inline
+  - 'IMMEDIATE' - mark the last word as immediate
+  - ':'         - define a new c3 word
+  - ';'         - end word definition
+
+c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
+
+Everything in c3 can defined from those.
+
+See the sys-load.h file for details.
+
+Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
+
+## The dictionary
+- A dictionary entry looks like this:
+  - xt:     cell_t
+  - flags:  byte (IMMEDIATE=$01, INLINE=$02)
+  - len:    byte
+  - name:   char[NAME_LEN+1] (NULL terminated)
 
 ## Default sizes for PC-based systems
 - The default NAME_LEN is 13.
@@ -138,25 +138,25 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 |Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
 |  0 | STOP       | (--)         | Stops the runtime engine|
-|  1 | LIT1       | (--B)        | Pushes next BYTE onto the stack|
-|  3 | EXIT       | (--)         | Exit subroutine|
+|  1 | LIT1       | (--n)        | Pushes next BYTE onto the stack|
 |  2 | LIT        | (--N)        | Pushes next CELL onto the stack|
+|  3 | EXIT       | (--)         | Exit subroutine|
 |  4 | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
 |  5 | JUMP       | (--)         | Jump: next CELL is address|
-|  6 | JUMP-Z     | (N--)        | Jump if TOS==0: next CELL is address|
-|  7 | JUMP-NZ    | (N--N)       | Jump if TOS!=0: next CELL is address|
-|  8 | STORE      | (N A--)      | Store CELL N to address A|
-|  9 | CSTORE     | (B A--)      | Store BYTE B to address A|
+|  6 | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
+|  7 | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address|
+|  8 | !          | (N A--)      | Store CELL N to address A|
+|  9 | C!         | (B A--)      | Store BYTE B to address A|
 | 10 | @          | (--)         | Fetch CELL N FROM address A|
 | 11 | C@         | (--)         | Fetch BYTE B FROM address A|
 | 12 | DUP        | (N--N N)     | Duplicate TOS|
 | 15 | DROP       | (A B--A)     | Drop TOS|
 | 13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
 | 14 | OVER       | (A B--A B A) | Push a copy of NOS|
-| 16 | ADD        | (A B--C)     | C: A + B|
-| 17 | MULT       | (A B--C)     | C: A * B|
+| 16 | +          | (A B--C)     | C: A + B|
+| 17 | *          | (A B--C)     | C: A * B|
 | 18 | /MOD       | (A B--C D)   | C: A modulo B, D: A divided by B|
-| 19 | SUB        | (A B--C)     | C: A - B|
+| 19 | -          | (A B--C)     | C: A - B|
 | 20 | 1+         | (A--B)       | Increment TOS|
 | 21 | 1-         | (A--B)       | Decrement TOS|
 | 22 | <          | (A B--F)     | If A<B, F=1, else F=0|
@@ -167,8 +167,8 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 27 | R@         | (--N)        | N: Copy of top of return stack|
 | 28 | R>         | (--N)        | N: Top of return stack (popped)|
 | 29 | DO         | (T F--)      | Begin a loop from F to T, set I = F|
-| 30 | LOOP       | (--)         | Increment I. Jump to beginning if I<T|
-| 31 | -LOOP      | (--)         | Decrement I. Jump to beginning if I>T|
+| 30 | LOOP       | (--)         | Increment I. Jump to DO if I<T|
+| 31 | -LOOP      | (--)         | Decrement I. Jump to DO if I>T|
 | 32 | (I)        | (--)         | Address of I, the loop index|
 | 33 | COM        | (A--B)       | B: Ones-complement of A|
 | 34 | AND        | (A B--C)     | C: A bitwise-AND B|
@@ -191,14 +191,14 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 47,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
 | 47,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
 | 47,2  | (.)        | (N--)        | Perform ITOA on N, then TYPEZ it (no trailing space)|
-| 47,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
-| 47,4  | ITOA       | (N--A)       | Convert N into a string version of N in the current BASE|
+| 47,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
+| 47,4  | ITOA       | (N--A)       | A: a string version of N in the current BASE|
 | 47,5  | :          | (--)         | Execute CREATE, then set STATE=1|
 | 47,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
 | 47,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
 | 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
 | 47,9  | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
-| 47,10 | TIMER      | (--N)        | N: current system time|
+| 47,10 | TIMER      | (--N)        | N: current system time in milliseconds|
 | 47,11 | C,         | (C--)        | Standard Forth "C,"|
 | 47,12 | ,          | (N--)        | Standard Forth ","|
 | 47,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
@@ -212,7 +212,7 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 48,0  | TRUNC      | (S--)        | Truncate string S|
 | 48,1  | STRCPY     | (S --)       | Copy string S to string D|
 | 48,2  | STRCAT     | (S D--)      | Concatenate string S to string D|
-| 48,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
+| 48,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
 | 48,4  | STRLEN     | (S--N)       | N: length of string S|
 | 48,5  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
 | 48,6  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
@@ -225,7 +225,7 @@ For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 | 49,0  | F+         | (F1 F2--F3)  | Add F1 and F2, leaving F3|
 | 49,1  | F-         | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
 | 49,2  | F*         | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
-| 49,3  | **UNUSED** |              | Not used so opcodes can be marked as INLINE|
+| 49,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
 | 49,4  | F/         | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
 | 49,5  | F=         | (F1 F2--FL)  | FL: 1 if F1 = F2, else 0|
 | 49,6  | F<         | (F1 F2--FL)  | FL: 1 if F1 < F2, else 0|
@@ -296,14 +296,16 @@ For example, there might be some functionality in a library you want to make ava
 Here is the process:
 
 - Global opcode:
-  - In c3.c, define the new opcode(s) to the appropriate enum.
+  - In c3.c, add the new opcode(s) to the appropriate enum.
   - In c3.c, add a NCASE to run() to for each new opcode.
   - In sys-load.h, add a "-ML-" line to LoadStartupWords() for each new opcode.
+  - Update your README.md.
 
 - Target-specific opcode:
   - All work is done in the target's *.h file (e.g. - sys-pc.h).
-  - Define the new opcodes(s) to the enum.
-  - These opcodes should have values above 100.
+  - Add the new opcodes(s) to the enum.
+  - Target-specific opcodes should have values above 100.
   - Edit LoadStartupWords() and add a "-ML-" line for each new opcode.
-  - For example: to define opcode 67 as "NEWOP" ... ParseLine("-ML- NEWOP 67 3 -MLX- INLINE");
+  - For example: to define opcode 120 as "NEWOP" ... ParseLine("-ML- NEWOP 120 3 -MLX- INLINE");
   - In doUser(), add cases for the new opcode(s).
+  - Update your README.md.

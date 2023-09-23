@@ -2,9 +2,9 @@
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
 void sysLoad() {
-    char *m1i = "-ML- %s %d 3 -MLX- INLINE";
     char *m2n = "-ML- %s %d %d 3 -MLX-";
     char *m2i = "-ML- %s %d %d 3 -MLX- INLINE";
+    char *m1i = "-ML- %s %d    3 -MLX- INLINE";
     char *lit = ": %s %d ; INLINE";
 
     // Bootstrap ...
@@ -14,7 +14,7 @@ void sysLoad() {
     parseF(m2n, ";", SYS_OPS, ENDWORD); last->f = IS_IMMEDIATE;
 
     // Opcodes ...
-    parseF(lit, "(LIT4)", LIT4);
+    parseF(lit, "(LIT)", LIT);
     parseF(m1i, "EXIT", EXIT);
     parseF(lit, "(EXIT)", EXIT); last->f = 0;
     parseF(lit, "(CALL)", CALL);
@@ -106,7 +106,7 @@ void sysLoad() {
     loadStartupWords();
 
     // System information words
-    parseF(": VERSION     %ld ;",  VERSION);
+    parseF(": VERSION     #%ld ;", VERSION);
     parseF(": (SP)        $%lx ;", &DSP);
     parseF(": (RSP)       $%lx ;", &RSP);
     parseF(": (LSP)       $%lx ;", &lsp);
@@ -117,16 +117,16 @@ void sysLoad() {
     parseF(": TIB         $%lx ;", &tib[0]);
     parseF(": >IN         $%lx ;", &in);
     parseF(": MEM         $%lx ;", &mem[0]);
-    parseF(": MEM-SZ      %ld ;",  MEM_SZ);
+    parseF(": MEM-SZ      #%ld ;", MEM_SZ);
     parseF(": VARS        $%lx ;", &vars[0]);
-    parseF(": VARS-SZ     %ld ;",  VARS_SZ);
+    parseF(": VARS-SZ     #%ld ;", VARS_SZ);
     parseF(": (VHERE)     $%lx ;", &vhere);
     parseF(": (REGS)      $%lx ;", &reg[0]);
     parseF(": (OUTPUT_FP) $%lx ;", &output_fp);
     parseF(": (INPUT_FP)  $%lx ;", &input_fp);
     parseF(": STATE       $%lx ;", &state);
     parseF(": BASE        $%lx ;", &base);
-    parseF(": WORD-SZ     %ld ;",  sizeof(dict_t));
+    parseF(": WORD-SZ     #%ld ;", sizeof(dict_t));
     parseF(": BYE %d STATE ! ;",   ALL_DONE);
     parseF(": CELL %d ; inline",   CELL_SZ);
 
@@ -145,7 +145,7 @@ void sysLoad() {
     ParseLine(": vc, vhere c! (vhere) ++ ;");
     ParseLine(": v,  vhere ! cell allot ;");
     ParseLine(": cells cell * ; inline");
-    ParseLine(": constant  create (lit4) c, , (exit) c, ;");
+    ParseLine(": constant  create (lit) c, , (exit) c, ;");
     ParseLine(": variable  vhere constant cell allot ;");
     ParseLine(": val  vhere constant ;");
     ParseLine(": (val)  here 1- cell - constant ;");
@@ -163,9 +163,9 @@ void sysLoad() {
     ParseLine(": repeat swap (jmp) c, , here swap ! ; immediate");
     ParseLine(": for 0 swap do ; inline");
     ParseLine(": next -loop ; inline");
-    ParseLine(": -if     (dup) c,  (jmpz) c, here 0 , ; immediate");
-    ParseLine(": -until  (dup) c,  (jmpz) c, , ; immediate");
-    ParseLine(": -while  (jmpnz) c, , ; immediate");
+    ParseLine(": -if (dup) c, (jmpz) c, here 0 , ; immediate");
+    ParseLine(": -until (dup) c,  (jmpz) c, , ; immediate");
+    ParseLine(": -while (jmpnz) c, , ; immediate");
     ParseLine(": tuck  swap over ; inline");
     ParseLine(": nip   swap drop ; inline");
     ParseLine(": 2dup  over over ; inline");
@@ -224,10 +224,10 @@ void sysLoad() {
     ParseLine("        if 0 r8+ c!   r9 r8 -regs   exit then");
     ParseLine("        r1   r8+ c!");
     ParseLine("    again ;");
-    ParseLine(": s\" ( --cstr ) T2 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate");
-    ParseLine(": z\" ( --zstr ) T3 state @ 0= if drop exit then (vhere) ! (lit4) c, , ; immediate");
+    ParseLine(": s\" ( --cstr ) T2 state @ 0= if drop exit then (vhere) ! (lit) c, , ; immediate");
+    ParseLine(": z\" ( --zstr ) T3 state @ 0= if drop exit then (vhere) ! (lit) c, , ; immediate");
     ParseLine(": .\" ( -- )     T2 state @ 0= if drop count type exit then");
-    ParseLine("    (vhere) ! (lit4) c, , (count) c, (type) c, ; immediate");
+    ParseLine("    (vhere) ! (lit) c, , (count) c, (type) c, ; immediate");
     ParseLine(": .word cell + 1+ count type ;");
     ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
     ParseLine("        r2 mem-end < while");
