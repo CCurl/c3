@@ -10,7 +10,7 @@
 #define mySerial Serial
 extern "C" {
     typedef long cell_t;
-    enum { OPEN_INPUT = 100, OPEN_OUTPUT, OPEN_PULLUP,
+    enum { OPEN_INPUT = 110, OPEN_OUTPUT, OPEN_PULLUP,
         PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
     };
     extern void push(cell_t);
