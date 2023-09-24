@@ -461,7 +461,6 @@ void c3Init() {
     base = 10;
     DSP = RSP = reg_base = 0;
     sysLoad();
-    loadUserWords();
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
