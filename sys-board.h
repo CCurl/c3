@@ -38,7 +38,6 @@ extern "C" {
 cell_t sysTime() { return micros(); }
 
 void loadStartupWords() {
-    ParseLine(": isPC 0 ;");
     ParseLine("-ML- PIN-INPUT   100 3 -MLX- inline");
     ParseLine("-ML- PIN-OUTPUT  101 3 -MLX- inline");
     ParseLine("-ML- PIN-PULLUP  102 3 -MLX- inline");
@@ -48,7 +47,9 @@ void loadStartupWords() {
     ParseLine("-ML- APIN!       106 3 -MLX- inline");
 }
 
-void loadUserWords() { }
+void loadUserWords() {
+    ParseLine(": isPC 0 ;");
+}
 
 char *doUser(char *pc, int ir) {
         cell_t t, n;
