@@ -18,7 +18,7 @@ The goals for c3 are:
 
 ## Notes about c3:
 - c3 is NOT an ANSI-standard Forth system.
-- Counted strings are also null-terminated.
+- All strings are null-terminated, not counted.
 - The dictionary starts at the end of the MEM area and grows down.
 - The dictionary search is not case-sensitive.
 - The VARIABLE space is separated from the MEM space.
@@ -174,8 +174,8 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 34 | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35 | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37 | COUNT      | (A1--A2 N)   | Standard Forth COUNT|
-| 38 | TYPE       | (A N--)      | Output N formatted chars at address A to (output_fp)|
+| 37 | FOR        | (--)         | ?????|
+| 38 | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
 | 39 | iX         | (--)         | Increment register X|
 | 30 | dX         | (--)         | Decrement register X|
 | 41 | rX         | (--N)        | N: value of register X|
@@ -203,8 +203,8 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 47,12 | ,          | (N--)        | Standard Forth ","|
 | 47,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
 | 47,14 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
-| 47,15 | EMIT       | (B--)        | Output BYTE B to (output_fp)|
-| 47,16 | TYPEZ      | (A--)        | Output NULL-terminated a address A to (output_fp)|
+| 47,15 | EMIT       | (C--)        | Output CHAR C to (output_fp)|
+| 47,16 | QTYPE      | (A--)        | Output NULL-terminated a address A to (output_fp)|
 
 ### String opcodes are 2-bytes, starting with 48
 |Opcode|Word|Stack|Description|

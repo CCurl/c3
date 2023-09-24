@@ -21,7 +21,7 @@ enum {
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR, COUNT, TYPE,
+    COM, AND, OR, XOR, FOR, ZTYPE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
     SYS_OPS, STR_OPS, FLT_OPS
@@ -31,7 +31,7 @@ enum {
 enum { // System opcodes
     INLINE=0, IMMEDIATE, DOT, ITOA = 4,
     DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
-    CCOMMA, COMMA, KEY, QKEY, EMIT, TYPEZ
+    CCOMMA, COMMA, KEY, QKEY, EMIT, QTYPE
 };
 
 enum { // String opcodes
@@ -242,16 +242,19 @@ void doType(const char *str) {
         char c = str[i];
         if (c == '%') {
             c = str[++i];
-            if (c=='f') { printStringF("%f", fpop()); }
-            else if (c=='g') { printStringF("%g", fpop()); }
-            else if (c=='c') { printChar((char)pop()); }
-            else if (c=='e') { printChar(27); }
-            else if (c=='q') { printChar(34); }
+            if (c == 0) { return; }
             else if (c=='b') { printString(iToA(pop(), 2)); }
+            else if (c=='c') { printChar((char)pop()); }
             else if (c=='d') { printString(iToA(pop(), 10)); }
+            else if (c=='e') { printChar(27); }
+            else if (c=='f') { printStringF("%f", fpop()); }
+            else if (c=='g') { printStringF("%g", fpop()); }
             else if (c=='i') { printString(iToA(pop(), base)); }
-            else if (c=='x') { printString(iToA(pop(), 16)); }
             else if (c=='n') { printString("\n\r"); }
+            else if (c=='q') { printChar(34); }
+            else if (c=='s') { printString(cpop()); }
+            else if (c=='t') { printChar(9); }
+            else if (c=='x') { printString(iToA(pop(), 16)); }
             else { printChar(c); }
         } else {
             printChar(c);
@@ -263,14 +266,14 @@ char *doStringOp(char *pc) {
     char *d, *s;
     switch(*pc++) {
         case TRUNC:    d=cpop(); d[0] = 0;
+        RCASE LCASE:   TOS = lower((int)TOS);
+        RCASE UCASE:   TOS = upper((int)TOS);
         RCASE STRCPY:  s=cpop(); d=cpop(); strCpy(d, s);
         RCASE STRCAT:  s=cpop(); d=cpop(); strCat(d, s);
+        RCASE STRCATC: t1=pop(); d=cpop(); strCatC(d, (char)t1);
         RCASE STRLEN:  d=CTOS; TOS=strLen(d);
         RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
         RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
-        RCASE LCASE:   TOS = lower((int)TOS);
-        RCASE UCASE:   TOS = upper((int)TOS);
-        RCASE STRCATC: t1=pop(); d=cpop(); strCatC(d, (char)t1);
             return pc;
         default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
@@ -294,7 +297,7 @@ char *doSysOp(char *pc) {
         RCASE KEY:  push(key());
         RCASE QKEY: push(qKey());
         RCASE EMIT: printChar((char)pop());
-        RCASE TYPEZ: printString(cpop());
+        RCASE QTYPE: printString(cpop());
             return pc; 
         default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
@@ -363,8 +366,8 @@ next:
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
-        NCASE COUNT: y=cpop(); push((cell_t)(y+1)); push(*y);
-        NCASE TYPE: doType(0);
+        NCASE FOR: printString("FOR not implemented");
+        NCASE ZTYPE: doType(0);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
         NCASE REG_D: reg[*(pc++)+reg_base]--;
         NCASE REG_R:  push(reg[*(pc++)+reg_base]);
@@ -467,8 +470,8 @@ void c3Init() {
     ParseLine("version 100 /mod .\" c3 - v%d.%d - Chris Curl%n\"");
     ParseLine("here mem - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
     ParseLine("vhere vars - .\" %d variable bytes used, \" vars-end vhere - .\" %d bytes free.\"");
-    ParseLine(": benches forget s\" benches.c3\" (load) ;");
-    ParseLine(": sb forget s\" sandbox.c3\" (load) ;");
+    ParseLine(": benches forget \" benches.c3\" (load) ;");
+    ParseLine(": sb forget \" sandbox.c3\" (load) ;");
     ParseLine("marker");
 }
 

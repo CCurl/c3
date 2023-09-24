@@ -52,10 +52,8 @@ void sysLoad() {
     parseF(m1i, "AND", AND);
     parseF(m1i, "OR", OR);
     parseF(m1i, "XOR", XOR);
-    parseF(m1i, "COUNT", COUNT);
-    parseF(lit, "(COUNT)", COUNT);
-    parseF(m1i, "TYPE", TYPE);
-    parseF(lit, "(TYPE)", TYPE);
+    parseF(m1i, "ZTYPE", ZTYPE);
+    parseF(lit, "(ZTYPE)", ZTYPE);
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
     parseF(m1i, "+REGS", REG_NEW);
     parseF(m1i, "-REGS", REG_FREE);
@@ -77,7 +75,7 @@ void sysLoad() {
     parseF(m2i, "KEY",       SYS_OPS, KEY);
     parseF(m2i, "?KEY",      SYS_OPS, QKEY);
     parseF(m2i, "EMIT",      SYS_OPS, EMIT);
-    parseF(m2i, "TYPEZ",     SYS_OPS, TYPEZ);
+    parseF(m2i, "QTYPE",     SYS_OPS, QTYPE);
 
     // String opcodes ...
     parseF(m2i, "S-TRUNC", STR_OPS, TRUNC);
@@ -218,7 +216,7 @@ void sysLoad() {
     ParseLine("        r1   r8+ c!");
     ParseLine("    again ;");
     ParseLine(": \" ( --zstr ) T3 state @ 0= if drop exit then (vhere) ! (lit) c, , ; immediate");
-    ParseLine(": .\" ( -- )     T3 state @ 0= if drop ztype exit then");
+    ParseLine(": .\" ( -- )    T3 state @ 0= if drop ztype exit then");
     ParseLine("    (vhere) ! (lit) c, , (ztype) c, ; immediate");
     ParseLine(": .word cell + 1+ 1+ ztype ; inline");
     ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
