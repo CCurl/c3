@@ -237,17 +237,11 @@ int isNum(const char *wd) {
 }
 
 void doType(const char *str) {
-    if (!str) {
-        t1=pop();
-        y=cpop();
-    } else {
-        y = (char *)str;
-        t1 = strLen(y);
-    }
-    for (int i = 0; i < t1; i++) {
-        char c = y[i];
+    if (!str) { str=cpop(); }
+    for (int i = 0; i < str[i]; i++) {
+        char c = str[i];
         if (c == '%') {
-            c = y[++i];
+            c = str[++i];
             if (c=='f') { printStringF("%f", fpop()); }
             else if (c=='g') { printStringF("%g", fpop()); }
             else if (c=='c') { printChar((char)pop()); }
