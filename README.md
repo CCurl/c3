@@ -18,13 +18,15 @@ The goals for c3 are:
 
 ## Notes about c3:
 - c3 is NOT an ANSI-standard Forth system.
-- All strings are null-terminated, not counted.
+- Core strings are null-terminated, not counted.
+- The user can add counted strings if desired.
 - The dictionary starts at the end of the MEM area and grows down.
 - The dictionary search is not case-sensitive.
 - The VARIABLE space is separated from the MEM space.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9. There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
+The names of the register words are case-sensitive: (r0-r9, not R0-R9).
 
 Note: The support for registers is built into c3, so they do NOT show up in "WORDS".
 
@@ -53,7 +55,7 @@ c3 provides 10 temporary words, T0 thru T9.
 - A temporary word can be redefined as often as desired.
 - When redefined, code references to the previous definition are unchanged.
 - T0-T5 are "normal" words, T6-T8 are INLINE, and T9 is IMMEDIATE.
-- The names of the temporary words is case-sensitive (T0-T9, not t0-t9).
+- The names of the temporary words are case-sensitive (T0-T9, not t0-t9).
 
 An example usage of temporary words:
 ```
@@ -63,9 +65,9 @@ An example usage of temporary words:
 ```
 
 ## Inline words
-In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space too. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like in an address for example), then it should not be marked as INLINE.**
+In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the first EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space as well. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
 
-## Notes on output formatting in TYPE (aka - ."):
+## Notes on output formatting in ZTYPE (aka - ."):
 - %b: output TOS as a binary number
 - %c: output TOS as a character
 - %d: output TOS as an integer (base 10)
@@ -196,7 +198,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 47,5  | :          | (--)         | Execute CREATE, then set STATE=1|
 | 47,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
 | 47,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
-| 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0) |
+| 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0)|
 | 47,9  | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
 | 47,10 | TIMER      | (--N)        | N: current system time in milliseconds|
 | 47,11 | C,         | (C--)        | Standard Forth "C,"|
@@ -204,7 +206,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 47,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
 | 47,14 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
 | 47,15 | EMIT       | (C--)        | Output CHAR C to (output_fp)|
-| 47,16 | QTYPE      | (A--)        | Output NULL-terminated a address A to (output_fp)|
+| 47,16 | QTYPE      | (A--)        | Quick-type: Output string A to (output_fp), no formatting|
 
 ### String opcodes are 2-bytes, starting with 48
 |Opcode|Word|Stack|Description|
@@ -241,7 +243,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
 | 100 | SYSTEM | (A--)      | Call system(A)|
-| 101 | FOPEN  | (N M--H)   | N: FileName, M: OpenMode (R/W/A), H: Handle|
+| 101 | FOPEN  | (N M--H)   | N: FileName, M: Mode (e.g. - "r+b"), H: Handle|
 | 102 | FCLOSE | (H--)      | Close file with handle H|
 | 103 | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
 | 104 | FWRITE | (A N H--)  | Write N bytes to file H to address A|
@@ -250,13 +252,13 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 ### Opcodes for Development Boards
 |Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
-| 58 | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
-| 59 | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
-| 60 | PIN-PULLUP | (P--)   | pinMode(P, INPUT_PULLUP)|
-| 61 | DPIN@      | (P--N)  | N = digitalRead(P)|
-| 62 | APIN@      | (P--N)  | N = analogRead(P)|
-| 63 | DPIN!      | (N P--) | digitalWrite(P, N)|
-| 64 | APIN!      | (N P--) | analogWrite(P, N)|
+| 110 | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
+| 111 | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
+| 112 | PIN-PULLUP | (P--)   | pinMode(P, INPUT_PULLUP)|
+| 113 | DPIN@      | (P--N)  | N = digitalRead(P)|
+| 114 | APIN@      | (P--N)  | N = analogRead(P)|
+| 115 | DPIN!      | (N P--) | digitalWrite(P, N)|
+| 116 | APIN!      | (N P--) | analogWrite(P, N)|
 
 ## Built-in c3 system-information words
 |Word|Stack|Description|
