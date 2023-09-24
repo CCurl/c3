@@ -35,7 +35,7 @@ enum { // System opcodes
 };
 
 enum { // String opcodes
-    TRUNC=0, STRCPY, STRCAT, STRLEN = 4, STREQ, STREQI, LCASE, UCASE
+    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN, STREQ, STREQI
 };
 
 enum { // Floating point opcdes
@@ -91,6 +91,7 @@ void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
 void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { d[i]=val; } }
 char *strEnd(char *s) { while (*s) ++s; return s; }
 void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); } *d=0; }
+void strCatC(char *d, const char c) { d=strEnd(d); *(d++)=c; *d=0; }
 void strCpy(char *d, const char *s) { *d = 0; strCat(d, s); }
 int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
@@ -116,11 +117,12 @@ void printStringF(const char *fmt, ...) {
 }
 
 char *iToA(cell_t N, int b) {
+    static char buf[65];
     ucell_t X = (ucell_t)N;
     int isNeg = 0;
     if (b == 0) { b = base; }
     if ((b == 10) && (N < 0)) { isNeg = 1; X = -N; }
-    char c, *cp = &tib[240];
+    char c, *cp = &buf[64];
     *(cp) = 0;
     do {
         c = (char)(X % b) + '0';
@@ -266,14 +268,15 @@ void doType(const char *str) {
 char *doStringOp(char *pc) {
     char *d, *s;
     switch(*pc++) {
-        case TRUNC:   d=cpop(); d[0] = 0;
-        RCASE STRCPY: s=cpop(); d=cpop(); strCpy(d, s);
-        RCASE STRCAT: s=cpop(); d=cpop(); strCat(d, s);
-        RCASE STRLEN: d=CTOS; TOS=strLen(d);
-        RCASE STREQ:  s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
-        RCASE STREQI: s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
-        RCASE LCASE:  TOS = lower((int)TOS);
-        RCASE UCASE:  TOS = upper((int)TOS);
+        case TRUNC:    d=cpop(); d[0] = 0;
+        RCASE STRCPY:  s=cpop(); d=cpop(); strCpy(d, s);
+        RCASE STRCAT:  s=cpop(); d=cpop(); strCat(d, s);
+        RCASE STRLEN:  d=CTOS; TOS=strLen(d);
+        RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
+        RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
+        RCASE LCASE:   TOS = lower((int)TOS);
+        RCASE UCASE:   TOS = upper((int)TOS);
+        RCASE STRCATC: t1=pop(); d=cpop(); strCatC(d, (char)t1);
             return pc;
         default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
@@ -285,7 +288,7 @@ char *doSysOp(char *pc) {
         case INLINE: last->f = IS_INLINE;
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
         RCASE DOT: printString(iToA(pop(), base));
-        RCASE ITOA: t1 = pop(); TOS = (cell_t)iToA(TOS, t1);
+        RCASE ITOA: TOS = (cell_t)iToA(TOS, base);
         RCASE DEFINE: doCreate(ToCP(0)); state=1;
         RCASE ENDWORD: state=0; CComma(EXIT);
         RCASE CREATE: doCreate(ToCP(0));

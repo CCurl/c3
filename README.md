@@ -210,14 +210,15 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |Opcode|Word|Stack|Description|
 | :-- | :-- | :-- | :-- |
 | 48,0  | TRUNC      | (S--)        | Truncate string S|
-| 48,1  | STRCPY     | (S --)       | Copy string S to string D|
-| 48,2  | STRCAT     | (S D--)      | Concatenate string S to string D|
+| 48,1  | LCASE      | (C1--C2)     | Convert C1 to lowercase|
+| 48,2  | UCASE      | (C1--C2)     | Convert C1 to uppercase|
 | 48,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
-| 48,4  | STRLEN     | (S--N)       | N: length of string S|
-| 48,5  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
-| 48,6  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
-| 48,7  | LCASE      | (C1--C2)     | Convert C1 to lowercase|
-| 48,8  | UCASE      | (C1--C2)     | Convert C1 to uppercase|
+| 48,4  | STRCPY     | (S --)       | Copy string S to string D|
+| 48,5  | STRCAT     | (S D--)      | Concatenate string S to string D|
+| 48,6  | STRCATC    | (D C--)      | Concatenate char C to string D|
+| 48,7  | STRLEN     | (S--N)       | N: length of string S|
+| 48,8  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
+| 48,9  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
 
 ### Floating point opcodes are 2-bytes, starting with 49
 |Opcode|Word|Stack|Description|

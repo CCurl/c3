@@ -81,13 +81,14 @@ void sysLoad() {
 
     // String opcodes ...
     parseF(m2i, "S-TRUNC", STR_OPS, TRUNC);
+    parseF(m2i, "LCASE",   STR_OPS, LCASE);
+    parseF(m2i, "UCASE",   STR_OPS, UCASE);
     parseF(m2i, "S-CPY",   STR_OPS, STRCPY);
     parseF(m2i, "S-CAT",   STR_OPS, STRCAT);
+    parseF(m2i, "S-CATC",  STR_OPS, STRCATC);
     parseF(m2i, "S-LEN",   STR_OPS, STRLEN);
     parseF(m2i, "S-EQ",    STR_OPS, STREQ);
     parseF(m2i, "S-EQ-I",  STR_OPS, STREQI);
-    parseF(m2i, "LCASE",   STR_OPS, LCASE);
-    parseF(m2i, "UCASE",   STR_OPS, UCASE);
 
     // Float opcodes ...
     parseF(m2i, "F+",   FLT_OPS, FADD);
