@@ -48,7 +48,6 @@ char *doUser(char *pc, int ir) {
 }
 
 void loadStartupWords() {
-    ParseLine(": isPC 1 ;");
     parseF("-ML- SYSTEM %d 3 -MLX- inline", SYSTEM);
     parseF("-ML- FOPEN  %d 3 -MLX- inline", FOPEN);
     parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
@@ -57,7 +56,9 @@ void loadStartupWords() {
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
 }
 
-void loadUserWords() { }
+void loadUserWords() {
+    ParseLine(": isPC 1 ;");
+}
 
 int main(int argc, char *argv[]) {
     input_fp = output_fp = 0;
