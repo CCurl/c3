@@ -138,58 +138,58 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## c3 Opcode / Word reference
 |Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
-|  0 | STOP       | (--)         | Stops the runtime engine|
-|  1 | LIT1       | (--n)        | Pushes next BYTE onto the stack|
-|  2 | LIT        | (--N)        | Pushes next CELL onto the stack|
-|  3 | EXIT       | (--)         | Exit subroutine|
-|  4 | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
-|  5 | JUMP       | (--)         | Jump: next CELL is address|
-|  6 | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
-|  7 | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address|
-|  8 | !          | (N A--)      | Store CELL N to address A|
-|  9 | C!         | (B A--)      | Store BYTE B to address A|
-| 10 | @          | (--)         | Fetch CELL N FROM address A|
-| 11 | C@         | (--)         | Fetch BYTE B FROM address A|
-| 12 | DUP        | (N--N N)     | Duplicate TOS|
-| 15 | DROP       | (A B--A)     | Drop TOS|
-| 13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
-| 14 | OVER       | (A B--A B A) | Push a copy of NOS|
-| 16 | +          | (A B--C)     | C: A + B|
-| 17 | *          | (A B--C)     | C: A * B|
-| 18 | /MOD       | (A B--C D)   | C: A modulo B, D: A divided by B|
-| 19 | -          | (A B--C)     | C: A - B|
-| 20 | 1+         | (A--B)       | Increment TOS|
-| 21 | 1-         | (A--B)       | Decrement TOS|
-| 22 | <          | (A B--F)     | If A<B, F=1, else F=0|
-| 23 | =          | (A B--F)     | If A=B, F=1, else F=0|
-| 24 | >          | (A B--F)     | If A>B, F=1, else F=0|
-| 25 | 0= , NOT   | (N--F)       | If N=0, F=1, else F=0|
-| 26 | >R         | (N--)        | Move N to return stack|
-| 27 | R@         | (--N)        | N: Copy of top of return stack|
-| 28 | R>         | (--N)        | N: Top of return stack (popped)|
-| 29 | DO         | (T F--)      | Begin a loop from F to T, set I = F|
-| 30 | LOOP       | (--)         | Increment I. Jump to DO if I<T|
-| 31 | -LOOP      | (--)         | Decrement I. Jump to DO if I>T|
-| 32 | (I)        | (--)         | Address of I, the loop index|
-| 33 | COM        | (A--B)       | B: Ones-complement of A|
-| 34 | AND        | (A B--C)     | C: A bitwise-AND B|
-| 35 | OR         | (A B--C)     | C: A bitwise-OR B|
-| 36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37 | FOR        | (--)         | ?????|
-| 38 | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
-| 39 | iX         | (--)         | Increment register X|
-| 30 | dX         | (--)         | Decrement register X|
-| 41 | rX         | (--N)        | N: value of register X|
-| 42 | rX+        | (--N)        | N: value of register X, then decrement it|
-| 43 | rX-        | (--N)        | N: value of register X, then increment it|
-| 44 | sX         | (N--)        | Set regiser X to TOS|
-| 45 | +REGS      | (--)         | Allocate 10 new registers|
-| 46 | -REGS      | (--)         | Restore last set of registers|
+| :-- | :--       | :--          | :-- |
+|   0 | STOP       | (--)         | Stops the runtime engine|
+|   1 | LIT1       | (--n)        | Pushes next BYTE onto the stack|
+|   2 | LIT        | (--N)        | Pushes next CELL onto the stack|
+|   3 | EXIT       | (--)         | Exit subroutine|
+|   4 | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
+|   5 | JUMP       | (--)         | Jump: next CELL is address|
+|   6 | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
+|   7 | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address|
+|   8 | !          | (N A--)      | Store CELL N to address A|
+|   9 | C!         | (B A--)      | Store BYTE B to address A|
+|  10 | @          | (--)         | Fetch CELL N FROM address A|
+|  11 | C@         | (--)         | Fetch BYTE B FROM address A|
+|  12 | DUP        | (N--N N)     | Duplicate TOS|
+|  15 | DROP       | (A B--A)     | Drop TOS|
+|  13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
+|  14 | OVER       | (A B--A B A) | Push a copy of NOS|
+|  16 | +          | (A B--C)     | C: A + B|
+|  17 | *          | (A B--C)     | C: A * B|
+|  18 | /MOD       | (A B--C D)   | C: A modulo B, D: A divided by B|
+|  19 | -          | (A B--C)     | C: A - B|
+|  20 | 1+         | (A--B)       | Increment TOS|
+|  21 | 1-         | (A--B)       | Decrement TOS|
+|  22 | <          | (A B--F)     | If A<B, F=1, else F=0|
+|  23 | =          | (A B--F)     | If A=B, F=1, else F=0|
+|  24 | >          | (A B--F)     | If A>B, F=1, else F=0|
+|  25 | 0= , NOT   | (N--F)       | If N=0, F=1, else F=0|
+|  26 | >R         | (N--)        | Move N to return stack|
+|  27 | R@         | (--N)        | N: Copy of top of return stack|
+|  28 | R>         | (--N)        | N: Top of return stack (popped)|
+|  29 | DO         | (T F--)      | Begin a loop from F to T, set I = F|
+|  30 | LOOP       | (--)         | Increment I. Jump to DO if I<T|
+|  31 | -LOOP      | (--)         | Decrement I. Jump to DO if I>T|
+|  32 | (I)        | (--)         | Address of I, the loop index|
+|  33 | COM        | (A--B)       | B: Ones-complement of A|
+|  34 | AND        | (A B--C)     | C: A bitwise-AND B|
+|  35 | OR         | (A B--C)     | C: A bitwise-OR B|
+|  36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
+|  37 | FOR        | (--)         | ?????|
+|  38 | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
+|  39 | iX         | (--)         | Increment register X|
+|  30 | dX         | (--)         | Decrement register X|
+|  41 | rX         | (--N)        | N: value of register X|
+|  42 | rX+        | (--N)        | N: value of register X, then decrement it|
+|  43 | rX-        | (--N)        | N: value of register X, then increment it|
+|  44 | sX         | (N--)        | Set regiser X to TOS|
+|  45 | +REGS      | (--)         | Allocate 10 new registers|
+|  46 | -REGS      | (--)         | Restore last set of registers|
 
 ### System opcodes are 2-bytes, starting with 47
 |Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
+| :--   | :--        | :--          | :-- |
 | 47,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
 | 47,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
 | 47,2  | (.)        | (N--)        | Perform ITOA on N, then TYPEZ it (no trailing space)|
@@ -210,29 +210,29 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ### String opcodes are 2-bytes, starting with 48
 |Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
-| 48,0  | TRUNC      | (S--)        | Truncate string S|
-| 48,1  | LCASE      | (C1--C2)     | Convert C1 to lowercase|
-| 48,2  | UCASE      | (C1--C2)     | Convert C1 to uppercase|
+| :--   | :--        | :--          | :-- |
+| 48,0  | S-TRUNC    | (S--)        | Truncate string S|
+| 48,1  | LCASE      | (C1--C2)     | C2: C1 converted to lowercase|
+| 48,2  | UCASE      | (C1--C2)     | C2: C1 converted to uppercase|
 | 48,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
-| 48,4  | STRCPY     | (S --)       | Copy string S to string D|
-| 48,5  | STRCAT     | (S D--)      | Concatenate string S to string D|
-| 48,6  | STRCATC    | (D C--)      | Concatenate char C to string D|
-| 48,7  | STRLEN     | (S--N)       | N: length of string S|
-| 48,8  | STREQ      | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (case sensitive)|
-| 48,9  | STREQI     | (S1 S2--FL)  | FL: 1 if F1 = F2, else 0 (not case sensitive)|
+| 48,4  | S-CPY      | (D S--)      | Copy string S to string D|
+| 48,5  | S-CAT      | (D S--)      | Concatenate string S to string D|
+| 48,6  | S-CATC     | (D C--)      | Concatenate char C to string D|
+| 48,7  | S-LEN      | (S--N)       | N: length of string S|
+| 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if F1 = F2, else 0 (case sensitive)|
+| 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if F1 = F2, else 0 (not case sensitive)|
 
 ### Floating point opcodes are 2-bytes, starting with 49
 |Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
+| :--   | :--        | :--          | :-- |
 | 49,0  | F+         | (F1 F2--F3)  | Add F1 and F2, leaving F3|
 | 49,1  | F-         | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
 | 49,2  | F*         | (F1 F2--F3)  | Multiply F1 and F2, leaving F3|
 | 49,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
 | 49,4  | F/         | (F1 F2--F3)  | Divide F1 by F2, leaving F3|
-| 49,5  | F=         | (F1 F2--FL)  | FL: 1 if F1 = F2, else 0|
-| 49,6  | F<         | (F1 F2--FL)  | FL: 1 if F1 < F2, else 0|
-| 49,7  | F>         | (F1 F2--FL)  | FL: 1 if F1 > F2, else 0|
+| 49,5  | F=         | (F1 F2--F)   | F: 1 if F1 = F2, else 0|
+| 49,6  | F<         | (F1 F2--F)   | F: 1 if F1 < F2, else 0|
+| 49,7  | F>         | (F1 F2--F)   | F: 1 if F1 > F2, else 0|
 | 49,8  | F2I        | (F1--N)      | Convert double F1 into an integer N|
 | 49,9  | I2F        | (N--F1)      | Convert integer N into a double F1|
 | 49,10 | F.         | (F1--)       | Output F1 using the "%g" C format string|
@@ -241,7 +241,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ### Opcodes for PCs (Windows and Linux)
 |Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
+| :-- | :--    | :--        | :-- |
 | 100 | SYSTEM | (A--)      | Call system(A)|
 | 101 | FOPEN  | (N M--H)   | N: FileName, M: Mode (e.g. - "r+b"), H: Handle|
 | 102 | FCLOSE | (H--)      | Close file with handle H|
@@ -251,7 +251,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ### Opcodes for Development Boards
 |Opcode|Word|Stack|Description|
-| :-- | :-- | :-- | :-- |
+| :-- | :--        | :--     | :-- |
 | 110 | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
 | 111 | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
 | 112 | PIN-PULLUP | (P--)   | pinMode(P, INPUT_PULLUP)|
@@ -262,7 +262,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## Built-in c3 system-information words
 |Word|Stack|Description|
-| :-- | :-- | :-- |
+| :--           | :--      | :-- |
 | VERSION       | (--N)    | N: c3 version*100 (e.g. - 147 => v1.47).|
 | MEM           | (--A)    | A: Start address for the MEMORY area.|
 | MEM-SZ        | (--N)    | A: The size of the MEMORY area in bytes.|

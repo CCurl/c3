@@ -2,10 +2,10 @@
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
 void sysLoad() {
-    char *m2n = "-ML- %s %d %d 3 -MLX-";
-    char *m2i = "-ML- %s %d %d 3 -MLX- INLINE";
-    char *m1i = "-ML- %s %d    3 -MLX- INLINE";
-    char *lit = ": %s %d ; INLINE";
+    const char *m2n = "-ML- %s %d %d 3 -MLX-";
+    const char *m2i = "-ML- %s %d %d 3 -MLX- INLINE";
+    const char *m1i = "-ML- %s %d    3 -MLX- INLINE";
+    const char *lit = ": %s %d ; INLINE";
 
     // Bootstrap ...
     parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
@@ -204,7 +204,7 @@ void sysLoad() {
     ParseLine(": 0sp 0 (sp) ! ;");
     ParseLine(": depth (sp) @ 1- ;");
     ParseLine(": .s '(' emit space depth ?dup if");
-    ParseLine("    0 do (stk) i 1+ cells + @ . loop");
+    ParseLine("    0 do (stk) i 1+ 8 * + @ . loop");
     ParseLine("    then ')' emit ;");
     ParseLine(": dump ( a n-- ) for dup c@ . 1+ next drop ;");
     ParseLine(": T3 ( --zstr end )   +regs   >in ++");
@@ -231,7 +231,7 @@ void sysLoad() {
     ParseLine(": ? @ . ;");
     ParseLine(": lshift ( n1 s--n2 ) 0 do 2* loop ;");
     ParseLine(": rshift ( n1 s--n2 ) 0 do 2/ loop ;");
-    ParseLine(": load next-word drop 1- (load) ;");
+    ParseLine(": load next-word DROP (load) ;");
     ParseLine(": load-abort #99 state ! ;");
     ParseLine(": loaded? if 2drop load-abort then ;");
     ParseLine("variable T0 2 cells allot");

@@ -13,7 +13,7 @@ typedef double flt_t;
 #include "sys-init.h"
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;
-typedef union { se_t stk[STK_SZ+1]; int sp; } stk_t;
+typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 enum {
