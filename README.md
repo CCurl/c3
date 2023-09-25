@@ -67,7 +67,7 @@ An example usage of temporary words:
 ## Inline words
 In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the first EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space as well. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
 
-## Notes on output formatting in ZTYPE (aka - ."):
+## Notes on output formatting in ZTYPE and '."':
 - %b: output TOS as a binary number
 - %c: output TOS as a character
 - %d: output TOS as an integer (base 10)
