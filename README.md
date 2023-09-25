@@ -176,7 +176,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |  34 | AND        | (A B--C)     | C: A bitwise-AND B|
 |  35 | OR         | (A B--C)     | C: A bitwise-OR B|
 |  36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-|  37 | FOR        | (--)         | ?????|
+|  37 | UNUSED     | (--)         | ?????|
 |  38 | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
 |  39 | iX         | (--)         | Increment register X|
 |  30 | dX         | (--)         | Decrement register X|
