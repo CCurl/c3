@@ -19,9 +19,9 @@ typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 enum {
     STOP = 0, LIT1, LIT, EXIT, CALL, JMP, JMPZ, JMPNZ,
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
-    ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, NOT,
+    ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, EQ0,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR, FOR, ZTYPE,
+    COM, AND, OR, XOR, UNUSED1, ZTYPE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
     SYS_OPS, STR_OPS, FLT_OPS
@@ -354,7 +354,7 @@ next:
         NCASE LT: t1=pop(); TOS = (TOS<t1);
         NCASE EQ: t1=pop(); TOS = (TOS==t1);
         NCASE GT: t1=pop(); TOS = (TOS>t1);
-        NCASE NOT: TOS = (TOS==0);
+        NCASE EQ0: TOS = (TOS==0);
         NCASE RTO: rpush((char *)pop());
         NCASE RFETCH: push((cell_t)RTOS);
         NCASE RFROM: push((cell_t)rpop());
@@ -366,7 +366,7 @@ next:
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
-        NCASE FOR: printString("FOR not implemented");
+        NCASE UNUSED1: printString("-unused1-");
         NCASE ZTYPE: doType(0);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
         NCASE REG_D: reg[*(pc++)+reg_base]--;

@@ -39,8 +39,8 @@ void sysLoad() {
     parseF(m1i, "<", LT);
     parseF(m1i, "=", EQ);
     parseF(m1i, ">", GT);
-    parseF(m1i, "0=", NOT);
-    parseF(m1i, "NOT", NOT);
+    parseF(m1i, "0=", EQ0);
+    parseF(m1i, "NOT", EQ0);
     parseF(m1i, ">R", RTO);
     parseF(m1i, "R@", RFETCH);
     parseF(m1i, "R>", RFROM);
@@ -52,6 +52,7 @@ void sysLoad() {
     parseF(m1i, "AND", AND);
     parseF(m1i, "OR", OR);
     parseF(m1i, "XOR", XOR);
+    // parseF(m1i, "UNUSED1", UNUSED1);
     parseF(m1i, "ZTYPE", ZTYPE);
     parseF(lit, "(ZTYPE)", ZTYPE);
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
