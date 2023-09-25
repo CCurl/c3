@@ -71,7 +71,7 @@ stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t fileStk[10], fileSp, input_fp, output_fp;
 cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
-char mem[MEM_SZ], vars[VARS_SZ], tib[256], WD[32];
+char code[CODE_SZ], vars[VARS_SZ], tib[256], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
@@ -186,7 +186,7 @@ int doFind(const char *nm) {
     }
     int len = strLen(nm);
     dict_t *dp = last;
-    while (dp < (dict_t*)&mem[MEM_SZ]) {
+    while (dp < (dict_t*)&code[CODE_SZ]) {
         if ((len==dp->len) && strEq(nm, dp->name, 0)) {
             push(dp->xt);
             push(dp->f);
@@ -455,9 +455,9 @@ void parseF(const char *fmt, ...) {
 #include "sys-load.h"
 
 void c3Init() {
-    here = &mem[0];
+    here = &code[0];
     vhere = &vars[0];
-    last = (dict_t*)&mem[MEM_SZ];
+    last = (dict_t*)&code[CODE_SZ];
     base = 10;
     DSP = RSP = reg_base = 0;
     sysLoad();
@@ -467,7 +467,7 @@ void c3Init() {
     tempWords[9].f = IS_IMMEDIATE;
 
     ParseLine("version 100 /mod .\" c3 - v%d.%d - Chris Curl%n\"");
-    ParseLine("here mem - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
+    ParseLine("here code - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
     ParseLine("vhere vars - .\" %d variable bytes used, \" vars-end vhere - .\" %d bytes free.\"");
     ParseLine(": benches forget \" benches.c3\" (load) ;");
     ParseLine(": sb forget \" sandbox.c3\" (load) ;");

@@ -18,17 +18,17 @@ The goals for c3 are:
 
 ## Notes about c3:
 - c3 is NOT an ANSI-standard Forth system.
-- Core strings are null-terminated, not counted.
+- Strings in c3 are null-terminated, not counted.
 - The user can add counted strings if desired.
-- The dictionary starts at the end of the MEM area and grows down.
+- There are 2 separate memory areas: CODE and VARIABLE.
+- The dictionary starts at the end of the CODE area and grows down.
 - The dictionary search is not case-sensitive.
-- The VARIABLE space is separated from the MEM space.
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9. There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
 The names of the register words are case-sensitive: (r0-r9, not R0-R9).
 
-Note: The support for registers is built into c3, so they do NOT show up in "WORDS".
+**Note:** The support for registers is built into c3, so they do NOT show up in "WORDS".
 
 - +regs   allocate 10 new registers.
 - r4      push register 4 to the stack.
@@ -109,12 +109,12 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## Default sizes for PC-based systems
 - The default NAME_LEN is 13.
-- The default MEM_SZ is 128K bytes (code and distionary).
-- The default VARS_SZ is 4MB bytes (strings and variables).
-- The default STK_SZ is 64 CELLS (data and return stacks).
-- The default LSTK_SZ is 30 CELLS (loop stack, multiple of 3).
-- The default REGS_SZ is 100 CELLS (register stack, multiple of 10).
-- These can be easily changed in the sys-init.h file.
+- The default CODE_SZ is 128K bytes (code and dictionary).
+- The default VARS_SZ is  4MB bytes (strings and variables).
+- The default STK_SZ  is   64 CELLS (data and return stacks).
+- The default LSTK_SZ is   30 CELLS (loop stack, multiple of 3).
+- The default REGS_SZ is  100 CELLS (register stack, multiple of 10).
+- These are defined in the sys-init.h file.
 
 ## Building c3:
 - Windows: there is a c3.sln file for Visual Studio
@@ -127,9 +127,9 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
   - But c3 is minimal enough that it should be easy to port to an Apple system
 - Arduino: there is a c3.ino file
   - I use the Arduino IDE v2.0
-  - Edit the section where isBOARD is defined to set the sizes for the board
+  - Edit the section where isBOARD is defined to set the configuration for the board
   - For the RPI Pico and Teensy 4.0, I use:
-    - MEM_SZ:    64K
+    - CODE_SZ:   64K
     - VARS_SZ:   96K
     - STK_SZ:    32
     - LSTK_SZ:   30
@@ -138,7 +138,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## c3 Opcode / Word reference
 |Opcode|Word|Stack|Description|
-| :-- | :--       | :--          | :-- |
+| :-- | :--        | :--          | :-- |
 |   0 | STOP       | (--)         | Stops the runtime engine|
 |   1 | LIT1       | (--n)        | Pushes next BYTE onto the stack|
 |   2 | LIT        | (--N)        | Pushes next CELL onto the stack|
@@ -188,7 +188,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |  46 | -REGS      | (--)         | Restore last set of registers|
 
 ### System opcodes are 2-bytes, starting with 47
-|Opcode|Word|Stack|Description|
+|Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 | 47,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
 | 47,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
@@ -209,7 +209,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 47,16 | QTYPE      | (A--)        | Quick-type: Output string A to (output_fp), no formatting|
 
 ### String opcodes are 2-bytes, starting with 48
-|Opcode|Word|Stack|Description|
+|Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 | 48,0  | S-TRUNC    | (S--)        | Truncate string S|
 | 48,1  | LCASE      | (C1--C2)     | C2: C1 converted to lowercase|
@@ -223,7 +223,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if F1 = F2, else 0 (not case sensitive)|
 
 ### Floating point opcodes are 2-bytes, starting with 49
-|Opcode|Word|Stack|Description|
+|Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 | 49,0  | F+         | (F1 F2--F3)  | Add F1 and F2, leaving F3|
 | 49,1  | F-         | (F1 F2--F3)  | Subtract F2 from F1, leaving F3|
@@ -240,32 +240,32 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 49,12 | TANH       | (F1--F2)     | F2: the hyperbolic tangent of F1
 
 ### Opcodes for PCs (Windows and Linux)
-|Opcode|Word|Stack|Description|
-| :-- | :--    | :--        | :-- |
-| 100 | SYSTEM | (A--)      | Call system(A)|
-| 101 | FOPEN  | (N M--H)   | N: FileName, M: Mode (e.g. - "r+b"), H: Handle|
-| 102 | FCLOSE | (H--)      | Close file with handle H|
-| 103 | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
-| 104 | FWRITE | (A N H--)  | Write N bytes to file H to address A|
-| 105 | (LOAD) | (A--)      | Load from file A|
+|Opcode|Word    |Stack       |Description|
+| :--  | :--    | :--        | :-- |
+| 100  | SYSTEM | (A--)      | Call system(A)|
+| 101  | FOPEN  | (N M--H)   | N: FileName, M: Mode (e.g. - "r+b"), H: Handle|
+| 102  | FCLOSE | (H--)      | Close file with handle H|
+| 103  | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
+| 104  | FWRITE | (A N H--)  | Write N bytes to file H to address A|
+| 105  | (LOAD) | (A--)      | Load from file A|
 
 ### Opcodes for Development Boards
-|Opcode|Word|Stack|Description|
-| :-- | :--        | :--     | :-- |
-| 110 | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
-| 111 | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
-| 112 | PIN-PULLUP | (P--)   | pinMode(P, INPUT_PULLUP)|
-| 113 | DPIN@      | (P--N)  | N = digitalRead(P)|
-| 114 | APIN@      | (P--N)  | N = analogRead(P)|
-| 115 | DPIN!      | (N P--) | digitalWrite(P, N)|
-| 116 | APIN!      | (N P--) | analogWrite(P, N)|
+|Opcode|Word        |Stack    |Description|
+| :--  | :--        | :--     | :-- |
+| 110  | PIN-INPUT  | (P--)   | pinMode(P, INPUT)|
+| 111  | PIN-OUTPUT | (P--)   | pinMode(P, OUTPUT)|
+| 112  | PIN-PULLUP | (P--)   | pinMode(P, INPUT_PULLUP)|
+| 113  | DPIN@      | (P--N)  | N = digitalRead(P)|
+| 114  | APIN@      | (P--N)  | N = analogRead(P)|
+| 115  | DPIN!      | (N P--) | digitalWrite(P, N)|
+| 116  | APIN!      | (N P--) | analogWrite(P, N)|
 
 ## Built-in c3 system-information words
-|Word|Stack|Description|
+|Word           |Stack     |Description|
 | :--           | :--      | :-- |
 | VERSION       | (--N)    | N: c3 version*100 (e.g. - 147 => v1.47).|
-| MEM           | (--A)    | A: Start address for the MEMORY area.|
-| MEM-SZ        | (--N)    | A: The size of the MEMORY area in bytes.|
+| CODE          | (--A)    | A: Start address for the CODE area.|
+| CODE-SZ       | (--N)    | A: The size of the CODE area in bytes.|
 | VARS          | (--A)    | A: Start address for the VARIABLES area.|
 | VARS-SZ       | (--N)    | N: The size of the VARIABLES area in bytes.|
 | (REGS)        | (--A)    | A: Start address for the REGISTERS (REGS_SZ CELLs).|

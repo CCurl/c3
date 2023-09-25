@@ -116,8 +116,8 @@ void sysLoad() {
     parseF(": (RSTK)      $%lx ;", &rs.stk[0].c);
     parseF(": TIB         $%lx ;", &tib[0]);
     parseF(": >IN         $%lx ;", &in);
-    parseF(": MEM         $%lx ;", &mem[0]);
-    parseF(": MEM-SZ      #%ld ;", MEM_SZ);
+    parseF(": CODE        $%lx ;", &code[0]);
+    parseF(": CODE-SZ     #%ld ;", CODE_SZ);
     parseF(": VARS        $%lx ;", &vars[0]);
     parseF(": VARS-SZ     #%ld ;", VARS_SZ);
     parseF(": (VHERE)     $%lx ;", &vhere);
@@ -136,7 +136,7 @@ void sysLoad() {
     ParseLine(": ] 1 state ! ;");
     ParseLine(": last (last) @ ;");
     ParseLine(": here (here) @ ;");
-    ParseLine(": mem-end   mem  mem-sz  + ;");
+    ParseLine(": code-end   code  code-sz  + ;");
     ParseLine(": vars-end  vars vars-sz + ;");
     ParseLine(": ++ dup @ 1+ swap ! ; inline");
     ParseLine(": -- dup @ 1- swap ! ; inline");
@@ -221,7 +221,7 @@ void sysLoad() {
     ParseLine("    (vhere) ! (lit) c, , (ztype) c, ; immediate");
     ParseLine(": .word cell + 1+ 1+ ztype ; inline");
     ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
-    ParseLine("        r2 mem-end < while");
+    ParseLine("        r2 code-end < while");
     ParseLine("        r1+ #10 > if 0 s1 cr then");
     ParseLine("        i3 r2 .word tab r2 word-sz + s2");
     ParseLine("    repeat");
