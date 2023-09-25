@@ -34,16 +34,17 @@ enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
 char *doUser(char *pc, int ir) {
     switch (ir) {
-    case SYSTEM: system(cpop());                                                    return pc;
-    case FOPEN:  y=cpop(); TOS=(cell_t)fopen(CTOS, y);                              return pc;
-    case FCLOSE: t1=pop(); fclose((FILE*)t1);                                       return pc;
-    case FREAD:  t1=pop(); n1=pop(); TOS = fread( CTOS, 1, n1, (FILE*)t1);          return pc;
-    case FWRITE: t1=pop(); n1=pop(); TOS = fwrite(CTOS, 1, n1, (FILE*)t1);          return pc;
+    case SYSTEM: system(cpop());                                                return pc;
+    case FOPEN:  y=cpop(); TOS=(cell_t)fopen(CTOS, y);                          return pc;
+    case FCLOSE: t1=pop(); fclose((FILE*)t1);                                   return pc;
+    case FREAD:  t1=pop(); n1=pop(); y = CTOS;
+        TOS = feof((FILE*)t1) ? 0 : fread( y, 1, n1, (FILE*)t1);                return pc;
+    case FWRITE: t1=pop(); n1=pop(); TOS = fwrite(CTOS, 1, n1, (FILE*)t1);      return pc;
     case FLOAD:  y=cpop(); t1=(cell_t)fopen(y, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t1) { input_fp = t1; ClearTib; }
-            else { printStringF("-noFile[%s]-", y); }                               return pc;
-    default:                                                                        return 0;
+            else { printStringF("-noFile[%s]-", y); }                           return pc;
+    default:                                                                    return 0;
     }
 }
 
