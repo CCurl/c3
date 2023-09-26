@@ -198,8 +198,8 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 47,5  | :          | (--)         | Execute CREATE, then set STATE=1|
 | 47,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
 | 47,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
-| 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. Push (XT FL 1) if found, else push only (0)|
-| 47,9  | NEXT-WORD  | (--A)        | A: Address of the next word from the input stream|
+| 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. If found, (XT FL 1), else only (0)|
+| 47,9  | NEXT-WORD  | (--A N)      | A: Address of the next word from the input stream, N: length of A|
 | 47,10 | TIMER      | (--N)        | N: current system time in milliseconds|
 | 47,11 | C,         | (C--)        | Standard Forth "C,"|
 | 47,12 | ,          | (N--)        | Standard Forth ","|
@@ -243,11 +243,11 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |Opcode|Word    |Stack       |Description|
 | :--  | :--    | :--        | :-- |
 | 100  | SYSTEM | (A--)      | Call system(A)|
-| 101  | FOPEN  | (N M--H)   | N: FileName, M: Mode (e.g. - "r+b"), H: Handle|
+| 101  | FOPEN  | (NM MD--H) | NM: FileName, MD: Mode (e.g. - "rt"), H: Handle|
 | 102  | FCLOSE | (H--)      | Close file with handle H|
-| 103  | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read|
-| 104  | FWRITE | (A N H--)  | Write N bytes to file H to address A|
-| 105  | (LOAD) | (A--)      | Load from file A|
+| 103  | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
+| 104  | FWRITE | (A N H--)  | Write N bytes to file H from address A|
+| 105  | (LOAD) | (NM--)     | Load from file NM|
 
 ### Opcodes for Development Boards
 |Opcode|Word        |Stack    |Description|

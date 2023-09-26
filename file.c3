@@ -9,14 +9,14 @@
 : fopen-rw ( fn--fh ) " r+b" FOPEN ;
 
 variable T0
-: fgetc ( fh--c f )
-    T0 0 OVER ! SWAP 1 SWAP FREAD T0 C@ SWAP ;
+: fgetc ( fh--ch num-read )
+    0 T0 C! T0 1 FREAD T0 C@ SWAP ;
 
 : fgets ( a fh--eof )
     +REGS  s2 s1  0 s4
     r1 S-TRUNC
     BEGIN
-        r2 fgetc  s5 s3
+        r2 fgetc s5 s3
         r5 0=    IF  r4 0= -REGS EXIT  THEN
         r3 10 =  IF  0     -REGS EXIT  THEN
         r3 13 <> IF  r1 r3 S-CATC  i4  THEN
@@ -28,7 +28,10 @@ variable T0
 : fputc ( c  fh-- ) T1  EMIT   T2 ;
 : fputs ( sz fh-- ) T1  ZTYPE  T2 ;
 
-\ VARIABLE ln 128 ALLOT
-\ " file.c3" fopen-rt s1 CR r1 . CR
-\ : dump-f BEGIN ln r1 fgets IF EXIT THEN ln QTYPE CR AGAIN ;
-\ dump-f r1 FCLOSE
+: T0 vhere #256 + ;
+: cat +REGS
+    NEXT-WORD DROP fopen-rt s1
+    BEGIN
+        r1 0= IF -REGS EXIT THEN
+        T0 r1 fgets IF r1 FCLOSE 0 s1 ELSE T0 QTYPE CR THEN
+    AGAIN ;
