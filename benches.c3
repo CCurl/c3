@@ -1,6 +1,6 @@
 \ Some benchmarks
 
-: ms . ." usec" ;
+: ms ." (%d usec)" ;
 : elapsed timer swap - ms ;
 : mil #1000 dup * * ;
 
@@ -18,13 +18,14 @@ variable num
         i 3 prime? if num ++ then 1 +i
     loop num ? ;
 
-: bm1 cr ." Bench 1: decrement loop, " dup . ." iterations ... "
+: T0 dup ." %d iterations ..." ;
+: bm1 cr ." Bench 1: decrement loop, " T0
     timer swap begin 1- -while drop elapsed ;
-: bm2 cr ." Bench 2: register decrement loop, " dup . ." iterations ... "
+: bm2 cr ." Bench 2: register decrement loop, " T0
     s1 timer begin r1- while repeat elapsed ;
-: bm3 cr ." Bench 3: empty do/loop, " dup . ." iterations ... "
+: bm3 cr ." Bench 3: empty do/loop, " T0
     timer swap 0 do loop elapsed ;
-: bm4 cr ." Bench 4: empty for/next, " dup . ." iterations ... "
+: bm4 cr ." Bench 4: empty for/next, " T0
     timer swap for next elapsed ;
 : bm5 cr ." Bench 5: number of primes in " dup . ." ... "
     timer swap num-primes elapsed ;
@@ -35,4 +36,4 @@ variable num
 250 mil bm2
 250 mil bm3
 250 mil bm4
-2 mil bm5
+  2 mil bm5

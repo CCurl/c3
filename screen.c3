@@ -2,13 +2,11 @@
 
 ' cls loaded?
 
-: t       ( -- )       27 emit '[' emit ; inline
-: T0      ( n1 n2-- )  t (.) ';' emit (.) ;
-: cur-on  ( -- )       t ." ?25h" ;
-: cur-off ( -- )       t ." ?25l" ;
-: ->yx    ( y x-- )    T0 'H' emit ;
-: ->xy    ( x y-- )    swap ->yx ;
-: cls     ( -- )       t ." 2J" 1 dup ->yx ;
-: clr-eol ( -- )       t ." 0K" ;
-: color   ( bg fg-- )  T0 'm' emit ;
+: cur-on  ( -- )       ." %e[?25h" ;
+: cur-off ( -- )       ." %e[?25l" ;
+: ->xy    ( y x-- )    ." %e[%d;%dH" ;
+: ->yx    ( x y-- )    swap ->xy ;
+: cls     ( -- )       ." %e[2J%e[1;1H" ;
+: clr-eol ( -- )       ." %e[0K" ;
+: color   ( bg fg-- )  ." %e[%d;%dm" ;
 : fg      ( -- )       40 swap color ;

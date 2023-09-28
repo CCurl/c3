@@ -1,5 +1,5 @@
 // Support for development boards
-// NOTE: this is a *.ipp file because the Arduino IDE doesn't like *.inc files
+// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
 #include <Arduino.h>
 
@@ -10,7 +10,7 @@
 #define mySerial Serial
 extern "C" {
     typedef long cell_t;
-    enum { OPEN_INPUT = IMMEDIATE+1, OPEN_OUTPUT, OPEN_PULLUP,
+    enum { OPEN_INPUT = 110, OPEN_OUTPUT, OPEN_PULLUP,
         PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
     };
     extern void push(cell_t);
@@ -38,15 +38,17 @@ extern "C" {
 cell_t sysTime() { return micros(); }
 
 void loadStartupWords() {
+    ParseLine("-ML- PIN-INPUT   100 3 -MLX- inline");
+    ParseLine("-ML- PIN-OUTPUT  101 3 -MLX- inline");
+    ParseLine("-ML- PIN-PULLUP  102 3 -MLX- inline");
+    ParseLine("-ML- DPIN@       103 3 -MLX- inline");
+    ParseLine("-ML- APIN@       104 3 -MLX- inline");
+    ParseLine("-ML- DPIN!       105 3 -MLX- inline");
+    ParseLine("-ML- APIN!       106 3 -MLX- inline");
+}
+
+void loadUserWords() {
     ParseLine(": isPC 0 ;");
-    #include "sys-load.ipp"
-    ParseLine("-ML- PIN-INPUT   58 3 -MLX- inline");
-    ParseLine("-ML- PIN-OUTPUT  59 3 -MLX- inline");
-    ParseLine("-ML- PIN-PULLUP  60 3 -MLX- inline");
-    ParseLine("-ML- DPIN@       61 3 -MLX- inline");
-    ParseLine("-ML- APIN@       62 3 -MLX- inline");
-    ParseLine("-ML- DPIN!       63 3 -MLX- inline");
-    ParseLine("-ML- APIN!       64 3 -MLX- inline");
 }
 
 char *doUser(char *pc, int ir) {

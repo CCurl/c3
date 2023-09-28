@@ -1,10 +1,11 @@
 // System initialization logic for different types of systems
-// NOTE: this is a *.ipp file because the Arduino IDE doesn't like *.inc files
+// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
 extern void printString(const char *s);
 extern void printChar(const char c);
 extern void ParseLine(const char *s);
 extern void loadStartupWords();
+extern void loadUserWords();
 extern char *doUser(char *pc, int ir);
 extern cell_t sysTime();
 
@@ -22,53 +23,51 @@ extern cell_t sysTime();
 #include <unistd.h>
 #include <termios.h>
 #define isPC
-#define MD_NORMAL 0
-#define MD_RAW    1
-void ttyMode(int mode) {
-    static struct termios origt, rawt;
-    static int curMode = -1;
-    if (curMode == -1) {
-        curMode = MD_NORMAL;
-        tcgetattr( STDIN_FILENO, &origt);
-        cfmakeraw(&rawt);
-    }
-    if (mode != curMode) {
-        if (mode == MD_RAW) {
-            tcsetattr( STDIN_FILENO, TCSANOW, &rawt);
-        } else {
-            tcsetattr( STDIN_FILENO, TCSANOW, &origt);
-        }
-        curMode = mode;
-    }
+static struct termios normT, rawT;
+static int isTtyInit = 0;
+void ttyInit() {
+    tcgetattr( STDIN_FILENO, &normT);
+    cfmakeraw(&rawT);
+    isTtyInit = 1;
+}
+void ttyModeNorm() {
+    if (!isTtyInit) { ttyInit(); }
+    tcsetattr( STDIN_FILENO, TCSANOW, &normT);
+}
+void ttyModeRaw() {
+    if (!isTtyInit) { ttyInit(); }
+    tcsetattr( STDIN_FILENO, TCSANOW, &rawT);
 }
 int qKey() {
     struct timeval tv;
     fd_set rdfs;
-    ttyMode(MD_RAW);
+    ttyModeRaw();
     tv.tv_sec = 0;
     tv.tv_usec = 0;
     FD_ZERO(&rdfs);
     FD_SET(STDIN_FILENO, &rdfs);
     select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
     int x = FD_ISSET(STDIN_FILENO, &rdfs);
-    ttyMode(MD_NORMAL);
+    ttyModeNorm();
     return x;
 }
 int key() {
-    ttyMode(MD_RAW);
+    ttyModeRaw();
     int x = getchar();
-    ttyMode(MD_NORMAL);
+    ttyModeNorm();
     return x;
 }
 
 #else
 
-    // Not Windows or Linux, must be a development board
+    // Not a PC, must be a development board
+    // NOTE: Change these values for a specific board
+    //       I use these for the Teensy-4 and the Pico
     #define isBOARD 1
 
     extern int qKey();
     extern int key();
-    #define MEM_SZ             64*1024
+    #define CODE_SZ            64*1024
     #define VARS_SZ            96*1024
     #define STK_SZ             32
     #define LSTK_SZ            30
@@ -88,8 +87,8 @@ int key() {
     cell_t Fetch(char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
 #endif
 
-#ifndef MEM_SZ
-    #define MEM_SZ            128*1024
+#ifndef CODE_SZ
+    #define CODE_SZ           128*1024
     #define VARS_SZ        4*1024*1024
     #define STK_SZ             64
     #define LSTK_SZ            30
