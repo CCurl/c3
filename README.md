@@ -146,11 +146,11 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |   4 | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
 |   5 | JUMP       | (--)         | Jump: next CELL is address|
 |   6 | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
-|   7 | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address|
+|   7 | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
 |   8 | !          | (N A--)      | Store CELL N to address A|
 |   9 | C!         | (B A--)      | Store BYTE B to address A|
-|  10 | @          | (--)         | Fetch CELL N FROM address A|
-|  11 | C@         | (--)         | Fetch BYTE B FROM address A|
+|  10 | @          | (A--N)       | Fetch CELL N FROM address A|
+|  11 | C@         | (A--B)       | Fetch BYTE B FROM address A|
 |  12 | DUP        | (N--N N)     | Duplicate TOS|
 |  15 | DROP       | (A B--A)     | Drop TOS|
 |  13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
@@ -192,7 +192,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | :--   | :--        | :--          | :-- |
 | 47,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
 | 47,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
-| 47,2  | (.)        | (N--)        | Perform ITOA on N, then TYPEZ it (no trailing space)|
+| 47,2  | (.)        | (N--)        | Perform ITOA on N, then QTYPE it (no trailing space)|
 | 47,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
 | 47,4  | ITOA       | (N--A)       | A: a string version of N in the current BASE|
 | 47,5  | :          | (--)         | Execute CREATE, then set STATE=1|
@@ -288,7 +288,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 ## c3 startup behavior
 When c3 starts:
 - For every parameter on the command line:
-  - If c3 can open the parameter as a file, load it.
+  - If c3 can open the parameter as a file, queue it up to be loaded.
   - Else, set the (numeric only) value to a register based on the parameter's position.
 
 ## Adding new opcodes to c3
