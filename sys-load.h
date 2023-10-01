@@ -67,6 +67,7 @@ void sysLoad() {
     // parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
     parseF(m2i, "(.)",       SYS_OPS, DOT);
     parseF(m2i, "ITOA",      SYS_OPS, ITOA);
+    parseF(m2i, "ATOI",      SYS_OPS, ATOI);
     parseF(m2i, "CREATE",    SYS_OPS, CREATE);
     parseF(m2i, "'",         SYS_OPS, FIND);
     parseF(m2i, "NEXT-WORD", SYS_OPS, WORD);
@@ -127,7 +128,7 @@ void sysLoad() {
     parseF(": STATE       $%lx ;", &state);
     parseF(": BASE        $%lx ;", &base);
     parseF(": WORD-SZ     #%ld ;", sizeof(dict_t));
-    parseF(": BYE %d STATE ! ;",   ALL_DONE);
+    parseF(": BYE  %d STATE !  ;", ALL_DONE);
     parseF(": CELL %d ; inline",   CELL_SZ);
 
     // Main system
@@ -136,7 +137,7 @@ void sysLoad() {
     ParseLine(": ] 1 state ! ;");
     ParseLine(": last (last) @ ;");
     ParseLine(": here (here) @ ;");
-    ParseLine(": code-end   code  code-sz  + ;");
+    ParseLine(": code-end  code code-sz + ;");
     ParseLine(": vars-end  vars vars-sz + ;");
     ParseLine(": ++ dup @ 1+ swap ! ; inline");
     ParseLine(": -- dup @ 1- swap ! ; inline");

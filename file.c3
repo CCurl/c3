@@ -8,9 +8,9 @@
 : fopen-wb ( fn--fh ) " wb"  FOPEN ;
 : fopen-rw ( fn--fh ) " r+b" FOPEN ;
 
-variable T0
+VARIABLE T0
 : fgetc ( fh--ch num-read )
-    0 T0 C! T0 1 FREAD T0 C@ SWAP ;
+    0 T0 C! >R T0 1 R> FREAD T0 C@ SWAP ;
 
 : fgets ( a fh--eof )
     +REGS  s2 s1  0 s4
@@ -22,11 +22,17 @@ variable T0
         r3 13 <> IF  r1 r3 S-CATC  i4  THEN
     AGAIN ;
 
-: T1 ( fh-- ) (output_fp) DUP @ T0 ! ! ;  \ Save and set output_fp
-: T2 ( -- )   T0 @ (output_fp) ! ;        \ Restore output_fp
+\ Words to redirect output
+: output-fp ( --H )  (output_fp) @ ;
+: ->file    ( H-- )  (output_fp) ! ;
+: ->stdout  ( -- )   0 ->file ;
 
-: fputc ( c  fh-- ) T1  EMIT   T2 ;
-: fputs ( sz fh-- ) T1  ZTYPE  T2 ;
+VARIABLE T0
+: T1 ( H-- )  output-fp T0 ! ->file ;  \ Save and redirect
+: T2 ( -- )   T0 @ ->file ;            \ Restore output_fp
+
+: fputc ( ch H-- )  T1  EMIT   T2 ;
+: fputs ( sz H-- )  T1  QTYPE  T2 ;
 
 : T0 vhere #256 + ;
 : cat +REGS
