@@ -198,7 +198,7 @@ void sysLoad() {
     ParseLine(": abs  dup 0 < if negate then ;");
     ParseLine(": min  over over > if swap then drop ;");
     ParseLine(": max  over over < if swap then drop ;");
-    ParseLine(": btw +regs s3 s2 s1 r1 r2 >= r1 r3 <= and -regs ;");
+    ParseLine(": btw +regs s3 s2 s1 r2 r1 <= r1 r3 <= and -regs ;");
     ParseLine(": i  (i) @ ;");
     ParseLine(": j  (i) 3 cells - @ ;");
     ParseLine(": +i (i) +! ;");
@@ -217,8 +217,8 @@ void sysLoad() {
     ParseLine("        if 0 r8+ c!   r9 r8 -regs   exit then");
     ParseLine("        r1   r8+ c!");
     ParseLine("    again ;");
-    ParseLine(": \" ( --zstr ) T3 state @ 0= if drop exit then (vhere) ! (lit) c, , ; immediate");
-    ParseLine(": .\" ( -- )    T3 state @ 0= if drop ztype exit then");
+    ParseLine(": \" ( --SZ )  T3 state @ 0= if drop exit then (vhere) ! (lit) c, , ; immediate");
+    ParseLine(": .\" ( -- )   T3 state @ 0= if drop ztype exit then");
     ParseLine("    (vhere) ! (lit) c, , (ztype) c, ; immediate");
     ParseLine(": .word cell + 1+ 1+ ztype ; inline");
     ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
