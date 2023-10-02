@@ -439,6 +439,8 @@ void ParseLine(const char *x) {
         if (doWord(WD)) { continue; }
         printStringF("-[word:%s]?-", WD);
         if (state) { here = ToCP((last++)->xt); state = 0; }
+        while (fileSp) { fclose((FILE*)fileStk[fileSp--]); }
+        input_fp = 0;
         return;
     }
 }
