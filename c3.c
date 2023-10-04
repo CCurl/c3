@@ -43,7 +43,7 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 90 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 92 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -92,7 +92,7 @@ void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { d[i]=val; } 
 char *strEnd(char *s) { while (*s) ++s; return s; }
 void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); } *d=0; }
 void strCatC(char *d, const char c) { d=strEnd(d); *(d++)=c; *d=0; }
-void strCpy(char *d, const char *s) { *d = 0; strCat(d, s); }
+void strCpy(char *d, const char *s) { if (d != s) { *d = 0; strCat(d, s); } }
 int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
@@ -440,6 +440,8 @@ void ParseLine(const char *x) {
         if (doWord(WD)) { continue; }
         printStringF("-[word:%s]?-", WD);
         if (state) { here = ToCP((last++)->xt); state = 0; }
+        while (fileSp) { fclose((FILE*)fileStk[fileSp--]); }
+        input_fp = 0;
         return;
     }
 }

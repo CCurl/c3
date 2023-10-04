@@ -14,12 +14,11 @@ VARIABLE T0
 
 : fgets ( a fh--eof )
     +REGS  s2 s1  0 s4
-    r1 S-TRUNC
     BEGIN
-        r2 fgetc s5 s3
+        0 r1 C!  r2 fgetc s5 s3
         r5 0=    IF  r4 0= -REGS EXIT  THEN
         r3 10 =  IF  0     -REGS EXIT  THEN
-        r3 13 <> IF  r1 r3 S-CATC  i4  THEN
+        r3 13 <> IF  r3 r1+ C!  i4  THEN
     AGAIN ;
 
 \ Words to redirect output
@@ -28,16 +27,8 @@ VARIABLE T0
 : ->stdout  ( -- )   0 ->file ;
 
 VARIABLE T0
-: T1 ( H-- )  output-fp T0 ! ->file ;  \ Save and redirect
-: T2 ( -- )   T0 @ ->file ;            \ Restore output_fp
+: redirect    ( H-- )  output-fp T0 ! ->file ;  \ Save and redirect
+: restore-out ( -- )   T0 @ ->file ;            \ Restore output_fp
 
-: fputc ( ch H-- )  T1  EMIT   T2 ;
-: fputs ( sz H-- )  T1  QTYPE  T2 ;
-
-: T0 vhere #256 + ;
-: cat +REGS
-    NEXT-WORD DROP fopen-rt s1
-    BEGIN
-        r1 0= IF -REGS EXIT THEN
-        T0 r1 fgets IF r1 FCLOSE 0 s1 ELSE T0 QTYPE CR THEN
-    AGAIN ;
+: fputc ( ch H-- )  redirect  EMIT   restore-out ;
+: fputs ( sz H-- )  redirect  QTYPE  restore-out ;
