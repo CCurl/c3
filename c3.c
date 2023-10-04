@@ -29,7 +29,7 @@ enum {
 
 // NB: these skip #3 (EXIT), so they can be marked as INLINE
 enum { // System opcodes
-    INLINE=0, IMMEDIATE, DOT, ITOA = 4,
+    INLINE=0, IMMEDIATE, DOT, ITOA = 4, ATOI,
     DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
     CCOMMA, COMMA, KEY, QKEY, EMIT, QTYPE
 };
@@ -291,6 +291,7 @@ char *doSysOp(char *pc) {
         RCASE CREATE: doCreate(ToCP(0));
         RCASE FIND: push(doFind(ToCP(0)));
         RCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
+        RCASE ATOI: push(isNum(cpop()));
         RCASE TIMER: push(sysTime());
         RCASE CCOMMA: CComma(pop());
         RCASE COMMA: Comma(pop());

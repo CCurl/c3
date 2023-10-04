@@ -94,7 +94,7 @@ To bootstrap itself, c3 has a simple "machine language parser" that can create w
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-Everything in c3 can defined from those.
+Everything in c3 can be defined from those.
 
 See the sys-load.h file for details.
 
@@ -137,76 +137,81 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
     - NAME_LEN:  13
 
 ## c3 Opcode / Word reference
-|Opcode|Word|Stack|Description|
-| :-- | :--        | :--          | :-- |
-|   0 | STOP       | (--)         | Stops the runtime engine|
-|   1 | LIT1       | (--n)        | Pushes next BYTE onto the stack|
-|   2 | LIT        | (--N)        | Pushes next CELL onto the stack|
-|   3 | EXIT       | (--)         | Exit subroutine|
-|   4 | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
-|   5 | JUMP       | (--)         | Jump: next CELL is address|
-|   6 | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
-|   7 | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
-|   8 | !          | (N A--)      | Store CELL N to address A|
-|   9 | C!         | (B A--)      | Store BYTE B to address A|
-|  10 | @          | (A--N)       | Fetch CELL N FROM address A|
-|  11 | C@         | (A--B)       | Fetch BYTE B FROM address A|
-|  12 | DUP        | (N--N N)     | Duplicate TOS|
-|  15 | DROP       | (A B--A)     | Drop TOS|
-|  13 | SWAP       | (A B--B A)   | Swap TOS and NOS|
-|  14 | OVER       | (A B--A B A) | Push a copy of NOS|
-|  16 | +          | (A B--C)     | C: A + B|
-|  17 | *          | (A B--C)     | C: A * B|
-|  18 | /MOD       | (A B--C D)   | C: A modulo B, D: A divided by B|
-|  19 | -          | (A B--C)     | C: A - B|
-|  20 | 1+         | (A--B)       | Increment TOS|
-|  21 | 1-         | (A--B)       | Decrement TOS|
-|  22 | <          | (A B--F)     | If A<B, F=1, else F=0|
-|  23 | =          | (A B--F)     | If A=B, F=1, else F=0|
-|  24 | >          | (A B--F)     | If A>B, F=1, else F=0|
-|  25 | 0= , NOT   | (N--F)       | If N=0, F=1, else F=0|
-|  26 | >R         | (N--)        | Move N to return stack|
-|  27 | R@         | (--N)        | N: Copy of top of return stack|
-|  28 | R>         | (--N)        | N: Top of return stack (popped)|
-|  29 | DO         | (T F--)      | Begin a loop from F to T, set I = F|
-|  30 | LOOP       | (--)         | Increment I. Jump to DO if I<T|
-|  31 | -LOOP      | (--)         | Decrement I. Jump to DO if I>T|
-|  32 | (I)        | (--)         | Address of I, the loop index|
-|  33 | COM        | (A--B)       | B: Ones-complement of A|
-|  34 | AND        | (A B--C)     | C: A bitwise-AND B|
-|  35 | OR         | (A B--C)     | C: A bitwise-OR B|
-|  36 | XOR        | (A B--C)     | C: A bitwise-XOR B|
-|  37 | UNUSED     | (--)         | ?????|
-|  38 | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
-|  39 | iX         | (--)         | Increment register X|
-|  30 | dX         | (--)         | Decrement register X|
-|  41 | rX         | (--N)        | N: value of register X|
-|  42 | rX+        | (--N)        | N: value of register X, then decrement it|
-|  43 | rX-        | (--N)        | N: value of register X, then increment it|
-|  44 | sX         | (N--)        | Set regiser X to TOS|
-|  45 | +REGS      | (--)         | Allocate 10 new registers|
-|  46 | -REGS      | (--)         | Restore last set of registers|
+
+### NOTE:
+This is only the list of the opcodes in c3. There are alot more words in the base c3 system. See the sys-load.h file for all the words defined in the base c3 system.
+
+|Opcode |Word        |Stack         |Description|
+| :--   | :--        | :--          | :-- |
+|  0    | STOP       | (--)         | Stops the runtime engine|
+|  1    | LIT1       | (--B)        | Pushes next BYTE onto the stack|
+|  2    | LIT        | (--N)        | Pushes next CELL onto the stack|
+|  3    | EXIT       | (--)         | Exit subroutine|
+|  4    | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
+|  5    | JUMP       | (--)         | Jump: next CELL is address|
+|  6    | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
+|  7    | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
+|  8    | !          | (N A--)      | Store CELL N to address A|
+|  9    | C!         | (B A--)      | Store BYTE B to address A|
+| 10    | @          | (A--N)       | Fetch CELL N FROM address A|
+| 11    | C@         | (A--B)       | Fetch BYTE B FROM address A|
+| 12    | DUP        | (N--N N)     | Duplicate TOS|
+| 15    | DROP       | (A B--A)     | Drop TOS|
+| 13    | SWAP       | (A B--B A)   | Swap TOS and NOS|
+| 14    | OVER       | (A B--A B A) | Push a copy of NOS|
+| 16    | +          | (A B--C)     | C: A + B|
+| 17    | *          | (A B--C)     | C: A * B|
+| 18    | /MOD       | (A B--M Q)   | M: A modulo B, Q: A divided by B|
+| 19    | -          | (A B--C)     | C: A - B|
+| 20    | 1+         | (A--B)       | Increment TOS|
+| 21    | 1-         | (A--B)       | Decrement TOS|
+| 22    | <          | (A B--F)     | If A<B, F=1, else F=0|
+| 23    | =          | (A B--F)     | If A=B, F=1, else F=0|
+| 24    | >          | (A B--F)     | If A>B, F=1, else F=0|
+| 25    | 0= , NOT   | (N--F)       | If N=0, F=1, else F=0|
+| 26    | >R         | (N--)        | Move N to return stack|
+| 27    | R@         | (--N)        | N: Copy of top of return stack|
+| 28    | R>         | (--N)        | N: Top of return stack (popped)|
+| 29    | DO         | (T F--)      | Begin a loop from F to T, set I = F|
+| 30    | LOOP       | (--)         | Increment I. Jump to DO if I<T|
+| 31    | -LOOP      | (--)         | Decrement I. Jump to DO if I>T|
+| 32    | (I)        | (--A)        | A: Address of I, the loop index|
+| 33    | COM        | (A--B)       | B: Ones-complement of A|
+| 34    | AND        | (A B--C)     | C: A bitwise-AND B|
+| 35    | OR         | (A B--C)     | C: A bitwise-OR B|
+| 36    | XOR        | (A B--C)     | C: A bitwise-XOR B|
+| 37    | UNUSED     | (--)         | ?????|
+| 38    | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
+| 39,X  | iX         | (--)         | Increment register X|
+| 30,X  | dX         | (--)         | Decrement register X|
+| 41,X  | rX         | (--N)        | N: value of register X|
+| 42,X  | rX+        | (--N)        | N: value of register X, then decrement it|
+| 43,X  | rX-        | (--N)        | N: value of register X, then increment it|
+| 44,X  | sX         | (N--)        | Set regiser X to TOS|
+| 45    | +REGS      | (--)         | Allocate 10 new registers (add 10 to REG-BASE)|
+| 46    | -REGS      | (--)         | Restore last set of registers (subtract 10 from REG-BASE)|
 
 ### System opcodes are 2-bytes, starting with 47
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 | 47,0  | INLINE     | (--)         | Mark the last word in the dictionary as INLINE|
 | 47,1  | IMMEDIATE  | (--)         | Mark the last word in the dictionary as IMMEDIATE|
-| 47,2  | (.)        | (N--)        | Perform ITOA on N, then QTYPE it (no trailing space)|
+| 47,2  | (.)        | (I--)        | Perform ITOA on I, then QTYPE it (no trailing space)|
 | 47,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
-| 47,4  | ITOA       | (N--A)       | A: a string version of N in the current BASE|
-| 47,5  | :          | (--)         | Execute CREATE, then set STATE=1|
-| 47,6  | ;          | (--)         | Append EXIT to code,then set STATE=0|
-| 47,7  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
-| 47,8  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. If found, (XT FL 1), else only (0)|
-| 47,9  | NEXT-WORD  | (--A N)      | A: Address of the next word from the input stream, N: length of A|
-| 47,10 | TIMER      | (--N)        | N: current system time in milliseconds|
-| 47,11 | C,         | (C--)        | Standard Forth "C,"|
-| 47,12 | ,          | (N--)        | Standard Forth ","|
-| 47,13 | KEY        | (--B)        | B: next keypress, wait if necessary|
-| 47,14 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
-| 47,15 | EMIT       | (C--)        | Output CHAR C to (output_fp)|
-| 47,16 | QTYPE      | (A--)        | Quick-type: Output string A to (output_fp), no formatting|
+| 47,4  | ITOA       | (I--SZ)      | Convert I to string SZ in the current BASE|
+| 47,5  | ATOI       | (SZ--I F)    | Convert string SZ to I. If successful, (I 1) else only (0)|
+| 47,6  | :          | (--)         | Execute CREATE, then set STATE=1|
+| 47,7  | ;          | (--)         | Append EXIT to code,then set STATE=0|
+| 47,8  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
+| 47,9  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. If found, (XT FL 1), else only (0)|
+| 47,10 | NEXT-WORD  | (--A N)      | A: Address of the next word from the input stream, N: length of A|
+| 47,11 | TIMER      | (--N)        | N: current system time in milliseconds|
+| 47,12 | C,         | (B--)        | Standard Forth "C,"|
+| 47,13 | ,          | (N--)        | Standard Forth ","|
+| 47,14 | KEY        | (--B)        | B: next keypress, wait if necessary|
+| 47,15 | ?KEY       | (--F)        | If key was pressed, F=1, else F=0|
+| 47,16 | EMIT       | (C--)        | Output CHAR C to (output_fp)|
+| 47,17 | QTYPE      | (A--)        | Quick-type: Output string A to (output_fp), no formatting|
 
 ### String opcodes are 2-bytes, starting with 48
 |Opcode |Word        |Stack         |Description|
