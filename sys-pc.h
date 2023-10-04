@@ -2,6 +2,8 @@
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 #include <time.h>
 
+#define SC(x)         strCat(tib, x)
+
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
 cell_t sysTime() { return clock(); }

@@ -119,10 +119,8 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 ## Building c3:
 - Windows: there is a c3.sln file for Visual Studio
   - Use the x86 configuration (32-bit)
-- Linux: there is a 'make' script
-  - It uses clang and builds a 64-bit version
-  - Use -m32 to build a 32-bit version
-  - You can also use gcc if you desire
+- Linux: there is a makefile
+  - It uses clang -O3 and builds a 64-bit version
 - Apple: I do not have an Apple, so I cannot build for Apples
   - But c3 is minimal enough that it should be easy to port to an Apple system
 - Arduino: there is a c3.ino file
@@ -217,15 +215,15 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 | 48,0  | S-TRUNC    | (S--)        | Truncate string S|
-| 48,1  | LCASE      | (C1--C2)     | C2: C1 converted to lowercase|
-| 48,2  | UCASE      | (C1--C2)     | C2: C1 converted to uppercase|
+| 48,1  | LCASE      | (C1--C2)     | C2: char C1 converted to lowercase|
+| 48,2  | UCASE      | (C1--C2)     | C2: char C1 converted to uppercase|
 | 48,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
 | 48,4  | S-CPY      | (D S--)      | Copy string S to string D|
 | 48,5  | S-CAT      | (D S--)      | Concatenate string S to string D|
 | 48,6  | S-CATC     | (D C--)      | Concatenate char C to string D|
 | 48,7  | S-LEN      | (S--N)       | N: length of string S|
-| 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if F1 = F2, else 0 (case sensitive)|
-| 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if F1 = F2, else 0 (not case sensitive)|
+| 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (case sensitive)|
+| 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (not case sensitive)|
 
 ### Floating point opcodes are 2-bytes, starting with 49
 |Opcode |Word        |Stack         |Description|

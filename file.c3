@@ -28,7 +28,7 @@ VARIABLE T0
 
 VARIABLE T0
 : redirect    ( H-- )  output-fp T0 ! ->file ;  \ Save and redirect
-: restore-out ( -- )   T0 @ ->file ;            \ Restore output_fp
+: restore     ( -- )   T0 @ ->file ;            \ Restore output_fp
 
-: fputc ( ch H-- )  redirect  EMIT   restore-out ;
-: fputs ( sz H-- )  redirect  QTYPE  restore-out ;
+: fputc ( ch H-- )  redirect  EMIT   restore ;
+: fputs ( sz H-- )  redirect  QTYPE  restore ;
