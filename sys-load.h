@@ -52,7 +52,7 @@ void sysLoad() {
     parseF(m1i, "AND", AND);
     parseF(m1i, "OR", OR);
     parseF(m1i, "XOR", XOR);
-    // parseF(m1i, "UNUSED1", UNUSED1);
+    parseF(m1i, "TYPE", TYPE);
     parseF(m1i, "ZTYPE", ZTYPE);
     parseF(lit, "(ZTYPE)", ZTYPE);
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
