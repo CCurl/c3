@@ -43,14 +43,13 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 92 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 93 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
 #define ToCP(x)       (char*)(x)
 #define ClearTib      fill(tib, 0, sizeof(tib))
-#define SC(x)         strCat(tib, x)
 #define DSP           ds.sp
 #define TOS           (ds.stk[DSP].i)
 #define NOS           (ds.stk[DSP-1].i)
