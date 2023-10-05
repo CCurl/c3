@@ -21,7 +21,7 @@ enum {
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
     ADD, MULT, SLMOD, SUB, INC, DEC, LT, EQ, GT, EQ0,
     RTO, RFETCH, RFROM, DO, LOOP, LOOP2, INDEX,
-    COM, AND, OR, XOR, UNUSED1, ZTYPE,
+    COM, AND, OR, XOR, TYPE, ZTYPE,
     REG_I, REG_D, REG_R, REG_RD, REG_RI, REG_S,
     REG_NEW, REG_FREE,
     SYS_OPS, STR_OPS, FLT_OPS
@@ -43,7 +43,7 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 93 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 94 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -366,7 +366,7 @@ next:
         NCASE AND: t1=pop(); TOS = (TOS & t1);
         NCASE OR:  t1=pop(); TOS = (TOS | t1);
         NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
-        NCASE UNUSED1: printString("-unused1-");
+        NCASE TYPE: t1=pop(); y=cpop(); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE ZTYPE: doType(0);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
         NCASE REG_D: reg[*(pc++)+reg_base]--;
@@ -462,18 +462,18 @@ void c3Init() {
     last = (dict_t*)&code[CODE_SZ];
     base = 10;
     DSP = RSP = reg_base = 0;
-    sysLoad();
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
 
+    sysLoad();
+    ParseLine("marker");
     ParseLine("version 100 /mod .\" c3 - v%d.%d - Chris Curl%n\"");
     ParseLine("here code - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
     ParseLine("vhere vars - .\" %d variable bytes used, \" vars-end vhere - .\" %d bytes free.\"");
     ParseLine(": benches forget \" benches.c3\" (load) ;");
     ParseLine(": sb forget \" sandbox.c3\" (load) ;");
-    ParseLine("marker");
 }
 
 #ifdef isPC

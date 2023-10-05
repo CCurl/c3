@@ -178,7 +178,7 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | 34    | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35    | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36    | XOR        | (A B--C)     | C: A bitwise-XOR B|
-| 37    | UNUSED     | (--)         | ?????|
+| 37    | TYPE       | (A N--)      | EMIT N chars from address A (Standard Forth TYPE)|
 | 38    | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
 | 39,X  | iX         | (--)         | Increment register X|
 | 30,X  | dX         | (--)         | Decrement register X|
