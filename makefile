@@ -16,5 +16,5 @@ $(app): $(srcfiles) $(incfiles)
 clean:
 	rm -f $(app)
 
-bin: c3
-	cp -u -p c3 ~/.local/bin/
+bin: $(app)
+	cp -u -p $(app) ~/.local/bin/
