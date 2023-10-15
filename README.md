@@ -263,7 +263,7 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | 115  | DPIN!      | (N P--) | digitalWrite(P, N)|
 | 116  | APIN!      | (N P--) | analogWrite(P, N)|
 
-## Built-in c3 system-information words
+### Built-in c3 system-information words
 |Word           |Stack     |Description|
 | :--           | :--      | :-- |
 | VERSION       | (--N)    | N: c3 version*100 (e.g. - 147 => v1.47).|
@@ -287,6 +287,11 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | >IN           | (--A)    | A: Address of >IN.|
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
+
+### Other built-1n c3 words
+| Word          | Stack      | Description|
+| :--           | :--        | :-- |
+| TODO          | (A B--C)   | Description|
 
 ## c3 startup behavior
 When c3 starts:
