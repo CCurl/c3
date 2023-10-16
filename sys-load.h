@@ -225,9 +225,11 @@ void sysLoad() {
     ParseLine(": .\" ( -- )   T3 state @ 0= IF DROP ztype exit THEN");
     ParseLine("    (vhere) ! (lit) c, , (ztype) c, ; immediate");
     ParseLine(": .word cell + 2+ qtype ; inline");
+    ParseLine(": word-len ( a--n ) cell + 2+ s-len ; inline");
     ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
     ParseLine("        r2 code-end < while");
-    ParseLine("        r1+ #10 > IF 0 s1 cr THEN");
+    ParseLine("        r1+ #9 > IF 0 s1 cr THEN");
+    ParseLine("        r2 word-len #7 > IF i1 THEN");
     ParseLine("        i3 r2 .word tab r2 word-sz + s2");
     ParseLine("    repeat");
     ParseLine("    r3 .\" (%d words)\" -regs ;");
