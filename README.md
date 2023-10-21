@@ -312,16 +312,16 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | --           | (A--)         | Decrement CELL At A |
 | vhere        | (--A)         | Address of the next free byte in the VARS area |
 | allot        | (N--)         | Add N to VHERE |
-| vc,          | (A B--C)      | Description |
-| v,           | (A B--C)      | Description |
-| cells        | (A B--C)      | Description |
-| create       | (A B--C)      | Description |
-| does>        | (A B--C)      | Description |
-| constant     | (A B--C)      | Description |
-| variable     | (A B--C)      | Description |
-| val          | (A B--C)      | Description |
-| >val         | (A B--C)      | Description |
-| (val)        | (A B--C)      | Description |
+| vc,          | (B--)         | Description |
+| v,           | (N--)         | Description |
+| cells        | (A--B)        | Description |
+| create       | (--)          | Description |
+| does>        | (--)          | Description |
+| constant     | (N--)         | Description |
+| variable     | (--)          | Description |
+| val          | (--)          | Description |
+| >val         | (--)          | Description |
+| (val)        | (--)          | Description |
 | :noname      | (A B--C)      | Description |
 | exec         | (A B--C)      | Description |
 | IF           | (A B--C)      | Description |
