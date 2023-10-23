@@ -291,136 +291,107 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 ### Other built-1n c3 words
 | WORD |STACK |Description|
 | :-- | :-- | :--|
-| (LIT)        | (--N)         | OPCODE for LITERAL (INLINE) |
-| (EXIT)       | (--N)         | OPCODE for EXIT (INLINE) |
-| (CALL)       | (--N)         | OPCODE for CALL (INLINE) |
-| (JMP)        | (--N)         | OPCODE for JMP |
-| (JMPZ)       | (--N)         | OPCODE for JMPZ |
-| (JMPNZ)      | (--N)         | OPCODE for JMPNZ |
-| (STORE)      | (--N)         | OPCODE for STORE |
-| (FETCH)      | (--N)         | OPCODE for FETCH |
-| (DUP)        | (--N)         | OPCODE for DUP |
-| (ZTYPE)      | (--N)         | OPCODE for ZTYPE |
-| \\           | (--)          | Line comment |
-| [            | (--)          | Set STATE=0 |
-| ]            | (--)          | SET STATE=1 |
-| last         | (--A)         | Address of the most recently created WORD |
-| here         | (--A)         | Address of the next free byte in the CODE area |
-| code-end     | (--A)         | Address of the end of the CODE area |
-| vars-end     | (--A)         | Address of the end of the VARS area |
-| ++           | (A--)         | Invrement CELL at A |
-| --           | (A--)         | Decrement CELL At A |
-| vhere        | (--A)         | Address of the next free byte in the VARS area |
-| allot        | (N--)         | Add N to VHERE |
-| vc,          | (B--)         | Description |
-| v,           | (N--)         | Description |
-| cells        | (A--B)        | Description |
-| create       | (--)          | Description |
-| does>        | (--)          | Description |
-| constant     | (N--)         | Description |
-| variable     | (--)          | Description |
-| val          | (--)          | Description |
-| >val         | (--)          | Description |
-| (val)        | (--)          | Description |
-| :noname      | (A B--C)      | Description |
-| exec         | (A B--C)      | Description |
-| IF           | (A B--C)      | Description |
-| ELSE         | (A B--C)      | Description |
-| THEN         | (A B--C)      | Description |
-| exit         | (A B--C)      | Description |
-| begin        | (A B--C)      | Description |
-| until        | (A B--C)      | Description |
-| again        | (A B--C)      | Description |
-| while        | (A B--C)      | Description |
-| repeat       | (A B--C)      | Description |
-| for          | (A B--C)      | Description |
-| next         | (A B--C)      | Description |
-| -if          | (A B--C)      | Description |
-| -until       | (A B--C)      | Description |
-| -while       | (A B--C)      | Description |
-| tuck         | (A B--C)      | Description |
-| nip          | (A B--C)      | Description |
-| 2dup         | (A B--C)      | Description |
-| 2drop        | (A B--C)      | Description |
-| ?DUP         | (A B--C)      | Description |
-| /            | (A B--C)      | Description |
-| mod          | (A B--C)      | Description |
-| +!           | (A B--C)      | Description |
-| c++          | (A B--C)      | Description |
-| 2*           | (A B--C)      | Description |
-| 2/           | (A B--C)      | Description |
-| 2+           | (A B--C)      | Description |
-| <=           | (A B--C)      | Description |
-| >=           | (A B--C)      | Description |
-| <>           | (A B--C)      | Description |
-| rdrop        | (A B--C)      | Description |
-| rot          | (A B--C)      | Description |
-| -rot         | (A B--C)      | Description |
-| (            | (A B--C)      | Description |
-| bl           | (A B--C)      | Description |
-| tab          | (A B--C)      | Description |
-| cr           | (A B--C)      | Description |
-| space        | (A B--C)      | Description |
-| .            | (A B--C)      | Description |
-| negate       | (A B--C)      | Description |
-| abs          | (A B--C)      | Description |
-| min          | (A B--C)      | Description |
-| max          | (A B--C)      | Description |
-| btw          | (A B--C)      | Description |
-| i            | (A B--C)      | Description |
-| j            | (A B--C)      | Description |
-| +i           | (A B--C)      | Description |
-| unloop       | (A B--C)      | Description |
-| 0sp          | (A B--C)      | Description |
-| depth        | (A B--C)      | Description |
-| .s           | (A B--C)      | Description |
-| dump         | (A B--C)      | Description |
-| \            | (A B--C)      | Description |
-| .\           | (A B--C)      | Description |
-| .word        | (A B--C)      | Description |
-| word-len     | (A B--C)      | Description |
-| words        | (A B--C)      | Description |
-| binary       | (A B--C)      | Description |
-| decimal      | (A B--C)      | Description |
-| hex          | (A B--C)      | Description |
-| ?            | (A B--C)      | Description |
-| lshift       | (A B--C)      | Description |
-| rshift       | (A B--C)      | Description |
-| load         | (A B--C)      | Description |
-| load-abort   | (A B--C)      | Description |
-| loaded?      | (A B--C)      | Description |
-| T1           | (A B--C)      | Description |
-| marker       | (A B--C)      | Description |
-| forget       | (A B--C)      | Description |
-| forget-1     | (A B--C)      | Description |
-
-## c3 startup behavior
-When c3 starts:
-- For every parameter on the command line:
-  - If c3 can open the parameter as a file, queue it up to be loaded.
-  - Else, set the (numeric only) value to a register based on the parameter's position.
-
-## Adding new opcodes to c3
-If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. 
-
-For example, there might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
-
-Here is the process:
-
-- Global opcode:
-  - In c3.c, add the new opcode(s) to the appropriate enum.
-  - In c3.c, add a NCASE to run() to for each new opcode.
-  - In sys-load.h, add a "-ML-" line to LoadStartupWords() for each new opcode.
-  - Update your README.md.
-
-- Target-specific opcode:
-  - All work is done in the target's *.h file (e.g. - sys-pc.h).
-  - Add the new opcodes(s) to the enum.
-  - Target-specific opcodes should have values above 100.
-  - Edit LoadStartupWords() and add a "-ML-" line for each new opcode.
-  - For example: to define opcode 120 as "NEWOP" ... ParseLine("-ML- NEWOP 120 3 -MLX- INLINE");
-  - In doUser(), add cases for the new opcode(s).
-  - Update your README.md.
+| (LIT)        | (--N)          | OPCODE for LITERAL (INLINE) |
+| (EXIT)       | (--N)          | OPCODE for EXIT (INLINE) |
+| (CALL)       | (--N)          | OPCODE for CALL (INLINE) |
+| (JMP)        | (--N)          | OPCODE for JMP |
+| (JMPZ)       | (--N)          | OPCODE for JMPZ |
+| (JMPNZ)      | (--N)          | OPCODE for JMPNZ |
+| (STORE)      | (--N)          | OPCODE for STORE |
+| (FETCH)      | (--N)          | OPCODE for FETCH |
+| (DUP)        | (--N)          | OPCODE for DUP |
+| (ZTYPE)      | (--N)          | OPCODE for ZTYPE |
+| \\           | (--)           | Line comment |
+| [            | (--)           | Set STATE=0 |
+| ]            | (--)           | SET STATE=1 |
+| last         | (--A)          | Address of the most recently created WORD |
+| here         | (--A)          | Address of the next free byte in the CODE area |
+| code-end     | (--A)          | Address of the end of the CODE area |
+| vars-end     | (--A)          | Address of the end of the VARS area |
+| ++           | (A--)          | Invrement CELL at A |
+| --           | (A--)          | Decrement CELL At A |
+| vhere        | (--A)          | Address of the next free byte in the VARS area |
+| allot        | (N--)          | Add N to VHERE |
+| vc,          | (B--)          | C, to the VARS area |
+| v,           | (N--)          | , to the VARS area |
+| cells        | (A--B)         | B: A * CELL |
+| create nm    | (--)           | Add "nm" to the dictionary. Must be used with does> |
+|              |                | or some other defining word that compiles EXIT. |
+| does>        | (--)           | Defines the behavior of words created using "create" |
+| constant nm  | (N--)          | Defines word "nm" that pushes N when executed. |
+| variable nm  | (--)           | Defines word "nm" that pushes an addess when executed. ALLOTs a CELL  |
+| val nm1      | (--)           | Defines "nm1" to push a number onto the stack when executed. |
+| >val nm2     | (N--)          | Defines "nm2" to set N to nm1 |
+| (val) nm3    | (--A)          | Defines "nm3" to push the address of nm1 |
+| :noname      | (--A)          | A: HERE. Sets STATE=1 |
+| exec         | (A--)          | Jumps to address A |
+| IF           | (F--)          | If F=0, jump to ELSE or THEN |
+| ELSE         | (--)           | If F<>0 (from IF), jump here  |
+| THEN         | (--)           | End of IF or IF/ELSE |
+| begin        | (--)           | Start a LOOP |
+| until        | (F--)          | If F<>0 jump to BEGIN |
+| again        | (--)           | Jump to BEGIN |
+| while        | (F--)          | If F=0, jump to instruction after REPEAT |
+| repeat       | (--)           | Jump to BEGIN (resolves WHILE) |
+| for          | (N--)          | Begin a loop of N iterations |
+| next         | (--)           | Next iteration |
+| -if          | (F--F)         | Non-destructive IF |
+| -until       | (F--F)         | Non-destructive UNTIL |
+| -while       | (F--F)         | Non-destructive WHILE |
+| tuck         | (A B--B A B)   | Tuck TOS before NOS |
+| nip          | (A B--B)       | Drop NOS |
+| 2dup         | (A B--A B A B) | Duplicate top 2 items |
+| 2drop        | (A B--)        | Drop top 2 items |
+| ?DUP         | (F--F?)        | If F<>0, duplicate it |
+| /            | (A B--C)       | C: A/B |
+| mod          | (A B--C)       | C: A modulo B |
+| +!           | (N A--)        | Add N to value at A |
+| c++          | (A--)          | Increment BYTE at A |
+| 2*           | (A--B)         | B: A*2 |
+| 2/           | (A--B)         | B: A/2 |
+| 2+           | (A--B)         | B: A+2 |
+| <=           | (A B--F)       | F: if A<=B then 1 else 0 |
+| >=           | (A B--F)       | F: if A>=B then 1 else 0 |
+| <>           | (A B--F)       | F: if A<>B then 1 else 0 |
+| rdrop        | (R:A--)        | Drop top of RETURN stack |
+| rot          | (A B C--B C A) | Rotate A to TOS |
+| -rot         | (A B C--C A B) | Rotate C before A |
+| (            | (--)           | Skip until ')' or EOL |
+| bl           | (--C)          | C: 32 (SPACE) |
+| tab          | (--C)          | C: 9 (TAB) |
+| cr           | (--)           | Output a NL (CR/LF) |
+| space        | (--)           | Output a SPACE |
+| .            | (N--)          | Print N in the current BASE |
+| negate       | (A--B)         | B: -A |
+| abs          | (A--B)         | B: if A<0 then -A else A |
+| min          | (A B--C)       | C: if A<B then A else B |
+| max          | (A B--C)       | C: if A>B then A else B |
+| btw          | (N L H--F)     | F: if N is between L and H then 1 else 0   |
+| i            | (--N)          | Description |
+| j            | (--N)          | Description |
+| +i           | (N--)          | Description |
+| unloop       | (--)           | Description |
+| 0sp          | (--)           | Description |
+| depth        | (--N)          | Description |
+| .s           | (--)           | Description |
+| dump         | (T F--)        | Description |
+| "            | (--A)          | Description |
+| ."           | (--)           | Description |
+| .word        | (A--)          | Description |
+| word-len     | (A--N)         | Description |
+| words        | (--C           | Description |
+| binary       | (--)           | Description |
+| decimal      | (--)           | Description |
+| hex          | (--)           | Description |
+| ?            | (A--)          | Description |
+| lshift       | (A B--C)       | Description |
+| rshift       | (A B--C)       | Description |
+| load <fn>    | (--)           | Description |
+| load-abort   | (--)           | Description |
+| loaded?      | (A B C--)      | Description |
+| marker       | (--)           | Description |
+| forget       | (--)           | Description |
+| forget-1     | (--)           | Description |
 
 ## c3 startup behavior
 When c3 starts:
