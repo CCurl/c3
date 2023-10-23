@@ -1,7 +1,7 @@
-# c3 - A minimal stack-based VM written in C.
+# c3 - A stack-based VM written in C.
 
 ## What is c3?
-- c3 is a stack-based, byte-coded VM whose "Virtual CPU" does not have alot of opcodes.
+- c3 is a stack-based, byte-coded VM.
 - c3's opcodes implement many of the standard Forth operations.
 - c3 supports IEEE 754 double-precision (64-bit) floating point numbers.
 - c3 provides 10 "virtual registers", r0 thru r9.
@@ -367,31 +367,31 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | min          | (A B--C)       | C: if A<B then A else B |
 | max          | (A B--C)       | C: if A>B then A else B |
 | btw          | (N L H--F)     | F: if N is between L and H then 1 else 0   |
-| i            | (--N)          | Description |
-| j            | (--N)          | Description |
-| +i           | (N--)          | Description |
-| unloop       | (--)           | Description |
-| 0sp          | (--)           | Description |
-| depth        | (--N)          | Description |
-| .s           | (--)           | Description |
-| dump         | (T F--)        | Description |
-| "            | (--A)          | Description |
-| ."           | (--)           | Description |
-| .word        | (A--)          | Description |
-| word-len     | (A--N)         | Description |
-| words        | (--C           | Description |
-| binary       | (--)           | Description |
-| decimal      | (--)           | Description |
-| hex          | (--)           | Description |
-| ?            | (A--)          | Description |
-| lshift       | (A B--C)       | Description |
-| rshift       | (A B--C)       | Description |
-| load <fn>    | (--)           | Description |
-| load-abort   | (--)           | Description |
-| loaded?      | (A B C--)      | Description |
-| marker       | (--)           | Description |
-| forget       | (--)           | Description |
-| forget-1     | (--)           | Description |
+| i            | (--N)          | Index of the current loop |
+| j            | (--N)          | Index of the next outer loop |
+| +i           | (N--)          | Add N to the index (+1 is still added at the end) |
+| unloop       | (--)           | Unwind the loop stack (does NOT exit the loop) |
+| 0sp          | (--)           | Empty/reset the stack |
+| depth        | (--N)          | N: the number of items on the stack |
+| .s           | (--)           | Output the stack using the current BASE |
+| dump         | (F N--)        | Output N bytes starting from F in the current BASE |
+| " str"       | (--A)          | A: the address of str |
+| ." hi"       | (--)           | Output "hi" |
+| .word        | (A--)          | Output the name of the word at A |
+| word-len     | (A--N)         | N: the length of the word at A |
+| words        | (--C           | Output the words in the dictionary |
+| binary       | (--)           | Set the BASE to 2 |
+| decimal      | (--)           | Set the BASE to 10 |
+| hex          | (--)           | Set the BASE to 16 |
+| ?            | (A--)          | Output the CELL value at A |
+| lshift       | (A B--C)       | C: A << B |
+| rshift       | (A B--C)       | C: A >> B |
+| load <fn>    | (--)           | Load from file "fn" |
+| load-abort   | (--)           | Stop loading from file |
+| loaded?      | (A B C--)      | Stops loading from file if C <> 0 |
+| marker       | (--)           | Remember HERE, LAST, and VHERE |
+| forget       | (--)           | Reset HERE, LAST, and VHERE to remembered values |
+| forget-1     | (--)           | Remove the most recent entry from the dictionary |
 
 ## c3 startup behavior
 When c3 starts:
