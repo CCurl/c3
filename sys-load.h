@@ -160,7 +160,6 @@ void sysLoad() {
     ParseLine(": IF    (jmpz) c, here 0 , ; immediate");
     ParseLine(": ELSE  (jmp) c, here SWAP 0 , here SWAP ! ; immediate");
     ParseLine(": THEN  here SWAP ! ; immediate");
-    ParseLine(": exit  (exit) c,   ; immediate");
     ParseLine(": begin  here        ; immediate");
     ParseLine(": until  (jmpz) c, , ; immediate");
     ParseLine(": again  (jmp) c, ,  ; immediate");
