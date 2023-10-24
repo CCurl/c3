@@ -92,20 +92,26 @@ To bootstrap itself, c3 has a simple "machine language parser" that can create w
   - ':'         - define a new c3 word
   - ';'         - end word definition
 
+```
+  -ML- INLINE 47 0 3 -MLX-
+  -ML- INLINE 47 1 3 -MLX-
+  -ML- INLINE 47 6 3 -MLX-
+  -ML- INLINE 47 7 3 -MLX-
+```
+
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-Everything in c3 can be defined from those.
+Everything in c3 is defined from those. See file 'sys-load.h' for details.
 
-See the sys-load.h file for details.
-
-Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
+Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be called "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
 
 ## The dictionary
+### NOTE: c3 does NOT do a case-sensitive dictionary search.
 - A dictionary entry looks like this:
-  - xt:     cell_t
-  - flags:  byte (IMMEDIATE=$01, INLINE=$02)
+  - xt:     cell_t               (either 32-bit or 64-bit)
+  - flags:  byte                 (IMMEDIATE=$01, INLINE=$02)
   - len:    byte
-  - name:   char[NAME_LEN+1] (NULL terminated)
+  - name:   char[NAME_LEN+1]     (NULL terminated)
 
 ## Default sizes for PC-based systems
 - The default NAME_LEN is 13.
@@ -136,8 +142,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## c3 Opcode / Word reference
 
-### NOTE:
-This is only the list of the opcodes in c3. There are alot more words in the base c3 system. See the sys-load.h file for all the words defined in the base c3 system.
+### NOTE: See the sys-load.h file for the implementation of the words defined in the base c3 system.
 
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
@@ -198,9 +203,11 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | 47,3  | **UNUSED** |              | Not used so words can be marked as INLINE|
 | 47,4  | ITOA       | (I--SZ)      | Convert I to string SZ in the current BASE|
 | 47,5  | ATOI       | (SZ--I F)    | Convert string SZ to I. If successful, (I 1) else only (0)|
-| 47,6  | :          | (--)         | Execute CREATE, then set STATE=1|
-| 47,7  | ;          | (--)         | Append EXIT to code,then set STATE=0|
+| 47,6  | :          | (--)         | Execute NEXT-WORD, add A to the dictionary, set STATE=1|
+| 47,7  | ;          | (--)         | Compile EXIT to code,then set STATE=0|
 | 47,8  | CREATE     | (--)         | Execute NEXT-WORD, add A to the dictionary|
+|       |            |              | -- NOTE: when new word is executed, pushes VHERE |
+|       |            |              | -- NOTE: must use with DOES> or compile EXIT |
 | 47,9  | '          | (--XT FL F)  | Execute NEXT-WORD, search for A. If found, (XT FL 1), else only (0)|
 | 47,10 | NEXT-WORD  | (--A N)      | A: Address of the next word from the input stream, N: length of A|
 | 47,11 | TIMER      | (--N)        | N: current system time in milliseconds|
@@ -304,44 +311,42 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | \\           | (--)           | Line comment |
 | [            | (--)           | Set STATE=0 |
 | ]            | (--)           | SET STATE=1 |
-| last         | (--A)          | Address of the most recently created WORD |
-| here         | (--A)          | Address of the next free byte in the CODE area |
+| LAST         | (--A)          | Address of the most recently created WORD |
+| HERE         | (--A)          | Address of the next free byte in the CODE area |
 | code-end     | (--A)          | Address of the end of the CODE area |
 | vars-end     | (--A)          | Address of the end of the VARS area |
 | ++           | (A--)          | Invrement CELL at A |
 | --           | (A--)          | Decrement CELL At A |
-| vhere        | (--A)          | Address of the next free byte in the VARS area |
-| allot        | (N--)          | Add N to VHERE |
+| VHERE        | (--A)          | Address of the next free byte in the VARS area |
+| ALLOT        | (N--)          | Add N to VHERE |
 | vc,          | (B--)          | C, to the VARS area |
 | v,           | (N--)          | , to the VARS area |
-| cells        | (A--B)         | B: A * CELL |
-| create nm    | (--)           | Add "nm" to the dictionary. Must be used with does> |
-|              |                | or some other defining word that compiles EXIT. |
-| does>        | (--)           | Defines the behavior of words created using "create" |
-| constant nm  | (N--)          | Defines word "nm" that pushes N when executed. |
-| variable nm  | (--)           | Defines word "nm" that pushes an addess when executed. ALLOTs a CELL  |
+| CELLS        | (A--B)         | B: A * CELL |
+| DOES>        | (--)           | Defines the behavior of words created using "CREATE" |
+| CONSTANT nm  | (N--)          | Defines word "nm" that pushes N when executed. |
+| VARIABLE nm  | (--)           | Defines word "nm" that pushes an addess when executed. ALLOTs a CELL  |
 | val nm1      | (--)           | Defines "nm1" to push a number onto the stack when executed. |
 | >val nm2     | (N--)          | Defines "nm2" to set N to nm1 |
 | (val) nm3    | (--A)          | Defines "nm3" to push the address of nm1 |
-| :noname      | (--A)          | A: HERE. Sets STATE=1 |
-| exec         | (A--)          | Jumps to address A |
+| :NONAME      | (--A)          | A: HERE. Sets STATE=1 |
+| EXEC         | (A--)          | Jumps to address A |
 | IF           | (F--)          | If F=0, jump to ELSE or THEN |
 | ELSE         | (--)           | If F<>0 (from IF), jump here  |
 | THEN         | (--)           | End of IF or IF/ELSE |
-| begin        | (--)           | Start a LOOP |
-| until        | (F--)          | If F<>0 jump to BEGIN |
-| again        | (--)           | Jump to BEGIN |
-| while        | (F--)          | If F=0, jump to instruction after REPEAT |
-| repeat       | (--)           | Jump to BEGIN (resolves WHILE) |
-| for          | (N--)          | Begin a loop of N iterations |
-| next         | (--)           | Next iteration |
+| BEGIN        | (--)           | Start a LOOP |
+| UNTIL        | (F--)          | If F<>0 jump to BEGIN |
+| AGAIN        | (--)           | Jump to BEGIN |
+| WHILE        | (F--)          | If F=0, jump to instruction after REPEAT |
+| REPEAT       | (--)           | Jump to BEGIN (resolves WHILE) |
+| FOR          | (N--)          | Begin a loop of N iterations |
+| NEXT         | (--)           | Next iteration |
 | -if          | (F--F)         | Non-destructive IF |
 | -until       | (F--F)         | Non-destructive UNTIL |
 | -while       | (F--F)         | Non-destructive WHILE |
-| tuck         | (A B--B A B)   | Tuck TOS before NOS |
-| nip          | (A B--B)       | Drop NOS |
-| 2dup         | (A B--A B A B) | Duplicate top 2 items |
-| 2drop        | (A B--)        | Drop top 2 items |
+| TUCK         | (A B--B A B)   | Tuck TOS before NOS |
+| NIP          | (A B--B)       | Drop NOS |
+| 2DUP         | (A B--A B A B) | Duplicate top 2 items |
+| 2DROP        | (A B--)        | Drop top 2 items |
 | ?DUP         | (F--F?)        | If F<>0, duplicate it |
 | /            | (A B--C)       | C: A/B |
 | mod          | (A B--C)       | C: A modulo B |
@@ -353,45 +358,45 @@ This is only the list of the opcodes in c3. There are alot more words in the bas
 | <=           | (A B--F)       | F: if A<=B then 1 else 0 |
 | >=           | (A B--F)       | F: if A>=B then 1 else 0 |
 | <>           | (A B--F)       | F: if A<>B then 1 else 0 |
-| rdrop        | (R:A--)        | Drop top of RETURN stack |
-| rot          | (A B C--B C A) | Rotate A to TOS |
-| -rot         | (A B C--C A B) | Rotate C before A |
+| RDROP        | (R:A--)        | Drop top of RETURN stack |
+| ROT          | (A B C--B C A) | Rotate A to TOS |
+| -ROT         | (A B C--C A B) | Rotate C before A |
 | (            | (--)           | Skip until ')' or EOL |
 | bl           | (--C)          | C: 32 (SPACE) |
 | tab          | (--C)          | C: 9 (TAB) |
 | cr           | (--)           | Output a NL (CR/LF) |
 | space        | (--)           | Output a SPACE |
 | .            | (N--)          | Print N in the current BASE |
-| negate       | (A--B)         | B: -A |
-| abs          | (A--B)         | B: if A<0 then -A else A |
+| NEGATE       | (A--B)         | B: -A |
+| ABS          | (A--B)         | B: if A<0 then -A else A |
 | min          | (A B--C)       | C: if A<B then A else B |
 | max          | (A B--C)       | C: if A>B then A else B |
 | btw          | (N L H--F)     | F: if N is between L and H then 1 else 0   |
-| i            | (--N)          | Index of the current loop |
-| j            | (--N)          | Index of the next outer loop |
-| +i           | (N--)          | Add N to the index (+1 is still added at the end) |
-| unloop       | (--)           | Unwind the loop stack (does NOT exit the loop) |
-| 0sp          | (--)           | Empty/reset the stack |
-| depth        | (--N)          | N: the number of items on the stack |
-| .s           | (--)           | Output the stack using the current BASE |
+| I            | (--N)          | Index of the current loop |
+| J            | (--N)          | Index of the next outer loop |
+| +I           | (N--)          | Add N to the index (+1 is still added at the end) |
+| UNLOOP       | (--)           | Unwind the loop stack (does NOT exit the loop) |
+| 0SP          | (--)           | Empty/reset the stack |
+| DEPTH        | (--N)          | N: the number of items on the stack |
+| .S           | (--)           | Output the stack using the current BASE |
 | dump         | (F N--)        | Output N bytes starting from F in the current BASE |
 | " str"       | (--A)          | A: the address of str |
 | ." hi"       | (--)           | Output "hi" |
 | .word        | (A--)          | Output the name of the word at A |
 | word-len     | (A--N)         | N: the length of the word at A |
-| words        | (--C           | Output the words in the dictionary |
-| binary       | (--)           | Set the BASE to 2 |
-| decimal      | (--)           | Set the BASE to 10 |
-| hex          | (--)           | Set the BASE to 16 |
+| WORDS        | (--C           | Output the words in the dictionary |
+| BINARY       | (--)           | Set the BASE to 2 |
+| DECIMAL      | (--)           | Set the BASE to 10 |
+| HEX          | (--)           | Set the BASE to 16 |
 | ?            | (A--)          | Output the CELL value at A |
-| lshift       | (A B--C)       | C: A << B |
-| rshift       | (A B--C)       | C: A >> B |
-| load <fn>    | (--)           | Load from file "fn" |
-| load-abort   | (--)           | Stop loading from file |
-| loaded?      | (A B C--)      | Stops loading from file if C <> 0 |
-| marker       | (--)           | Remember HERE, LAST, and VHERE |
-| forget       | (--)           | Reset HERE, LAST, and VHERE to remembered values |
-| forget-1     | (--)           | Remove the most recent entry from the dictionary |
+| LSHIFT       | (A B--C)       | C: A << B |
+| RSHIFT       | (A B--C)       | C: A >> B |
+| LOAD <FN>    | (--)           | Load from file "fn" |
+| LOAD-ABORT   | (--)           | Stop loading from file |
+| LOADED?      | (A B C--)      | Stops loading from file if C <> 0 |
+| MARKER       | (--)           | Remember HERE, LAST, and VHERE |
+| FORGET       | (--)           | Reset HERE, LAST, and VHERE to remembered values |
+| FORGET-1     | (--)           | Remove the most recent entry from the dictionary |
 
 ## c3 startup behavior
 When c3 starts:
@@ -400,19 +405,19 @@ When c3 starts:
   - Else, set the (numeric only) value to a register based on the parameter's position.
 
 ## Adding new opcodes to c3
-If for some reason, there is a need/desire to add more opcodes to c3, this describes how it can be accomplished. 
+If for some reason, there is a need/desire to add more opcodes to c3, this section describes how it can be accomplished. 
 
 For example, there might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
 
 Here is the process:
 
-- Global opcode:
+- For a global opcode:
   - In c3.c, add the new opcode(s) to the appropriate enum.
   - In c3.c, add a NCASE to run() to for each new opcode.
   - In sys-load.h, add a "-ML-" line to LoadStartupWords() for each new opcode.
   - Update your README.md.
 
-- Target-specific opcode:
+- For a target-specific opcode:
   - All work is done in the target's *.h file (e.g. - sys-pc.h).
   - Add the new opcodes(s) to the enum.
   - Target-specific opcodes should have values above 100.

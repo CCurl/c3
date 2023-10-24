@@ -30,7 +30,7 @@ enum {
 // NB: these skip #3 (EXIT), so they can be marked as INLINE
 enum { // System opcodes
     INLINE=0, IMMEDIATE, DOT, ITOA = 4, ATOI,
-    DEFINE, ENDWORD, CREATE, FIND, WORD, TIMER,
+    COLONDEF, ENDWORD, CREATE, FIND, WORD, TIMER,
     CCOMMA, COMMA, KEY, QKEY, EMIT, QTYPE
 };
 
@@ -162,13 +162,13 @@ int nextWord() {
     return len;
 }
 
-void doCreate(char *nm) {
-    if (nm == 0) { nextWord(); nm = WD; }
-    if (isTempWord(nm)) { tempWords[nm[1]-'0'].xt = (cell_t)here; return; }
-    int l = strLen(nm);
+void addWord() {
+    nextWord();
+    if (isTempWord(WD)) { tempWords[WD[1]-'0'].xt = (cell_t)here; return; }
+    int l = strLen(WD);
     --last;
-    if (NAME_LEN < l) { l=NAME_LEN; nm[l]=0; printString("-nameTrunc-"); }
-    strCpy(last->name, nm);
+    if (NAME_LEN < l) { l=NAME_LEN; WD[l]=0; printString("-nameTrunc-"); }
+    strCpy(last->name, WD);
     last->len = l;
     last->xt = (cell_t)here;
     last->f = 0;
@@ -285,12 +285,12 @@ char *doSysOp(char *pc) {
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
         RCASE DOT: printString(iToA(pop(), base));
         RCASE ITOA: TOS = (cell_t)iToA(TOS, base);
-        RCASE DEFINE: doCreate(ToCP(0)); state=1;
+        RCASE ATOI: push(isNum(cpop()));
+        RCASE COLONDEF: addWord(); state=1;
         RCASE ENDWORD: state=0; CComma(EXIT);
-        RCASE CREATE: doCreate(ToCP(0));
+        RCASE CREATE: addWord(); CComma(LIT); Comma((cell_t)vhere);
         RCASE FIND: push(doFind(ToCP(0)));
         RCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
-        RCASE ATOI: push(isNum(cpop()));
         RCASE TIMER: push(sysTime());
         RCASE CCOMMA: CComma(pop());
         RCASE COMMA: Comma(pop());
@@ -396,7 +396,7 @@ int doNum(const char *w) {
 
 int doML(const char *w) {
     if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
-    doCreate((char*)0);
+    addWord();
     while (nextWord()) {
         if (strEq(WD,"-MLX-",1)) { return 1; }
         if (doNum(WD) == 0) { printStringF("-ML:[%s]?-", WD); return 1; }
