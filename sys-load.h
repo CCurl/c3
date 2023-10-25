@@ -91,6 +91,8 @@ void sysLoad() {
     parseF(m2i, "S-LEN",   STR_OPS, STRLEN);
     parseF(m2i, "S-EQ",    STR_OPS, STREQ);
     parseF(m2i, "S-EQ-I",  STR_OPS, STREQI);
+    parseF(m2i, "S-LTRIM", STR_OPS, LTRIM);
+    parseF(m2i, "S-RTRIM", STR_OPS, RTRIM);
 
     // Float opcodes ...
     parseF(m2i, "F+",   FLT_OPS, FADD);
