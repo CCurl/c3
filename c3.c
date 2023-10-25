@@ -35,7 +35,7 @@ enum { // System opcodes
 };
 
 enum { // String opcodes
-    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN, STREQ, STREQI
+    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN, STREQ, STREQI, LTRIM, RTRIM
 };
 
 enum { // Floating point opcdes
@@ -43,7 +43,7 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 95 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 96 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -88,11 +88,13 @@ void CComma(cell_t x) { *(here++) = (char)x; }
 void Comma(cell_t x) { Store(here, x); here += CELL_SZ; }
 
 void fill(char *d, char val, int num) { for (int i=0; i<num; i++) { d[i]=val; } }
-char *strEnd(char *s) { while (*s) ++s; return s; }
+char *strEnd(char *s) { while (*s) { ++s; } return s; }
 void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); } *d=0; }
 void strCatC(char *d, const char c) { d=strEnd(d); *(d++)=c; *d=0; }
 void strCpy(char *d, const char *s) { if (d != s) { *d = 0; strCat(d, s); } }
 int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
+char *lTrim(char *d) { while (*d && (*d<33)) { ++d; } return d; }
+void rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) = 0; } }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
 
@@ -270,9 +272,11 @@ char *doStringOp(char *pc) {
         RCASE STRCPY:  s=cpop(); d=cpop(); strCpy(d, s);
         RCASE STRCAT:  s=cpop(); d=cpop(); strCat(d, s);
         RCASE STRCATC: t1=pop(); d=cpop(); strCatC(d, (char)t1);
-        RCASE STRLEN:  d=CTOS; TOS=strLen(d);
+        RCASE STRLEN:  TOS=strLen(CTOS);
         RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
         RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
+        RCASE LTRIM:   CTOS=lTrim(CTOS);
+        RCASE RTRIM:   rTrim(CTOS);
             return pc;
         default: printStringF("-strOp:[%d]?-", *(pc-1));
     }

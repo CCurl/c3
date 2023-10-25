@@ -231,6 +231,8 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 48,7  | S-LEN      | (S--N)       | N: length of string S|
 | 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (case sensitive)|
 | 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (not case sensitive)|
+| 48,10 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]<33)|
+| 48,11 | S-RTRIM    | (S--S)       | S: The string to be right-trimmed|
 
 ### Floating point opcodes are 2-bytes, starting with 49
 |Opcode |Word        |Stack         |Description|
