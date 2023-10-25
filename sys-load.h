@@ -10,7 +10,7 @@ void sysLoad() {
     // Bootstrap ...
     parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
     parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
-    parseF(m2i, ":", SYS_OPS, DEFINE);
+    parseF(m2i, ":", SYS_OPS, COLONDEF);
     parseF(m2n, ";", SYS_OPS, ENDWORD); last->f = IS_IMMEDIATE;
 
     // Opcodes ...
@@ -70,7 +70,7 @@ void sysLoad() {
     parseF(m2i, "(.)",       SYS_OPS, DOT);
     parseF(m2i, "ITOA",      SYS_OPS, ITOA);
     parseF(m2i, "ATOI",      SYS_OPS, ATOI);
-    parseF(m2i, "(CREATE)",  SYS_OPS, CREATE);
+    parseF(m2i, "CREATE",    SYS_OPS, CREATE);
     parseF(m2i, "'",         SYS_OPS, FIND);
     parseF(m2i, "NEXT-WORD", SYS_OPS, WORD);
     parseF(m2i, "TIMER",     SYS_OPS, TIMER);
@@ -135,6 +135,7 @@ void sysLoad() {
 
     // Main system
     ParseLine(": \\ 0 >in @ ! ; immediate");
+    ParseLine(": \\ 0 >in @ ! ; immediate");
     ParseLine(": [ 0 state ! ; immediate");
     ParseLine(": ] 1 state ! ;");
     ParseLine(": last (last) @ ;");
@@ -148,19 +149,17 @@ void sysLoad() {
     ParseLine(": vc, vhere c! (vhere) ++ ;");
     ParseLine(": v,  vhere ! cell allot ;");
     ParseLine(": cells cell * ; inline");
-    ParseLine(": create (create) vhere (lit) c, , (exit) here c! ;");
-    ParseLine(": does>  R> (jmp) c, , ;");
-    ParseLine(": constant  (create) (lit) c, , (exit) c, ;");
-    ParseLine(": variable   create 0 v, (exit) c, ;");
-    ParseLine(": val    create 0 v, does> @ ;");
-    ParseLine(": >val   create does> cell - ! ;");
-    ParseLine(": (val)  vhere cell - constant ;");
+    ParseLine(": DOES>  R> (JMP) C, , ;");
+    ParseLine(": CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;");
+    ParseLine(": VARIABLE  CREATE 0 V, (EXIT) C, ;");
+    ParseLine(": val    CREATE 0 v, DOES> @ ;");
+    ParseLine(": >val   CREATE DOES> CELL - ! ;");
+    ParseLine(": (val)  vhere CELL - CONSTANT ;");
     ParseLine(": :noname  here 1 state ! ;");
     ParseLine(": exec  >R ;");
     ParseLine(": IF    (jmpz) c, here 0 , ; immediate");
     ParseLine(": ELSE  (jmp) c, here SWAP 0 , here SWAP ! ; immediate");
     ParseLine(": THEN  here SWAP ! ; immediate");
-    ParseLine(": exit  (exit) c,   ; immediate");
     ParseLine(": begin  here        ; immediate");
     ParseLine(": until  (jmpz) c, , ; immediate");
     ParseLine(": again  (jmp) c, ,  ; immediate");
@@ -225,9 +224,11 @@ void sysLoad() {
     ParseLine(": .\" ( -- )   T3 state @ 0= IF DROP ztype exit THEN");
     ParseLine("    (vhere) ! (lit) c, , (ztype) c, ; immediate");
     ParseLine(": .word cell + 2+ qtype ; inline");
+    ParseLine(": word-len ( a--n ) cell + 2+ s-len ; inline");
     ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
     ParseLine("        r2 code-end < while");
-    ParseLine("        r1+ #10 > IF 0 s1 cr THEN");
+    ParseLine("        r1+ #9 > IF 0 s1 cr THEN");
+    ParseLine("        r2 word-len #7 > IF i1 THEN");
     ParseLine("        i3 r2 .word tab r2 word-sz + s2");
     ParseLine("    repeat");
     ParseLine("    r3 .\" (%d words)\" -regs ;");

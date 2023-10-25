@@ -159,7 +159,6 @@
     <ClCompile Include="c3.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sys-board.h" />
     <ClInclude Include="sys-init.h" />
     <ClInclude Include="sys-load.h" />
     <ClInclude Include="sys-pc.h" />
