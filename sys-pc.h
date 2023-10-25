@@ -64,16 +64,14 @@ void loadUserWords() {
 }
 
 int main(int argc, char *argv[]) {
+    char *p = &vars[1000];
     input_fp = output_fp = 0;
     c3Init();
     for (int i=1; i<argc; i++) {
         FILE *fp = fopen(argv[i], "rt");
         if (fp) { fileStk[++fileSp] = (cell_t)fp; }
-        else {
-            char x[2] = {i+'0',0};
-            ClearTib; SC(argv[i]); SC(" s"); SC(x);
-            ParseLine(tib);
-        }
+        if (isNum(argv[i])) { reg[i] = pop(); }
+        else { reg[i] = (cell_t)argv[i]; }
     }
     if (!input_fp && fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {

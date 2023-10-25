@@ -401,8 +401,14 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 ## c3 startup behavior
 When c3 starts:
 - For every parameter on the command line:
-  - If c3 can open the parameter as a file, queue it up to be loaded.
-  - Else, set the (numeric only) value to a register based on the parameter's position.
+  - IF c3 can open the argv[N] as a file, queue it up to be loaded.
+  - IF argv[N] can be converted to a number, set rN to that number
+  - - ELSE, set rN to argv[N] (e.g. - rN QTYPE will output the parameter)
+### Example:
+```
+Running this: c3 $100 test.txt
+will set r1 to #256 and r2 to the address where "test.txt" starts.
+```
 
 ## Adding new opcodes to c3
 If for some reason, there is a need/desire to add more opcodes to c3, this section describes how it can be accomplished. 
