@@ -231,7 +231,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 48,7  | S-LEN      | (S--N)       | N: length of string S|
 | 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (case sensitive)|
 | 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (not case sensitive)|
-| 48,10 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]<33)|
+| 48,10 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]>32)|
 | 48,11 | S-RTRIM    | (S--S)       | S: The string to be right-trimmed|
 
 ### Floating point opcodes are 2-bytes, starting with 49
@@ -373,16 +373,16 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | ABS          | (A--B)         | B: if A<0 then -A else A |
 | min          | (A B--C)       | C: if A<B then A else B |
 | max          | (A B--C)       | C: if A>B then A else B |
-| btw          | (N L H--F)     | F: if N is between L and H then 1 else 0   |
+| btw          | (N L H--F)     | F: if L<=N and N<=H then 1 else 0 |
 | I            | (--N)          | Index of the current loop |
 | J            | (--N)          | Index of the next outer loop |
-| +I           | (N--)          | Add N to the index (+1 is still added at the end) |
+| +I           | (N--)          | Add N to the index (+1 is still added at LOOP) |
 | UNLOOP       | (--)           | Unwind the loop stack (does NOT exit the loop) |
 | 0SP          | (--)           | Empty/reset the stack |
 | DEPTH        | (--N)          | N: the number of items on the stack |
 | .S           | (--)           | Output the stack using the current BASE |
 | dump         | (F N--)        | Output N bytes starting from F in the current BASE |
-| " str"       | (--A)          | A: the address of str |
+| " str"       | (--A)          | A: the address of "str" |
 | ." hi"       | (--)           | Output "hi" |
 | .word        | (A--)          | Output the name of the word at A |
 | word-len     | (A--N)         | N: the length of the word at A |
@@ -390,7 +390,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | BINARY       | (--)           | Set the BASE to 2 |
 | DECIMAL      | (--)           | Set the BASE to 10 |
 | HEX          | (--)           | Set the BASE to 16 |
-| ?            | (A--)          | Output the CELL value at A |
+| ?            | (A--)          | Output the value of the CELL at A |
 | LSHIFT       | (A B--C)       | C: A << B |
 | RSHIFT       | (A B--C)       | C: A >> B |
 | LOAD <FN>    | (--)           | Load from file "fn" |
