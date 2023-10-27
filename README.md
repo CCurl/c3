@@ -186,7 +186,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 37    | TYPE       | (A N--)      | EMIT N chars from address A (Standard Forth TYPE)|
 | 38    | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
 | 39,X  | iX         | (--)         | Increment register X|
-| 30,X  | dX         | (--)         | Decrement register X|
+| 40,X  | dX         | (--)         | Decrement register X|
 | 41,X  | rX         | (--N)        | N: value of register X|
 | 42,X  | rX+        | (--N)        | N: value of register X, then decrement it|
 | 43,X  | rX-        | (--N)        | N: value of register X, then increment it|
