@@ -297,7 +297,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 
-### Other built-1n c3 words
+### Other built-in c3 words
 | WORD |STACK |Description|
 | :-- | :-- | :--|
 | (LIT)        | (--N)          | OPCODE for LITERAL (INLINE) |
