@@ -16,5 +16,9 @@ $(app): $(srcfiles) $(incfiles)
 clean:
 	rm -f $(app)
 
+check: $(app)
+
+distcheck: $(app)
+
 bin: $(app)
 	cp -u -p $(app) ~/.local/bin/
