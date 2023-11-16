@@ -43,7 +43,7 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 96 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 97 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
@@ -273,8 +273,8 @@ char *doStringOp(char *pc) {
         RCASE STRCAT:  s=cpop(); d=cpop(); strCat(d, s);
         RCASE STRCATC: t1=pop(); d=cpop(); strCatC(d, (char)t1);
         RCASE STRLEN:  TOS=strLen(CTOS);
-        RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
-        RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
+        RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
+        RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
         RCASE LTRIM:   CTOS=lTrim(CTOS);
         RCASE RTRIM:   rTrim(CTOS);
             return pc;
