@@ -204,10 +204,11 @@ void sysLoad() {
     ParseLine(": min  OVER OVER > IF SWAP THEN DROP ;");
     ParseLine(": max  OVER OVER < IF SWAP THEN DROP ;");
     ParseLine(": btw +regs s3 s2 s1 r2 r1 <= r1 r3 <= and -regs ;");
-    ParseLine(": i  (i) @ ;");
-    ParseLine(": j  (i) 3 cells - 0 max @ ;");
-    ParseLine(": +i (i) +! ;");
-    ParseLine(": unloop (lsp) @ 3 - 0 max (lsp) ! ;");
+    ParseLine(": I  (I) @ ; INLINE");
+    ParseLine(": J  (I) 3 cells - @ ;");
+    ParseLine(": +I (I) @ + (I) ! ; INLINE");
+    ParseLine(": +LOOP 1- +I LOOP ; INLINE");
+    ParseLine(": UNLOOP (lsp) @ 3 - 0 max (lsp) ! ;");
     ParseLine(": 0sp 0 (sp) ! ;");
     ParseLine(": depth (sp) @ 1- ;");
     ParseLine(": .s '(' EMIT space depth ?DUP IF");
