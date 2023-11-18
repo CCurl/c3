@@ -377,6 +377,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | I            | (--N)          | Index of the current loop |
 | J            | (--N)          | Index of the next outer loop |
 | +I           | (N--)          | Add N to the index (+1 is still added at LOOP) |
+| +LOOP        | (N--)          | Add N to the index and LOOP |
 | UNLOOP       | (--)           | Unwind the loop stack (does NOT exit the loop) |
 | 0SP          | (--)           | Empty/reset the stack |
 | DEPTH        | (--N)          | N: the number of items on the stack |
