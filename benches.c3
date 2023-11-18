@@ -4,19 +4,19 @@
 : elapsed timer swap - ms ;
 : mil #1000 dup * * ;
 
-: prime? begin ( n 3--f )
-        over over /mod swap if
-            over < if drop exit then
-        else 
-            drop = exit
-        then
+: prime? BEGIN ( n 3--f )
+        OVER OVER /MOD SWAP IF
+            OVER < IF DROP EXIT THEN
+        ELSE 
+            DROP = EXIT
+        THEN
         1+ 1+
-    again ;
+    AGAIN ;
 
 variable num
-: num-primes 4 num ! 11 do
-        i 3 prime? if num ++ then 1 +i
-    loop num ? ;
+: num-primes 4 s9  11 DO
+        i 3 prime? IF i9 THEN
+    2 +LOOP r9 ;
 
 : T0 dup ." %d iterations ..." ;
 : bm1 cr ." Bench 1: decrement loop, " T0
@@ -27,8 +27,11 @@ variable num
     timer swap 0 do loop elapsed ;
 : bm4 cr ." Bench 4: empty for/next, " T0
     timer swap for next elapsed ;
-: bm5 cr ." Bench 5: number of primes in " dup . ." ... "
-    timer swap num-primes elapsed ;
+: T1 1- DUP IF T1 EXIT THEN DROP ;
+: bm5 cr ." Bench 5: empty tail-call, " T0
+    timer swap T1 elapsed ;
+: bm6 cr ." Bench 6: number of primes in " dup . ." ... "
+    timer swap num-primes . elapsed ;
 
 \ load-abort
 
@@ -36,4 +39,5 @@ variable num
 250 mil bm2
 250 mil bm3
 250 mil bm4
-  2 mil bm5
+250 mil bm5
+  2 mil bm6
