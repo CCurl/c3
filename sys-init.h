@@ -14,6 +14,9 @@ extern cell_t sysTime();
     // Support for Windows
     #include <conio.h>
     #define isPC
+    #ifdef _WIN64
+    #define FLOAT_T double
+    #endif
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 
@@ -23,6 +26,7 @@ extern cell_t sysTime();
 #include <unistd.h>
 #include <termios.h>
 #define isPC
+#define FLOAT_T double
 static struct termios normT, rawT;
 static int isTtyInit = 0;
 void ttyInit() {
@@ -65,6 +69,7 @@ int key() {
     //       I use these for the Teensy-4 and the Pico
     #define isBOARD 1
 
+    #define FLOAT_T            float
     extern int qKey();
     extern int key();
     #define CODE_SZ            64*1024

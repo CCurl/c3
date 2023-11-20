@@ -2,15 +2,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <math.h>
 
+//typedef int32_t cell_t;
+//typedef uint32_t ucell_t;
 typedef long cell_t;
 typedef unsigned long ucell_t;
-typedef unsigned char byte;
-typedef double flt_t;
+typedef uint8_t byte;
 
 #include "sys-init.h"
+
+#ifndef FLOAT_T
+#define FLOAT_T     double
+#endif
+typedef FLOAT_T flt_t;
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;
 typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
@@ -121,7 +128,7 @@ char *iToA(cell_t N, int b) {
     static char buf[65];
     ucell_t X = (ucell_t)N;
     int isNeg = 0;
-    if (b == 0) { b = base; }
+    if (b == 0) { b = (int)base; }
     if ((b == 10) && (N < 0)) { isNeg = 1; X = -N; }
     char c, *cp = &buf[64];
     *(cp) = 0;
@@ -217,7 +224,7 @@ int isBase10(const char *wd) {
 // ( --n | <null> )
 int isNum(const char *wd) {
     if ((wd[0]=='\'') && (wd[2]=='\'') && (wd[3]==0)) { push(wd[1]); return 1; }
-    int b = base, lastCh = '9';
+    int b = (int)base, lastCh = '9';
     if (*wd == '#') { b = 10;  ++wd; }
     if (*wd == '$') { b = 16;  ++wd; }
     if (*wd == '%') { b =  2;  ++wd; }
@@ -250,7 +257,7 @@ void doType(const char *str) {
             else if (c=='e') { printChar(27); }
             else if (c=='f') { printStringF("%f", fpop()); }
             else if (c=='g') { printStringF("%g", fpop()); }
-            else if (c=='i') { printString(iToA(pop(), base)); }
+            else if (c=='i') { printString(iToA(pop(), (int)base)); }
             else if (c=='n') { printString("\n\r"); }
             else if (c=='q') { printChar(34); }
             else if (c=='s') { printString(cpop()); }
@@ -287,8 +294,8 @@ char *doSysOp(char *pc) {
     switch(*pc++) {
         case INLINE: last->f = IS_INLINE;
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-        RCASE DOT: printString(iToA(pop(), base));
-        RCASE ITOA: TOS = (cell_t)iToA(TOS, base);
+        RCASE DOT: printString(iToA(pop(), (int)base));
+        RCASE ITOA: TOS = (cell_t)iToA(TOS, (int)base);
         RCASE ATOI: push(isNum(cpop()));
         RCASE COLONDEF: addWord(); state=1;
         RCASE ENDWORD: state=0; CComma(EXIT);
@@ -321,8 +328,8 @@ char *doFloatOp(char *pc) {
         RCASE F2I:  TOS = (cell_t)FTOS;
         RCASE I2F:  FTOS = (flt_t)TOS;
         RCASE FDOT: printStringF("%g", fpop());
-        RCASE SQRT: FTOS = sqrt(FTOS);
-        RCASE TANH: FTOS = tanh(FTOS);
+        RCASE SQRT: FTOS = (flt_t)sqrt(FTOS);
+        RCASE TANH: FTOS = (flt_t)tanh(FTOS);
             return pc; 
         default: printStringF("-fltOp:[%d]?-", *(pc-1));
     }

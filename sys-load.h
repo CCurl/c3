@@ -111,27 +111,27 @@ void sysLoad() {
     loadStartupWords();
 
     // System information words
-    parseF(": VERSION     #%ld ;", VERSION);
-    parseF(": (SP)        $%lx ;", &DSP);
-    parseF(": (RSP)       $%lx ;", &RSP);
-    parseF(": (LSP)       $%lx ;", &lsp);
-    parseF(": (HERE)      $%lx ;", &here);
-    parseF(": (LAST)      $%lx ;", &last);
-    parseF(": (STK)       $%lx ;", &ds.stk[0].i);
-    parseF(": (RSTK)      $%lx ;", &rs.stk[0].c);
-    parseF(": TIB         $%lx ;", &tib[0]);
-    parseF(": >IN         $%lx ;", &in);
-    parseF(": CODE        $%lx ;", &code[0]);
-    parseF(": CODE-SZ     #%ld ;", CODE_SZ);
-    parseF(": VARS        $%lx ;", &vars[0]);
-    parseF(": VARS-SZ     #%ld ;", VARS_SZ);
-    parseF(": (VHERE)     $%lx ;", &vhere);
-    parseF(": (REGS)      $%lx ;", &reg[0]);
-    parseF(": (OUTPUT_FP) $%lx ;", &output_fp);
-    parseF(": (INPUT_FP)  $%lx ;", &input_fp);
-    parseF(": STATE       $%lx ;", &state);
-    parseF(": BASE        $%lx ;", &base);
-    parseF(": WORD-SZ     #%ld ;", sizeof(dict_t));
+    parseF(": VERSION     #%d ;", VERSION);
+    parseF(": (SP)        $%p ;", &DSP);
+    parseF(": (RSP)       $%p ;", &RSP);
+    parseF(": (LSP)       $%p ;", &lsp);
+    parseF(": (HERE)      $%p ;", &here);
+    parseF(": (LAST)      $%p ;", &last);
+    parseF(": (STK)       $%p ;", &ds.stk[0].i);
+    parseF(": (RSTK)      $%p ;", &rs.stk[0].c);
+    parseF(": TIB         $%p ;", &tib[0]);
+    parseF(": >IN         $%p ;", &in);
+    parseF(": CODE        $%p ;", &code[0]);
+    parseF(": CODE-SZ     #%d ;", CODE_SZ);
+    parseF(": VARS        $%p ;", &vars[0]);
+    parseF(": VARS-SZ     #%d ;", VARS_SZ);
+    parseF(": (VHERE)     $%p ;", &vhere);
+    parseF(": (REGS)      $%p ;", &reg[0]);
+    parseF(": (OUTPUT_FP) $%p ;", &output_fp);
+    parseF(": (INPUT_FP)  $%p ;", &input_fp);
+    parseF(": STATE       $%p ;", &state);
+    parseF(": BASE        $%p ;", &base);
+    parseF(": WORD-SZ     #%d ;", sizeof(dict_t));
     parseF(": BYE  %d STATE !  ;", ALL_DONE);
     parseF(": CELL %d ; inline",   CELL_SZ);
 
