@@ -6,18 +6,7 @@
 #include <stdarg.h>
 #include <math.h>
 
-//typedef int32_t cell_t;
-//typedef uint32_t ucell_t;
-typedef long cell_t;
-typedef unsigned long ucell_t;
-typedef uint8_t byte;
-
 #include "sys-init.h"
-
-#ifndef FLOAT_T
-#define FLOAT_T     double
-#endif
-typedef FLOAT_T flt_t;
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;
 typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;

@@ -148,7 +148,7 @@
     <None Include="c3.ino" />
     <None Include="file.c3" />
     <None Include="LICENSE" />
-    <None Include="make" />
+    <None Include="makefile" />
     <None Include="memory.c3" />
     <None Include="README.md" />
     <None Include="benches.c3" />
