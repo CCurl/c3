@@ -1,7 +1,7 @@
 // System initialization logic for different types of systems
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
-#if (defined __x86_64 || _WIN64)
+#if (defined __x86_64 || defined _WIN64)
 #define FLOAT_T   double
 #define CELL_T    int64_t 
 #define UCELL_T   uint64_t 
@@ -24,7 +24,7 @@ typedef uint8_t  byte;
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 
-#elif (defined __x86_32 || __x86_64)
+#elif (defined __i386 || defined __x86_64)
 
 // Support for Linux
 #include <unistd.h>
