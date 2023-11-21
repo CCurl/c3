@@ -124,9 +124,11 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## Building c3:
 - Windows: there is a c3.sln file for Visual Studio
-  - Use the x86 configuration (32-bit)
+  - You can use the either configuration (x86 or x64)
 - Linux: there is a makefile
-  - It uses clang -O3 and builds a 64-bit version
+  - "make c3" builds the 64-bit version, c3
+  - "make c3-32" builds the 32-bit version, c3-32
+  - "make" builds both versions
 - Apple: I do not have an Apple, so I cannot build for Apples
   - But c3 is minimal enough that it should be easy to port to an Apple system
 - Arduino: there is a c3.ino file
@@ -324,6 +326,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | vc,          | (B--)          | C, to the VARS area |
 | v,           | (N--)          | , to the VARS area |
 | CELLS        | (A--B)         | B: A * CELL |
+| CELL+        | (A--B)         | B: A + CELL |
 | DOES>        | (--)           | Defines the behavior of words created using "CREATE" |
 | CONSTANT nm  | (N--)          | Defines word "nm" that pushes N when executed. |
 | VARIABLE nm  | (--)           | Defines word "nm" that pushes an addess when executed. ALLOTs a CELL  |
