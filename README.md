@@ -171,7 +171,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 22    | <          | (A B--F)     | If A<B, F=1, else F=0|
 | 23    | =          | (A B--F)     | If A=B, F=1, else F=0|
 | 24    | >          | (A B--F)     | If A>B, F=1, else F=0|
-| 25    | 0= , NOT   | (N--F)       | If N=0, F=1, else F=0|
+| 25    | 0=         | (N--F)       | If N=0, F=1, else F=0|
 | 26    | >R         | (N--)        | Move N to return stack|
 | 27    | R@         | (--N)        | N: Copy of top of return stack|
 | 28    | R>         | (--N)        | N: Top of return stack (popped)|
@@ -179,7 +179,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 30    | LOOP       | (--)         | Increment I. Jump to DO if I<T|
 | 31    | -LOOP      | (--)         | Decrement I. Jump to DO if I>T|
 | 32    | (I)        | (--A)        | A: Address of I, the loop index|
-| 33    | COM        | (A--B)       | B: Ones-complement of A|
+| 33    | INVERT     | (A--B)       | B: Ones-complement of A|
 | 34    | AND        | (A B--C)     | C: A bitwise-AND B|
 | 35    | OR         | (A B--C)     | C: A bitwise-OR B|
 | 36    | XOR        | (A B--C)     | C: A bitwise-XOR B|
@@ -362,7 +362,6 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | <>           | (A B--F)       | F: if A<>B then 1 else 0 |
 | RDROP        | (R:A--)        | Drop top of RETURN stack |
 | ROT          | (A B C--B C A) | Rotate A to TOS |
-| -ROT         | (A B C--C A B) | Rotate C before A |
 | (            | (--)           | Skip until ')' or EOL |
 | bl           | (--C)          | C: 32 (SPACE) |
 | tab          | (--C)          | C: 9 (TAB) |
@@ -377,6 +376,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | I            | (--N)          | Index of the current loop |
 | J            | (--N)          | Index of the next outer loop |
 | +I           | (N--)          | Add N to the index (+1 is still added at LOOP) |
+| +LOOP        | (N--)          | Add N to the index and LOOP |
 | UNLOOP       | (--)           | Unwind the loop stack (does NOT exit the loop) |
 | 0SP          | (--)           | Empty/reset the stack |
 | DEPTH        | (--N)          | N: the number of items on the stack |
