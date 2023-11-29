@@ -1,23 +1,30 @@
 // System initialization logic for different types of systems
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
-extern void printString(const char *s);
-extern void printChar(const char c);
-extern void ParseLine(const char *s);
-extern void loadStartupWords();
-extern void loadUserWords();
-extern char *doUser(char *pc, int ir);
-extern cell_t sysTime();
+#if (defined __x86_64 || defined _WIN64)
+#define FLOAT_T   double
+#define CELL_T    int64_t 
+#define UCELL_T   uint64_t 
+#else
+#define FLOAT_T   float
+#define CELL_T    int32_t 
+#define UCELL_T   uint32_t 
+#endif
 
-#ifdef _MSC_VER
+typedef CELL_T   cell_t;
+typedef UCELL_T  ucell_t;
+typedef FLOAT_T  flt_t;
+typedef uint8_t  byte;
+
+#if (defined _WIN32 || defined _WIN64)
 
     // Support for Windows
-    #include <conio.h>
     #define isPC
+    #include <conio.h>
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 
-#elif IS_LINUX
+#elif (defined __i386 || defined __x86_64)
 
 // Support for Linux
 #include <unistd.h>
@@ -95,3 +102,11 @@ int key() {
     #define REGS_SZ           100
     #define NAME_LEN           13
 #endif
+
+extern void printString(const char *s);
+extern void printChar(const char c);
+extern void ParseLine(const char *x);
+extern void loadStartupWords();
+extern void loadUserWords();
+extern char *doUser(char *pc, int ir);
+extern cell_t sysTime();

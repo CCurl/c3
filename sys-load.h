@@ -94,43 +94,43 @@ void sysLoad() {
     parseF(m2i, "S-RTRIM", STR_OPS, RTRIM);
 
     // Float opcodes ...
-    parseF(m2i, "F+",   FLT_OPS, FADD);
-    parseF(m2i, "F-",   FLT_OPS, FSUB);
-    parseF(m2i, "F*",   FLT_OPS, FMUL);
-    parseF(m2i, "F/",   FLT_OPS, FDIV);
-    parseF(m2i, "F=",   FLT_OPS, FEQ);
-    parseF(m2i, "F<",   FLT_OPS, FLT);
-    parseF(m2i, "F>",   FLT_OPS, FGT);
-    parseF(m2i, "F2I",  FLT_OPS, F2I);
-    parseF(m2i, "I2F",  FLT_OPS, I2F);
-    parseF(m2i, "F.",   FLT_OPS, FDOT);
-    parseF(m2i, "SQRT", FLT_OPS, SQRT);
-    parseF(m2i, "TANH", FLT_OPS, TANH);
+    parseF(m2i, "F+",    FLT_OPS, FADD);
+    parseF(m2i, "F-",    FLT_OPS, FSUB);
+    parseF(m2i, "F*",    FLT_OPS, FMUL);
+    parseF(m2i, "F/",    FLT_OPS, FDIV);
+    parseF(m2i, "F=",    FLT_OPS, FEQ);
+    parseF(m2i, "F<",    FLT_OPS, FLT);
+    parseF(m2i, "F>",    FLT_OPS, FGT);
+    parseF(m2i, "F>I",   FLT_OPS, F2I);
+    parseF(m2i, "I>F",   FLT_OPS, I2F);
+    parseF(m2i, "F.",    FLT_OPS, FDOT);
+    parseF(m2i, "FSQRT", FLT_OPS, SQRT);
+    parseF(m2i, "FTANH", FLT_OPS, TANH);
 
     loadStartupWords();
 
     // System information words
-    parseF(": VERSION     #%ld ;", VERSION);
-    parseF(": (SP)        $%lx ;", &DSP);
-    parseF(": (RSP)       $%lx ;", &RSP);
-    parseF(": (LSP)       $%lx ;", &lsp);
-    parseF(": (HERE)      $%lx ;", &here);
-    parseF(": (LAST)      $%lx ;", &last);
-    parseF(": (STK)       $%lx ;", &ds.stk[0].i);
-    parseF(": (RSTK)      $%lx ;", &rs.stk[0].c);
-    parseF(": TIB         $%lx ;", &tib[0]);
-    parseF(": >IN         $%lx ;", &in);
-    parseF(": CODE        $%lx ;", &code[0]);
-    parseF(": CODE-SZ     #%ld ;", CODE_SZ);
-    parseF(": VARS        $%lx ;", &vars[0]);
-    parseF(": VARS-SZ     #%ld ;", VARS_SZ);
-    parseF(": (VHERE)     $%lx ;", &vhere);
-    parseF(": (REGS)      $%lx ;", &reg[0]);
-    parseF(": (OUTPUT_FP) $%lx ;", &output_fp);
-    parseF(": (INPUT_FP)  $%lx ;", &input_fp);
-    parseF(": STATE       $%lx ;", &state);
-    parseF(": BASE        $%lx ;", &base);
-    parseF(": WORD-SZ     #%ld ;", sizeof(dict_t));
+    parseF(": VERSION     #%d ;", VERSION);
+    parseF(": (SP)        %zu ;", &DSP);
+    parseF(": (RSP)       %zu ;", &RSP);
+    parseF(": (LSP)       %zu ;", &lsp);
+    parseF(": (HERE)      %zu ;", &here);
+    parseF(": (LAST)      %zu ;", &last);
+    parseF(": (STK)       %zu ;", &ds.stk[0].i);
+    parseF(": (RSTK)      %zu ;", &rs.stk[0].c);
+    parseF(": TIB         %zu ;", &tib[0]);
+    parseF(": >IN         %zu ;", &in);
+    parseF(": CODE        %zu ;", &code[0]);
+    parseF(": CODE-SZ     #%d ;", CODE_SZ);
+    parseF(": VARS        %zu ;", &vars[0]);
+    parseF(": VARS-SZ     #%d ;", VARS_SZ);
+    parseF(": (VHERE)     %zu ;", &vhere);
+    parseF(": (REGS)      %zu ;", &reg[0]);
+    parseF(": (OUTPUT_FP) %zu ;", &output_fp);
+    parseF(": (INPUT_FP)  %zu ;", &input_fp);
+    parseF(": STATE       %zu ;", &state);
+    parseF(": BASE        %zu ;", &base);
+    parseF(": WORD-SZ     #%d ;", sizeof(dict_t));
     parseF(": BYE  %d STATE !  ;", ALL_DONE);
     parseF(": CELL %d ; INLINE",   CELL_SZ);
 

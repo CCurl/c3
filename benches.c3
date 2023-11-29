@@ -40,4 +40,4 @@ variable num
 250 mil bm3
 250 mil bm4
 250 mil bm5
-  2 mil bm6
+  1 mil bm6
