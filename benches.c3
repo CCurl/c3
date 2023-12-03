@@ -5,7 +5,7 @@
 : mil #1000 dup * * ;
 
 : prime? BEGIN ( n 3--f )
-        OVER OVER /MOD SWAP IF
+        2DUP /MOD SWAP IF
             OVER < IF DROP EXIT THEN
         ELSE 
             DROP = EXIT
@@ -13,7 +13,6 @@
         1+ 1+
     AGAIN ;
 
-variable num
 : num-primes 4 s9  11 DO
         i 3 prime? IF i9 THEN
     2 +LOOP r9 ;

@@ -100,7 +100,7 @@ int key() {
     #define STK_SZ             64
     #define LSTK_SZ            30
     #define REGS_SZ           100
-    #define NAME_LEN           13
+    #define NAME_LEN           21
 #endif
 
 extern void printString(const char *s);
