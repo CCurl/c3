@@ -156,8 +156,8 @@ void sysLoad() {
     ParseLine(": val    CREATE 0 v, DOES> @ ;");
     ParseLine(": >val   CREATE DOES> CELL - ! ;");
     ParseLine(": (val)  vhere CELL - CONSTANT ;");
-    ParseLine(": :noname  here 1 state ! ;");
-    ParseLine(": exec  >R ;");
+    ParseLine(": :NONAME  HERE 1 STATE ! ;");
+    ParseLine(": EXEC  >R ;");
     ParseLine(": IF    (jmpz) c, here 0 , ; IMMEDIATE");
     ParseLine(": ELSE  (jmp) c, here SWAP 0 , here SWAP ! ; IMMEDIATE");
     ParseLine(": THEN  here SWAP ! ; IMMEDIATE");
@@ -201,7 +201,7 @@ void sysLoad() {
     ParseLine(": ABS  DUP 0 < IF negate THEN ;");
     ParseLine(": MIN  OVER OVER > IF SWAP THEN DROP ;");
     ParseLine(": MAX  OVER OVER < IF SWAP THEN DROP ;");
-    ParseLine(": btw +regs s3 s2 s1 r2 r1 <= r1 r3 <= and -regs ;");
+    ParseLine(": BTW +regs s3 s2 s1 r2 r1 <= r1 r3 <= and -regs ;");
     ParseLine(": I  (I) @ ; INLINE");
     ParseLine(": J  (I) 3 CELLS - @ ;");
     ParseLine(": +I (I) @ + (I) ! ; INLINE");
@@ -209,7 +209,7 @@ void sysLoad() {
     ParseLine(": UNLOOP (lsp) @ 3 - 0 MAX (lsp) ! ;");
     ParseLine(": 0SP 0 (sp) ! ;");
     ParseLine(": DEPTH (sp) @ 1- ;");
-    ParseLine(": .s '(' EMIT space depth ?DUP IF");
+    ParseLine(": .S '(' EMIT space depth ?DUP IF");
     ParseLine("      0 do (stk) i 1+ 8 * + @ . loop");
     ParseLine("    THEN ')' EMIT ;");
     ParseLine(": dump ( a n-- ) for DUP c@ . 1+ next DROP ;");

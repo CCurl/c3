@@ -94,13 +94,14 @@ void rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) =
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
 
-int strEq(const char *d, const char *s, int caseSensitive) {
-    while (*s || *d) {
-        if (caseSensitive) { if (*s != *d) return 0; }
-        else { if (lower(*s) != lower(*d)) return 0; }
-        s++; d++;
-    }
-    return 1;
+int strEqI(const char *s, const char *d) {
+    while (lower(*s++) == lower(*d++)) { if (*(s-1)==0) { return 1; } }
+    return 0;
+}
+
+int strEq(const char *d, const char *s) {
+    while (*(s++) == *(d++)) { if (*(s-1)==0) { return 1; } }
+    return 0;
 }
 
 void printStringF(const char *fmt, ...) {
@@ -184,7 +185,7 @@ int doFind(const char *nm) {
     int len = strLen(nm);
     dict_t *dp = last;
     while (dp < (dict_t*)&code[CODE_SZ]) {
-        if ((len==dp->len) && strEq(nm, dp->name, 0)) {
+        if ((len==dp->len) && strEqI(nm, dp->name)) {
             push(dp->xt);
             push(dp->f);
             return 1;
@@ -269,8 +270,8 @@ char *doStringOp(char *pc) {
         RCASE STRCAT:  s=cpop(); d=cpop(); strCat(d, s);
         RCASE STRCATC: t1=pop(); d=cpop(); strCatC(d, (char)t1);
         RCASE STRLEN:  TOS=strLen(CTOS);
-        RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s, 1);
-        RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEq(d, s, 0);
+        RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s);
+        RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEqI(d, s);
         RCASE LTRIM:   CTOS=lTrim(CTOS);
         RCASE RTRIM:   rTrim(CTOS);
             return pc;
@@ -395,10 +396,10 @@ int doNum(const char *w) {
 }
 
 int doML(const char *w) {
-    if ((state) || (!strEq(w,"-ML-",1))) { return 0; }
+    if ((state) || (!strEq(w,"-ML-"))) { return 0; }
     addWord();
     while (nextWord()) {
-        if (strEq(WD,"-MLX-",1)) { return 1; }
+        if (strEq(WD,"-MLX-")) { return 1; }
         if (doNum(WD) == 0) { printStringF("-ML:[%s]?-", WD); return 1; }
         CComma(pop());
     }
