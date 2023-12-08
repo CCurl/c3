@@ -1,6 +1,9 @@
 // System initialization logic for different types of systems
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
+#include <stdlib.h>
+#include <stdint.h>
+
 #if (defined __x86_64 || defined _WIN64)
 #define FLOAT_T   double
 #define CELL_T    int64_t 

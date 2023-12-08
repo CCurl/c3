@@ -1,8 +1,6 @@
-// c3.cpp - a minimal Forth-like VM
+// c3 - a stack-based VM
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <stdarg.h>
 #include <math.h>
 
@@ -25,7 +23,7 @@ enum {
 
 // NB: these skip #3 (EXIT), so they can be marked as INLINE
 enum { // System opcodes
-    INLINE=0, IMMEDIATE, DOT, ITOA = 4, ATOI,
+    INLINE=0, IMMEDIATE, DOT, ITOA=4, ATOI,
     COLONDEF, ENDWORD, CREATE, FIND, WORD, TIMER,
     CCOMMA, COMMA, KEY, QKEY, EMIT, QTYPE
 };
@@ -35,7 +33,7 @@ enum { // String opcodes
 };
 
 enum { // Floating point opcdes
-    FADD=0, FSUB, FMUL, FDIV = 4, FEQ, FLT, FGT, F2I, I2F, FDOT,
+    FADD=0, FSUB, FMUL, FDIV=4, FEQ, FLT, FGT, F2I, I2F, FDOT,
     SQRT, TANH
 };
 
