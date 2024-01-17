@@ -1,6 +1,3 @@
-// System initialization logic for different types of systems
-// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
-
 #ifndef __C3_H__
 #define __C3_H__
 
@@ -22,6 +19,8 @@ typedef CELL_T   cell_t;
 typedef UCELL_T  ucell_t;
 typedef FLOAT_T  flt_t;
 typedef uint8_t  byte;
+
+#define RCASE         return pc; case
 
 #if (defined _WIN32 || defined _WIN64)
     #define isPC
@@ -46,17 +45,6 @@ typedef uint8_t  byte;
 
 enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
 
-#ifndef NEEDS_ALIGN
-    //void Store(const char *loc, cell_t x) { *(cell_t*)loc = x; }
-    //cell_t Fetch(const char *loc) { return *(cell_t*)loc; }
-#else
-    // 32-bit only
-    #define S(x, y) (*(x)=((y)&0xFF))
-    #define G(x, y) (*(x)<<y)
-    void Store(char *l, cell_t v) { S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); }
-    cell_t Fetch(char *l) { return (*l)|G(l+1,8)|G(l+2,16)|G(l+3,24); }
-#endif
-
 #ifndef CODE_SZ
     #define CODE_SZ           128*1024
     #define VARS_SZ        4*1024*1024
@@ -66,16 +54,7 @@ enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
     #define NAME_LEN           21
 #endif
 
-//extern void printString(const char *s);
-//extern void printChar(const char c);
-//extern void ParseLine(const char *x);
-//extern void loadStartupWords();
-//extern void loadUserWords();
-//extern char *doUser(char *pc, int ir);
-//extern cell_t sysTime();
-
-
-// These are defined in vm.c
+// These are defined in the VM
 extern cell_t lstk[LSTK_SZ+1], lsp;
 extern cell_t fileStk[10], fileSp, input_fp, output_fp;
 extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
@@ -123,7 +102,7 @@ extern void Run(char *pc);
 extern int doReg(const char *w);
 extern void c3Init();
 
-// These are functions vm.c needs to be defined
+// These are functions the VM calls
 extern void Store(const char *addr, cell_t val);
 extern cell_t Fetch(const char *addr);
 extern void printString(const char *str);

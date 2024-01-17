@@ -45,6 +45,12 @@ extern "C" {
 
 cell_t sysTime() { return micros(); }
 
+// Store and Fetch are 32-bit only on dev boards
+#define S1(x, y) (*(x)=((y)&0xFF))
+#define G1(x, y) (*(x)<<y)
+void Store(char *l, cell_t v) { S1(l,v); S1(l+1,v>>8); S1(l+2,v>>16); S1(l+3,v>>24); }
+cell_t Fetch(char *l) { return (*l)|G1(l+1,8)|G1(l+2,16)|G1(l+3,24); }
+
 void loadStartupWords() {
     ParseLine("-ML- PIN-INPUT   110 3 -MLX- inline");
     ParseLine("-ML- PIN-OUTPUT  111 3 -MLX- inline");

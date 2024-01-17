@@ -1,30 +1,24 @@
 // Support for PCs
-// NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
 
 #include "c3.h"
+#include <time.h>
+
 #ifdef isPC
 
-#define ClearTib      fill(tib, 0, sizeof(tib))
-#define RCASE         return pc; case
-#define TOS           (ds.stk[DSP].i)
-#define CTOS          (ds.stk[DSP].c)
-//#define NOS           (ds.stk[DSP-1].i)
-
-#include <time.h>
+enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
 #if (defined _WIN32 || defined _WIN64)
 
-    // Support for Windows
-#include <conio.h>
-int qKey() { return _kbhit(); }
-int key() { return _getch(); }
+// Support for Windows
+    #include <conio.h>
+    int qKey() { return _kbhit(); }
+    int key() { return _getch(); }
 
-#elif (defined __i386 || defined __x86_64)
+#elif (defined __i386 || defined __x86_64 || defined IS_LINUX)
 
 // Support for Linux
 #include <unistd.h>
 #include <termios.h>
-#define isPC
 static struct termios normT, rawT;
 static int isTtyInit = 0;
 void ttyInit() {
@@ -59,8 +53,8 @@ int key() {
     ttyModeNorm();
     return x;
 }
-#endif
 
+#endif
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
@@ -69,7 +63,7 @@ void Store(const char* loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(const char* loc) { return *(cell_t*)loc; }
 
 void getInput() {
-    ClearTib;
+    fill(tib, 0, sizeof(tib));
     if ((state == STOP_LOAD) && input_fp) {
         fclose((FILE*)input_fp);
         input_fp = (0 < fileSp) ? fileStk[fileSp--] : 0;
@@ -92,20 +86,17 @@ void getInput() {
     in = tib;
 }
 
-enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
-
 char *doUser(char *pc, int ir) {
     char *cp;
     switch (ir) {
     case SYSTEM:  system(cpop());
-        RCASE FOPEN : y = cpop(); cp = cpop(); push((cell_t)fopen(cp, y));
+    RCASE FOPEN : y = cpop(); cp = cpop(); push((cell_t)fopen(cp, y));
     RCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
-    RCASE FREAD:  t1=pop(); n1=pop(); y = cpop();
-        push(feof((FILE*)t1) ? 0 : fread( y, 1, n1, (FILE*)t1));
-        RCASE FWRITE : t1 = pop(); n1 = pop(); y = cpop(); push(fwrite(y, 1, n1, (FILE*)t1));
+    RCASE FREAD:  t1=pop(); n1=pop(); y=cpop(); push(fread( y, 1, n1, (FILE*)t1));
+    RCASE FWRITE: t1=pop(); n1=pop(); y=cpop(); push(fwrite(y, 1, n1, (FILE*)t1));
     RCASE FLOAD:  y=cpop(); t1=(cell_t)fopen(y, "rt");
             if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
-            if (t1) { input_fp = t1; ClearTib; }
+            if (t1) { input_fp = t1; fill(tib, 0, sizeof(tib)); }
             else { printStringF("-noFile[%s]-", y); }
     return pc; default: return 0;
     }
