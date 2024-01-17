@@ -24,54 +24,9 @@ typedef FLOAT_T  flt_t;
 typedef uint8_t  byte;
 
 #if (defined _WIN32 || defined _WIN64)
-
-    // Support for Windows
     #define isPC
-    #include <conio.h>
-    int qKey() { return _kbhit(); }
-    int key() { return _getch(); }
-
 #elif (defined __i386 || defined __x86_64)
-
-// Support for Linux
-#include <unistd.h>
-#include <termios.h>
-#define isPC
-static struct termios normT, rawT;
-static int isTtyInit = 0;
-void ttyInit() {
-    tcgetattr( STDIN_FILENO, &normT);
-    cfmakeraw(&rawT);
-    isTtyInit = 1;
-}
-void ttyModeNorm() {
-    if (!isTtyInit) { ttyInit(); }
-    tcsetattr( STDIN_FILENO, TCSANOW, &normT);
-}
-void ttyModeRaw() {
-    if (!isTtyInit) { ttyInit(); }
-    tcsetattr( STDIN_FILENO, TCSANOW, &rawT);
-}
-int qKey() {
-    struct timeval tv;
-    fd_set rdfs;
-    ttyModeRaw();
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    FD_ZERO(&rdfs);
-    FD_SET(STDIN_FILENO, &rdfs);
-    select(STDIN_FILENO+1, &rdfs, NULL, NULL, &tv);
-    int x = FD_ISSET(STDIN_FILENO, &rdfs);
-    ttyModeNorm();
-    return x;
-}
-int key() {
-    ttyModeRaw();
-    int x = getchar();
-    ttyModeNorm();
-    return x;
-}
-
+    #define isPC
 #else
 
     // Not a PC, must be a development board
@@ -79,8 +34,6 @@ int key() {
     //       I use these for the Teensy-4 and the Pico
     #define isBOARD 1
 
-    extern int qKey();
-    extern int key();
     #define CODE_SZ            64*1024
     #define VARS_SZ            96*1024
     #define STK_SZ             32
@@ -94,8 +47,8 @@ int key() {
 enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
 
 #ifndef NEEDS_ALIGN
-    void Store(const char *loc, cell_t x) { *(cell_t*)loc = x; }
-    cell_t Fetch(const char *loc) { return *(cell_t*)loc; }
+    //void Store(const char *loc, cell_t x) { *(cell_t*)loc = x; }
+    //cell_t Fetch(const char *loc) { return *(cell_t*)loc; }
 #else
     // 32-bit only
     #define S(x, y) (*(x)=((y)&0xFF))
@@ -128,6 +81,7 @@ extern cell_t fileStk[10], fileSp, input_fp, output_fp;
 extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
 extern cell_t inputStk[10], fileSp, input_fp, output_fp;
 extern char tib[256], *in, *y;
+extern char vars[VARS_SZ];
 
 extern void push(cell_t x);
 extern cell_t pop();
@@ -148,7 +102,8 @@ extern char *lTrim(char *d);
 extern char *rTrim(char *d);
 extern int lower(int x); 
 extern int upper(int x);
-
+extern void ParseLine(const char* x);
+extern void parseF(const char* fmt, ...);
 extern int strEqI(const char *s, const char *d);
 extern int strEq(const char *d, const char *s);
 extern void printStringF(const char *fmt, ...);
@@ -166,7 +121,7 @@ extern char *doSysOp(char *pc);
 extern char *doFloatOp(char *pc);
 extern void Run(char *pc);
 extern int doReg(const char *w);
-extern void vmInit();
+extern void c3Init();
 
 // These are functions vm.c needs to be defined
 extern void Store(const char *addr, cell_t val);
