@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <math.h>
 
-#include "sys-init.h"
+#include "c3.h"
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;
 typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
@@ -37,13 +37,12 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
+// enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
 
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
 #define ToCP(x)       (char*)(x)
-#define ClearTib      fill(tib, 0, sizeof(tib))
 #define DSP           ds.sp
 #define TOS           (ds.stk[DSP].i)
 #define NOS           (ds.stk[DSP-1].i)
@@ -88,7 +87,7 @@ void strCatC(char *d, const char c) { d=strEnd(d); *(d++)=c; *d=0; }
 void strCpy(char *d, const char *s) { if (d != s) { *d = 0; strCat(d, s); } }
 int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
 char *lTrim(char *d) { while (*d && (*d<33)) { ++d; } return d; }
-void rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) = 0; } }
+char *rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) = 0; } return d; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
 
@@ -475,7 +474,3 @@ void c3Init() {
     ParseLine(": benches forget \" benches.c3\" (load) ;");
     ParseLine(": sb forget \" sandbox.c3\" (load) ;");
 }
-
-#ifdef isPC
-#include "sys-pc.h"
-#endif

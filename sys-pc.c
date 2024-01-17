@@ -1,8 +1,15 @@
 // Support for PCs
 // NOTE: this is a *.h file because the Arduino IDE doesn't like *.inc files
-#include <time.h>
 
-#define SC(x)         strCat(tib, x)
+#include "c3.h"
+#ifdef isPC
+
+#define ClearTib      fill(tib, 0, sizeof(tib))
+#define RCASE         return pc; case
+#define TOS           (ds.stk[DSP].i)
+//#define NOS           (ds.stk[DSP-1].i)
+
+#include <time.h>
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
@@ -80,3 +87,5 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
+
+#endif isPC

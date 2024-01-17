@@ -159,9 +159,11 @@
     <ClCompile Include="c3.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sys-init.h" />
+    <ClInclude Include="c3.h" />
     <ClInclude Include="sys-load.h" />
-    <ClInclude Include="sys-pc.h" />
+    <ClCompile Include="sys-pc.c">
+      <FileType>CppCode</FileType>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
