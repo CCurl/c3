@@ -91,6 +91,7 @@ int key() {
     void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
     cell_t Fetch(char *loc) { return *(cell_t*)loc; }
 #else
+    // 32-bit only
     #define S(x, y) (*(x)=((y)&0xFF))
     #define G(x, y) (*(x)<<y)
     void Store(char *l, cell_t v) { S(l,v); S(l+1,v>>8); S(l+2,v>>16); S(l+3,v>>24); }
