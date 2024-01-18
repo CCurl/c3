@@ -73,7 +73,7 @@
 : 0SP 0 (sp) ! ;
 : DEPTH (sp) @ 1- ;
 : .S '(' EMIT space depth ?DUP IF
-      0 do (stk) i 1+ 8 * + @ . loop
+      0 do (stk) i 1+ CELL * + @ . loop
     THEN ')' EMIT ;
 : dump ( a n-- ) for DUP c@ . 1+ next DROP ;
 : T3 ( --zstr end )   +regs   >in ++

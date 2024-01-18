@@ -84,7 +84,7 @@ void sysLoad() {
     ParseLine(": 0SP 0 (sp) ! ;");
     ParseLine(": DEPTH (sp) @ 1- ;");
     ParseLine(": .S '(' EMIT space depth ?DUP IF");
-    ParseLine("      0 do (stk) i 1+ 8 * + @ . loop");
+    ParseLine("      0 do (stk) i 1+ CELL * + @ . loop");
     ParseLine("    THEN ')' EMIT ;");
     ParseLine(": dump ( a n-- ) for DUP c@ . 1+ next DROP ;");
     ParseLine(": T3 ( --zstr end )   +regs   >in ++");
