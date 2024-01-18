@@ -24,8 +24,12 @@ typedef uint8_t  byte;
 
 #if (defined _WIN32 || defined _WIN64)
     #define isPC
-#elif (defined __i386 || defined __x86_64)
+    #define IS_WINDOWS
+#elif (defined __i386 || defined __x86_64 || defined IS_LINUX)
     #define isPC
+    #ifndef IS_LINUX
+    #define IS_LINUX
+    #endif
 #else
 
     // Not a PC, must be a development board
@@ -112,6 +116,7 @@ extern int key();
 extern int qKey();
 extern cell_t sysTime();
 extern void loadStartupWords();
+extern void loadUserStartupWords();
 extern void loadUserWords();
 
 #endif // __C3_H__

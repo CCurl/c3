@@ -101,7 +101,21 @@ To bootstrap itself, c3 has a simple "machine language parser" that can create w
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-Everything in c3 is defined from those. See file 'sys-load.h' for details.
+On startup, c3 does the following to bootstrap itself:
+1. Create words to define its primitives.
+2. Create system-info words.
+3. Try to load block-000.c3 from the following locations (in order):
+    - On Windows:
+      - .
+      - c:\bin
+      - c:\bin\c3
+      - c:\c3
+    - On Linux:
+      - .
+      - ~/.local/bin
+      - ~/.local/c3
+
+Everything in else is defined from those. See file 'block-000.c3' for details.
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be called "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
 
@@ -144,24 +158,33 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## c3 Opcode / Word reference
 
-### NOTE: See the sys-load.h file for the implementation of the words defined in the base c3 system.
+### NOTE: See file 'block-000.c3' for the implementation of the words defined in the base c3 system.
 
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 |  0    | STOP       | (--)         | Stops the runtime engine|
 |  1    | LIT1       | (--B)        | Pushes next BYTE onto the stack|
 |  2    | LIT        | (--N)        | Pushes next CELL onto the stack|
+|       | (LIT)      | (--N)        | OPCODE for LITERAL (INLINE) |
 |  3    | EXIT       | (--)         | Exit subroutine|
+|       | (EXIT)     | (--N)        | OPCODE for EXIT (INLINE) |
 |  4    | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
-|  5    | JUMP       | (--)         | Jump: next CELL is address|
-|  6    | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
-|  7    | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
+|       | (CALL)     | (--N)        | OPCODE for CALL (INLINE) |
+|  5    | JMP        | (--)         | Jump: next CELL is address|
+|       | (JMP)      | (--N)        | OPCODE for JMP |
+|  6    | JMPZ       | (N--)        | Jump if TOS==0: next CELL is address|
+|       | (JMPZ)     | (--N)        | OPCODE for JMPZ |
+|  7    | JMPNZ      | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
+|       | (JMPNZ)    | (--N)        | OPCODE for JMPNZ |
 |  8    | !          | (N A--)      | Store CELL N to address A|
+|       | (STORE)    | (--N)        | OPCODE for STORE (!) |
 |  9    | C!         | (B A--)      | Store BYTE B to address A|
 | 10    | @          | (A--N)       | Fetch CELL N FROM address A|
+|       | (FETCH)    | (--N)        | OPCODE for FETCH (@) |
 | 11    | C@         | (A--B)       | Fetch BYTE B FROM address A|
 | 12    | DUP        | (N--N N)     | Duplicate TOS|
-| 15    | DROP       | (A B--A)     | Drop TOS|
+|       | (DUP)      | (--N)        | OPCODE for DUP |
+| 15    | DROP       | (A B--A)     | Discard TOS|
 | 13    | SWAP       | (A B--B A)   | Swap TOS and NOS|
 | 14    | OVER       | (A B--A B A) | Push a copy of NOS|
 | 16    | +          | (A B--C)     | C: A + B|
@@ -187,6 +210,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 36    | XOR        | (A B--C)     | C: A bitwise-XOR B|
 | 37    | TYPE       | (A N--)      | EMIT N chars from address A (Standard Forth TYPE)|
 | 38    | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
+|       | (ZTYPE)    | (--N)        | OPCODE for ZTYPE |
 | 39,X  | iX         | (--)         | Increment register X|
 | 40,X  | dX         | (--)         | Decrement register X|
 | 41,X  | rX         | (--N)        | N: value of register X|
@@ -299,19 +323,9 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 
-### Other built-in c3 words
-| WORD |STACK |Description|
-| :-- | :-- | :--|
-| (LIT)        | (--N)          | OPCODE for LITERAL (INLINE) |
-| (EXIT)       | (--N)          | OPCODE for EXIT (INLINE) |
-| (CALL)       | (--N)          | OPCODE for CALL (INLINE) |
-| (JMP)        | (--N)          | OPCODE for JMP |
-| (JMPZ)       | (--N)          | OPCODE for JMPZ |
-| (JMPNZ)      | (--N)          | OPCODE for JMPNZ |
-| (STORE)      | (--N)          | OPCODE for STORE |
-| (FETCH)      | (--N)          | OPCODE for FETCH |
-| (DUP)        | (--N)          | OPCODE for DUP |
-| (ZTYPE)      | (--N)          | OPCODE for ZTYPE |
+### Words defined in block-000.c3
+| WORD         | STACK          | Description|
+| :--          | :--            | :--|
 | \\           | (--)           | Line comment |
 | [            | (--)           | Set STATE=0 |
 | ]            | (--)           | SET STATE=1 |
@@ -425,14 +439,14 @@ Here is the process:
 - For a global opcode:
   - In c3.c, add the new opcode(s) to the appropriate enum.
   - In c3.c, add a NCASE to run() to for each new opcode.
-  - In sys-load.h, add a "-ML-" line to LoadStartupWords() for each new opcode.
+  - In c3.c, add a "-ML-" line to LoadC3Words() for each new opcode.
   - Update your README.md.
 
 - For a target-specific opcode:
-  - All work is done in the target's *.h file (e.g. - sys-pc.h).
+  - All work is done in the target's *.c file (e.g. - sys-pc.c).
   - Add the new opcodes(s) to the enum.
   - Target-specific opcodes should have values above 100.
-  - Edit LoadStartupWords() and add a "-ML-" line for each new opcode.
+  - Edit LoadUserWords() and add a "-ML-" line for each new opcode.
   - For example: to define opcode 120 as "NEWOP" ... ParseLine("-ML- NEWOP 120 3 -MLX- INLINE");
   - In doUser(), add cases for the new opcode(s).
   - Update your README.md.

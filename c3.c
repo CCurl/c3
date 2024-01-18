@@ -37,8 +37,6 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-// enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
-
 #define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
@@ -453,7 +451,135 @@ void parseF(const char *fmt, ...) {
     ParseLine(buf);
 }
 
-#include "sys-load.h"
+void loadC3Words() {
+    const char *m2n = "-ML- %s %d %d 3 -MLX-";
+    const char *m2i = "-ML- %s %d %d 3 -MLX- INLINE";
+    const char *m1i = "-ML- %s %d    3 -MLX- INLINE";
+    const char *lit = ": %s %d ; INLINE";
+
+    // Bootstrap ...
+    parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
+    parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
+    parseF(m2i, ":", SYS_OPS, COLONDEF);
+    parseF(m2n, ";", SYS_OPS, ENDWORD); last->f = IS_IMMEDIATE;
+
+    // Opcodes ...
+    parseF(lit, "(LIT)", LIT);
+    parseF(m1i, "EXIT", EXIT);
+    parseF(lit, "(EXIT)", EXIT); last->f = 0;
+    parseF(lit, "(CALL)", CALL);
+    parseF(lit, "(JMP)", JMP);
+    parseF(lit, "(JMPZ)", JMPZ);
+    parseF(lit, "(JMPNZ)", JMPNZ);
+    parseF(m1i, "!", STORE);
+    parseF(lit, "(STORE)", STORE);
+    parseF(m1i, "C!", CSTORE);
+    parseF(m1i, "@", FETCH);
+    parseF(lit, "(FETCH)", FETCH);
+    parseF(m1i, "C@", CFETCH);
+    parseF(m1i, "DUP", DUP);
+    parseF(lit, "(DUP)", DUP);
+    parseF(m1i, "SWAP", SWAP);
+    parseF(m1i, "OVER", OVER);
+    parseF(m1i, "DROP", DROP);
+    parseF(m1i, "+", ADD);
+    parseF(m1i, "*", MULT);
+    parseF(m1i, "/MOD", SLMOD);
+    parseF(m1i, "-", SUB);
+    parseF(m1i, "1+", INC);
+    parseF(m1i, "1-", DEC);
+    parseF(m1i, "<", LT);
+    parseF(m1i, "=", EQ);
+    parseF(m1i, ">", GT);
+    parseF(m1i, "0=", EQ0);
+    parseF(m1i, ">R", RTO);
+    parseF(m1i, "R@", RFETCH);
+    parseF(m1i, "R>", RFROM);
+    parseF(m1i, "DO", DO);
+    parseF(m1i, "LOOP", LOOP);
+    parseF(m1i, "-LOOP", LOOP2);
+    parseF(m1i, "(I)", INDEX);
+    parseF(m1i, "INVERT", COM);
+    parseF(m1i, "AND", AND);
+    parseF(m1i, "OR", OR);
+    parseF(m1i, "XOR", XOR);
+    parseF(m1i, "TYPE", TYPE);
+    parseF(m1i, "ZTYPE", ZTYPE);
+    parseF(lit, "(ZTYPE)", ZTYPE);
+    // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
+    parseF(m1i, "+REGS", REG_NEW);
+    parseF(m1i, "-REGS", REG_FREE);
+    // parseF(m1i, "SYS_OPS", SYS_OPS);
+    // parseF(lit, "STR_OPS", STR_OPS);
+    // parseF(lit, "FLT_OPS", FLT_OPS);
+
+    // System opcodes ...(INLINE and IMMEDIATE) were defined above
+    parseF(m2i, "(.)",       SYS_OPS, DOT);
+    parseF(m2i, "ITOA",      SYS_OPS, ITOA);
+    parseF(m2i, "ATOI",      SYS_OPS, ATOI);
+    parseF(m2i, "CREATE",    SYS_OPS, CREATE);
+    parseF(m2i, "'",         SYS_OPS, FIND);
+    parseF(m2i, "NEXT-WORD", SYS_OPS, WORD);
+    parseF(m2i, "TIMER",     SYS_OPS, TIMER);
+    parseF(m2i, "C,",        SYS_OPS, CCOMMA);
+    parseF(m2i, ",",         SYS_OPS, COMMA);
+    parseF(m2i, "KEY",       SYS_OPS, KEY);
+    parseF(m2i, "?KEY",      SYS_OPS, QKEY);
+    parseF(m2i, "EMIT",      SYS_OPS, EMIT);
+    parseF(m2i, "QTYPE",     SYS_OPS, QTYPE);
+
+    // String opcodes ...
+    parseF(m2i, "S-TRUNC", STR_OPS, TRUNC);
+    parseF(m2i, "LCASE",   STR_OPS, LCASE);
+    parseF(m2i, "UCASE",   STR_OPS, UCASE);
+    parseF(m2i, "S-CPY",   STR_OPS, STRCPY);
+    parseF(m2i, "S-CAT",   STR_OPS, STRCAT);
+    parseF(m2i, "S-CATC",  STR_OPS, STRCATC);
+    parseF(m2i, "S-LEN",   STR_OPS, STRLEN);
+    parseF(m2i, "S-EQ",    STR_OPS, STREQ);
+    parseF(m2i, "S-EQ-I",  STR_OPS, STREQI);
+    parseF(m2i, "S-LTRIM", STR_OPS, LTRIM);
+    parseF(m2i, "S-RTRIM", STR_OPS, RTRIM);
+
+    // Float opcodes ...
+    parseF(m2i, "F+",    FLT_OPS, FADD);
+    parseF(m2i, "F-",    FLT_OPS, FSUB);
+    parseF(m2i, "F*",    FLT_OPS, FMUL);
+    parseF(m2i, "F/",    FLT_OPS, FDIV);
+    parseF(m2i, "F=",    FLT_OPS, FEQ);
+    parseF(m2i, "F<",    FLT_OPS, FLT);
+    parseF(m2i, "F>",    FLT_OPS, FGT);
+    parseF(m2i, "F>I",   FLT_OPS, F2I);
+    parseF(m2i, "I>F",   FLT_OPS, I2F);
+    parseF(m2i, "F.",    FLT_OPS, FDOT);
+    parseF(m2i, "FSQRT", FLT_OPS, SQRT);
+    parseF(m2i, "FTANH", FLT_OPS, TANH);
+
+    // System information words
+    parseF(": VERSION     #%d ;", VERSION);
+    parseF(": (SP)        %zu ;", &DSP);
+    parseF(": (RSP)       %zu ;", &RSP);
+    parseF(": (LSP)       %zu ;", &lsp);
+    parseF(": (HERE)      %zu ;", &here);
+    parseF(": (LAST)      %zu ;", &last);
+    parseF(": (STK)       %zu ;", &ds.stk[0].i);
+    parseF(": (RSTK)      %zu ;", &rs.stk[0].c);
+    parseF(": TIB         %zu ;", &tib[0]);
+    parseF(": >IN         %zu ;", &in);
+    parseF(": CODE        %zu ;", &code[0]);
+    parseF(": CODE-SZ     #%d ;", CODE_SZ);
+    parseF(": VARS        %zu ;", &vars[0]);
+    parseF(": VARS-SZ     #%d ;", VARS_SZ);
+    parseF(": (VHERE)     %zu ;", &vhere);
+    parseF(": (REGS)      %zu ;", &reg[0]);
+    parseF(": (OUTPUT_FP) %zu ;", &output_fp);
+    parseF(": (INPUT_FP)  %zu ;", &input_fp);
+    parseF(": STATE       %zu ;", &state);
+    parseF(": BASE        %zu ;", &base);
+    parseF(": WORD-SZ     #%d ;", sizeof(dict_t));
+    parseF(": BYE  %d STATE !  ;", ALL_DONE);
+    parseF(": CELL %d ; INLINE",   CELL_SZ);
+}
 
 void c3Init() {
     here = &code[0];
@@ -466,11 +592,6 @@ void c3Init() {
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
 
-    sysLoad();
-    ParseLine("marker");
-    ParseLine("version 100 /mod .\" c3 - v%d.%d - Chris Curl%n\"");
-    ParseLine("here code - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
-    ParseLine("vhere vars - .\" %d variable bytes used, \" vars-end vhere - .\" %d bytes free.\"");
-    ParseLine(": benches forget \" benches.c3\" (load) ;");
-    ParseLine(": sb forget \" sandbox.c3\" (load) ;");
+    loadC3Words();
+    loadUserWords();
 }

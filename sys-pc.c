@@ -7,16 +7,14 @@
 
 enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
-#if (defined _WIN32 || defined _WIN64)
+#ifdef IS_WINDOWS
 
-// Support for Windows
     #include <conio.h>
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 
-#elif (defined __i386 || defined __x86_64 || defined IS_LINUX)
+#elif (defined IS_LINUX)
 
-// Support for Linux
 #include <unistd.h>
 #include <termios.h>
 static struct termios normT, rawT;
@@ -102,30 +100,51 @@ char *doUser(char *pc, int ir) {
     }
 }
 
-void loadStartupWords() {
+void loadUserWords() {
     parseF("-ML- SYSTEM %d 3 -MLX- inline", SYSTEM);
     parseF("-ML- FOPEN  %d 3 -MLX- inline", FOPEN);
     parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
     parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
     parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
-}
-
-void loadUserWords() {
     ParseLine(": isPC 1 ;");
 }
 
+int tryOpen(char *loc, char *fn) {
+    tib[0]=0;
+    if (loc && *loc) { strCpy(tib, loc); }
+    strCat(tib, fn);
+    FILE *fp = fopen(tib, "rb");
+    if (!fp) { return 0; }
+    fileStk[++fileSp] = (cell_t)fp;
+    return 1;
+}
+
+void lookForStartUpFile() {
+    y="block-000.c3";
+#ifdef IS_LINUX
+    if (tryOpen("./", y)) { return; }
+    if (tryOpen("~/.local/c3/", y)) { return; }
+    if (tryOpen("~/.local/bin/", y)) { return; }
+#elif (defined  IS_WINDOWS)
+    if (tryOpen(".\\", y)) { return; }
+    if (tryOpen("c:\\bin\\", y)) { return; }
+    if (tryOpen("c:\\bin\\c3\\", y)) { return; }
+    if (tryOpen("c:\\c3\\", y)) { return; }
+#endif
+}
+
 int main(int argc, char *argv[]) {
-    char *p = &vars[1000];
     input_fp = output_fp = 0;
     c3Init();
+
     for (int i=1; i<argc; i++) {
-        FILE *fp = fopen(argv[i], "rt");
-        if (fp) { fileStk[++fileSp] = (cell_t)fp; }
+        if (tryOpen("", argv[i])) { continue; }
         if (isNum(argv[i])) { reg[i] = pop(); }
         else { reg[i] = (cell_t)argv[i]; }
     }
-    if (!input_fp && fileSp) { input_fp = fileStk[fileSp--]; }
+    lookForStartUpFile();
+    if (fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {
         getInput();
         ParseLine(tib);
@@ -133,4 +152,4 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-#endif isPC
+#endif // isPC
