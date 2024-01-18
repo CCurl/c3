@@ -25,6 +25,7 @@ typedef uint8_t  byte;
 #if (defined _WIN32 || defined _WIN64)
     #define isPC
     #define IS_WINDOWS
+    #define _SYS_LOAD_
 #elif (defined __i386 || defined __x86_64 || defined IS_LINUX)
     #define isPC
     #ifndef IS_LINUX
@@ -44,6 +45,7 @@ typedef uint8_t  byte;
     #define REGS_SZ           100
     #define NAME_LEN           13
     #define NEEDS_ALIGN
+    #define _SYS_LOAD_
 
 #endif
 
@@ -115,8 +117,7 @@ extern char *doUser(char *pc, int ir);
 extern int key();
 extern int qKey();
 extern cell_t sysTime();
-extern void loadStartupWords();
-extern void loadUserStartupWords();
+extern void sysLoad();
 extern void loadUserWords();
 
 #endif // __C3_H__

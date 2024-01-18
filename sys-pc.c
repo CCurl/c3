@@ -120,18 +120,19 @@ int tryOpen(char * root, char *loc, char *fn) {
     return 1;
 }
 
-void lookForStartUpFile(char *root) {
-    y="block-000.c3";
+int lookForFile(char* root, char *name) {
 #ifdef IS_LINUX
-    if (tryOpen("", "./", y)) { return; }
-    if (tryOpen(root, "/.local/c3/", y)) { return; }
-    if (tryOpen(root, "/.local/bin/", y)) { return; }
+    if (tryOpen("", "", name)) { return 1; }
+    if (tryOpen("", "./", name)) { return 1; }
+    if (tryOpen(root, "/.local/c3/", name)) { return 1; }
+    if (tryOpen(root, "/.local/bin/", name)) { return 1; }
 #elif (defined  IS_WINDOWS)
-    if (tryOpen("", ".\\", y)) { return; }
-    if (tryOpen(root, "\\bin\\", y)) { return; }
-    if (tryOpen(root, "\\bin\\c3\\", y)) { return; }
-    if (tryOpen(root, "\\c3\\", y)) { return; }
+    if (tryOpen("", "", name)) { return 1; }
+    if (tryOpen("", ".\\", name)) { return 1; }
+    if (tryOpen(root, "\\c3\\", name)) { return 1; }
+    if (tryOpen(root, "\\bin\\", name)) { return 1; }
 #endif
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -141,11 +142,13 @@ int main(int argc, char *argv[]) {
 
     if (1 < argc) { root = argv[1]; }
     for (int i=2; i<argc; i++) {
-        if (tryOpen("", "", argv[i])) { continue; }
+        if (lookForFile(root, argv[i])) { continue; }
         if (isNum(argv[i])) { reg[i] = pop(); }
         else { reg[i] = (cell_t)argv[i]; }
     }
-    lookForStartUpFile(root);
+#ifndef _SYS_LOAD_
+    lookForFile(root, "block-000.c3");
+#endif
     if (fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {
         getInput();

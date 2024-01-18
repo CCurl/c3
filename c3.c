@@ -594,4 +594,5 @@ void c3Init() {
 
     loadC3Words();
     loadUserWords();
+    sysLoad();
 }
