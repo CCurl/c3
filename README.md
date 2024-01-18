@@ -65,7 +65,9 @@ An example usage of temporary words:
 ```
 
 ## Inline words
-In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the first EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space as well. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
+In c3, an "INLINE" word is like a macro. When compiling a word that is INLINE, c3 copies the contents of the word (up to, but not including the first EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space as well. This is especially true on a 64-bit system, where the CELL size is 8.
+
+**Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
 
 ## Notes on output formatting in ZTYPE and '."':
 - %b: output TOS as a binary number
@@ -84,38 +86,34 @@ In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copi
 For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 
 ## Bootstrapping c3
-To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-load.h, I define aliases for the opcodes.
+When c3 starts, it defines aliases for the c3 VM opcodes.
 
-- The first four words defined in c3 are:
-  - 'INLINE'    - mark the last word as inline
-  - 'IMMEDIATE' - mark the last word as immediate
-  - ':'         - define a new c3 word
-  - ';'         - end word definition
+c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-".
 
+For example, the c3 opcode for "exit word" is 3, and "duplicate the top of the stack" is 12. Some examples:
+
+|WORD     |Opcode|Description|
+|:--      |--:   |:--|
+|EXIT     |3     |Exit word|
+|DUP      |12    |Duplicate TOS|
+|INLINE   |47,0  |Mark the last word as INLINE|
+|IMMEDIATE|47,1  |Mark the last word as IMMEDIATE|
+|:        |47,6  |Define a new word|
+|;        |47,7  |End word definition|
+
+The above words are defined as follows:
 ```
+  -ML- EXIT 3 3 -MLX-
+  -ML- DUP 12 3 -MLX-
   -ML- INLINE 47 0 3 -MLX-
-  -ML- INLINE 47 1 3 -MLX-
-  -ML- INLINE 47 6 3 -MLX-
-  -ML- INLINE 47 7 3 -MLX-
+  -ML- IMMEDIATE 47 1 3 -MLX-
+  -ML- : 47 6 3 -MLX-
+  -ML- ; 47 7 3 -MLX-
 ```
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-On startup, c3 does the following to bootstrap itself:
-1. Create words to define its primitives.
-2. Create system-info words.
-3. Try to load block-000.c3 from the following locations (in order):
-    - On Windows:
-      - .
-      - c:\bin
-      - c:\bin\c3
-      - c:\c3
-    - On Linux:
-      - .
-      - ~/.local/bin
-      - ~/.local/c3
-
-Everything in else is defined from those. See file 'block-000.c3' for details.
+Everything else can be defined from those. See file 'block-000.c3' for details.
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be called "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
 
@@ -166,7 +164,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 |  1    | LIT1       | (--B)        | Pushes next BYTE onto the stack|
 |  2    | LIT        | (--N)        | Pushes next CELL onto the stack|
 |       | (LIT)      | (--N)        | OPCODE for LITERAL (INLINE) |
-|  3    | EXIT       | (--)         | Exit subroutine|
+|  3    | EXIT       | (--)         | Exit word|
 |       | (EXIT)     | (--N)        | OPCODE for EXIT (INLINE) |
 |  4    | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
 |       | (CALL)     | (--N)        | OPCODE for CALL (INLINE) |
@@ -418,15 +416,34 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | FORGET-1     | (--)           | Remove the most recent entry from the dictionary |
 
 ## c3 startup behavior
-When c3 starts:
-- For every parameter on the command line:
-  - IF c3 can open the argv[N] as a file, queue it up to be loaded.
+On startup, c3 does the following to bootstrap itself:
+- The first parameter (if provided) is assumed to be the root folder for searching.
+1. Create words to define its primitives.
+2. Create system-information words.
+3. Try to load block-000.c3 from the following locations (in order):
+    - The current folder, "."
+    - On Windows:
+      - (root)\c3
+      - (root)\bin
+    - On Linux:
+      - (root)/.local/c3
+      - (root)/.local/bin
+
+- For every other parameter on the command line:
+  - IF c3 can open argv[N] as a file, queue it up to be loaded.
   - IF argv[N] can be converted to a number, set rN to that number
   - - ELSE, set rN to argv[N] (e.g. - rN QTYPE will output the parameter)
 ### Example:
 ```
-Running this: c3 $100 test.txt
-will set r1 to #256 and r2 to the address where "test.txt" starts.
+Running this (under Linux): "c3 ~ $100 test.txt" will:
+- Set the root folder for startup file searches to "~"
+- Set r2 to #256
+- Set r3 to the address where "test.txt" starts.
+
+Running this (under Windows): "c3 e: $100 test.txt" will:
+- Set the root folder for startup file searches to "e:"
+- Set r2 to #256
+- Set r3 to the address where "test.txt" starts.
 ```
 
 ## Adding new opcodes to c3

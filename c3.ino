@@ -22,6 +22,7 @@ extern "C" {
     extern cell_t pop();
     extern void c3Init();
     extern void fill(char *d, char val, int num);
+    extern void parseF(const char* fmt, ...);
     extern void ParseLine(const char *s);
     extern void printStringF(const char *fmt, ...);
 
@@ -51,25 +52,23 @@ cell_t sysTime() { return micros(); }
 void Store(char *l, cell_t v) { S1(l,v); S1(l+1,v>>8); S1(l+2,v>>16); S1(l+3,v>>24); }
 cell_t Fetch(char *l) { return (*l)|G1(l+1,8)|G1(l+2,16)|G1(l+3,24); }
 
-void loadStartupWords() {
-    ParseLine("-ML- PIN-INPUT   110 3 -MLX- inline");
-    ParseLine("-ML- PIN-OUTPUT  111 3 -MLX- inline");
-    ParseLine("-ML- PIN-PULLUP  112 3 -MLX- inline");
-    ParseLine("-ML- DPIN@       113 3 -MLX- inline");
-    ParseLine("-ML- APIN@       114 3 -MLX- inline");
-    ParseLine("-ML- DPIN!       115 3 -MLX- inline");
-    ParseLine("-ML- APIN!       116 3 -MLX- inline");
-  #ifdef __LITTLEFS__
-    ParseLine("-ML- FOPEN       101 3 -MLX- inline");
-    ParseLine("-ML- FCLOSE      102 3 -MLX- inline");
-    ParseLine("-ML- FREAD       103 3 -MLX- inline");
-    ParseLine("-ML- FWRITE      104 3 -MLX- inline");
-    ParseLine("-ML- FLOAD       105 3 -MLX- inline");
-  #endif
-}
-
 void loadUserWords() {
-    ParseLine(": isPC 0 ;");
+    parseF("-ML- PIN-INPUT   %d 3 -MLX- inline", OPEN_INPUT);
+    parseF("-ML- PIN-OUTPUT  %d 3 -MLX- inline", OPEN_OUTPUT);
+    parseF("-ML- PIN-PULLUP  %d 3 -MLX- inline", OPEN_PULLUP);
+    parseF("-ML- DPIN@       %d 3 -MLX- inline", PIN_READ);
+    parseF("-ML- APIN@       %d 3 -MLX- inline", PIN_READA);
+    parseF("-ML- DPIN!       %d 3 -MLX- inline", PIN_WRITE);
+    parseF("-ML- APIN!       %d 3 -MLX- inline", PIN_WRITEA);
+    #ifdef __LITTLEFS__
+    parseF("-ML- FOPEN       %d 3 -MLX- inline", FOPEN);
+    parseF("-ML- FCLOSE      %d 3 -MLX- inline", FCLOSE);
+    parseF("-ML- FREAD       %d 3 -MLX- inline", FREAD);
+    parseF("-ML- FWRITE      %d 3 -MLX- inline", FWRITE);
+    parseF("-ML- FLOAD       %d 3 -MLX- inline", FLOAD);
+    parseF("-ML- BLOAD       %d 3 -MLX- inline", BLOAD);
+    #endif
+    parseF(": isPC 0 ;");
 }
 
 char *doUser(char *pc, int ir) {
@@ -89,6 +88,10 @@ char *doUser(char *pc, int ir) {
     RCASE FREAD:  t=pop(); n=pop(); push(fRead(pop(), 1, n, t));
     RCASE FWRITE: t=pop(); n=pop(); push(fWrite(pop(), 1, n, t));
     RCASE FLOAD:  n=pop(); t=fOpen(n, (cell_t)"rt");
+            if (t && input_fp) { fileStk[++fileSp]=input_fp; }
+            if (t) { input_fp = t; fill(tib, 0, sizeof(tib)); }
+            else { printStringF("-noFile[%s]-", (char*)n); }
+    RCASE BLOAD:  n=pop(); t=fOpen(n, (cell_t)"rt");
             if (t && input_fp) { fileStk[++fileSp]=input_fp; }
             if (t) { input_fp = t; fill(tib, 0, sizeof(tib)); }
             else { printStringF("-noFile[%s]-", (char*)n); }

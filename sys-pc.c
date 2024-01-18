@@ -110,9 +110,9 @@ void loadUserWords() {
     ParseLine(": isPC 1 ;");
 }
 
-int tryOpen(char *loc, char *fn) {
-    tib[0]=0;
-    if (loc && *loc) { strCpy(tib, loc); }
+int tryOpen(char * root, char *loc, char *fn) {
+    strCpy(tib, root);
+    strCat(tib, loc);
     strCat(tib, fn);
     FILE *fp = fopen(tib, "rb");
     if (!fp) { return 0; }
@@ -120,30 +120,32 @@ int tryOpen(char *loc, char *fn) {
     return 1;
 }
 
-void lookForStartUpFile() {
+void lookForStartUpFile(char *root) {
     y="block-000.c3";
 #ifdef IS_LINUX
-    if (tryOpen("./", y)) { return; }
-    if (tryOpen("~/.local/c3/", y)) { return; }
-    if (tryOpen("~/.local/bin/", y)) { return; }
+    if (tryOpen("", "./", y)) { return; }
+    if (tryOpen(root, "/.local/c3/", y)) { return; }
+    if (tryOpen(root, "/.local/bin/", y)) { return; }
 #elif (defined  IS_WINDOWS)
-    if (tryOpen(".\\", y)) { return; }
-    if (tryOpen("c:\\bin\\", y)) { return; }
-    if (tryOpen("c:\\bin\\c3\\", y)) { return; }
-    if (tryOpen("c:\\c3\\", y)) { return; }
+    if (tryOpen("", ".\\", y)) { return; }
+    if (tryOpen(root, "\\bin\\", y)) { return; }
+    if (tryOpen(root, "\\bin\\c3\\", y)) { return; }
+    if (tryOpen(root, "\\c3\\", y)) { return; }
 #endif
 }
 
 int main(int argc, char *argv[]) {
+    char *root=".";
     input_fp = output_fp = 0;
     c3Init();
 
-    for (int i=1; i<argc; i++) {
-        if (tryOpen("", argv[i])) { continue; }
+    if (1 < argc) { root = argv[1]; }
+    for (int i=2; i<argc; i++) {
+        if (tryOpen("", "", argv[i])) { continue; }
         if (isNum(argv[i])) { reg[i] = pop(); }
         else { reg[i] = (cell_t)argv[i]; }
     }
-    lookForStartUpFile();
+    lookForStartUpFile(root);
     if (fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {
         getInput();
