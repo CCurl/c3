@@ -59,6 +59,7 @@ void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout
 cell_t sysTime() { return clock(); }
 void Store(const char* loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(const char* loc) { return *(cell_t*)loc; }
+char *root;
 
 void getInput() {
     fill(tib, 0, sizeof(tib));
@@ -84,43 +85,20 @@ void getInput() {
     in = tib;
 }
 
-char *doUser(char *pc, int ir) {
-    char *cp;
-    switch (ir) {
-    case SYSTEM:  system(cpop());
-    RCASE FOPEN : y = cpop(); cp = cpop(); push((cell_t)fopen(cp, y));
-    RCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
-    RCASE FREAD:  t1=pop(); n1=pop(); y=cpop(); push(fread( y, 1, n1, (FILE*)t1));
-    RCASE FWRITE: t1=pop(); n1=pop(); y=cpop(); push(fwrite(y, 1, n1, (FILE*)t1));
-    RCASE FLOAD:  y=cpop(); t1=(cell_t)fopen(y, "rt");
-            if (t1 && input_fp) { fileStk[++fileSp]=input_fp; }
-            if (t1) { input_fp = t1; fill(tib, 0, sizeof(tib)); }
-            else { printStringF("-noFile[%s]-", y); }
-    return pc; default: return 0;
-    }
-}
-
-void loadUserWords() {
-    parseF("-ML- SYSTEM %d 3 -MLX- inline", SYSTEM);
-    parseF("-ML- FOPEN  %d 3 -MLX- inline", FOPEN);
-    parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
-    parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
-    parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
-    parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
-    ParseLine(": isPC 1 ;");
-}
-
-int tryOpen(char * root, char *loc, char *fn) {
-    strCpy(tib, root);
-    strCat(tib, loc);
-    strCat(tib, fn);
-    FILE *fp = fopen(tib, "rb");
+int tryOpen(char *root, char *loc, char *fn) {
+    char nm[64];
+    strCpy(nm, root);
+    strCat(nm, loc);
+    strCat(nm, fn);
+    // printf("try [%s]\n", nm);
+    FILE *fp = fopen(nm, "rb");
     if (!fp) { return 0; }
-    fileStk[++fileSp] = (cell_t)fp;
+    if (input_fp) { fileStk[++fileSp] = input_fp; }
+    input_fp = (cell_t)fp;
     return 1;
 }
 
-int lookForFile(char* root, char *name) {
+int lookForFile(char *name) {
 #ifdef IS_LINUX
     if (tryOpen("", "", name)) { return 1; }
     if (tryOpen("", "./", name)) { return 1; }
@@ -135,21 +113,43 @@ int lookForFile(char* root, char *name) {
     return 0;
 }
 
+char *doUser(char *pc, int ir) {
+    char *cp;
+    switch (ir) {
+    case SYSTEM:  system(cpop());
+    RCASE FOPEN : y=cpop(); cp=cpop(); push((cell_t)fopen(cp, y));
+    RCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
+    RCASE FREAD:  t1=pop(); n1=pop(); y=cpop(); push(fread( y, 1, n1, (FILE*)t1));
+    RCASE FWRITE: t1=pop(); n1=pop(); y=cpop(); push(fwrite(y, 1, n1, (FILE*)t1));
+    RCASE FLOAD:  y=cpop(); if (!lookForFile(y)) { printStringF("-file[%s]?-", y); }
+    return pc; default: return 0;
+    }
+}
+
+void loadUserWords() {
+    parseF("-ML- SYSTEM %d 3 -MLX- inline", SYSTEM);
+    parseF("-ML- FOPEN  %d 3 -MLX- inline", FOPEN);
+    parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
+    parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
+    parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
+    parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
+    ParseLine(": isPC 1 ;");
+}
+
 int main(int argc, char *argv[]) {
-    char *root=".";
+    root="";
     input_fp = output_fp = 0;
     c3Init();
 
     if (1 < argc) { root = argv[1]; }
     for (int i=2; i<argc; i++) {
-        if (lookForFile(root, argv[i])) { continue; }
+        if (lookForFile(argv[i])) { continue; }
         if (isNum(argv[i])) { reg[i] = pop(); }
         else { reg[i] = (cell_t)argv[i]; }
     }
 #ifndef _SYS_LOAD_
-    lookForFile(root, "block-000.c3");
+    lookForFile("block-000.c3");
 #endif
-    if (fileSp) { input_fp = fileStk[fileSp--]; }
     while (state != ALL_DONE) {
         getInput();
         ParseLine(tib);

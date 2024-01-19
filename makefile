@@ -22,5 +22,6 @@ $(app32): $(srcfiles) $(incfiles)
 clean:
 	rm -f $(app64) $(app32)
 
-bin: $(app64)
+bin: $(app64) $(app32)
 	cp -u -p $(app64) ~/.local/bin/
+	cp -u -p $(app32) ~/.local/bin/
