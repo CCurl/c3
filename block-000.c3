@@ -16,9 +16,13 @@
 : DOES>  R> (JMP) C, , ;
 : CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;
 : VARIABLE  CREATE 0 V, (EXIT) C, ;
-: val    CREATE 0 v, DOES> @ ;
-: >val   CREATE DOES> CELL - ! ;
-: (val)  vhere CELL - CONSTANT ;
+\ usage: val line >val >line ... 12 >line
+: val    CREATE 0 V, 10 C, (EXIT) C, ;
+: >val   VHERE CELL - CONSTANT (HERE) -- 8 C, (EXIT) C, ;
+: (val)  VHERE CELL - CONSTANT ;
+\ This definition of >val uses DOES>
+\ it might be more "elegant", but is longer and less efficient
+\ : >val  CREATE DOES> CELL - ! ;
 : :NONAME  HERE 1 STATE ! ;
 : EXEC  >R ;
 : IF    (jmpz) c, here 0 , ; IMMEDIATE
@@ -41,7 +45,7 @@
 : ?DUP  DUP IF DUP THEN ;
 : /   /mod nip  ; INLINE
 : MOD /mod DROP ; INLINE
-: +! SWAP OVER @ + SWAP ! ; INLINE
+: +! DUP >R @ + R> ! ; INLINE
 : c++ DUP c@ 1+ SWAP c! ; INLINE
 : 2*  DUP + ; INLINE
 : 2/  2 / ; INLINE
