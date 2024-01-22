@@ -57,7 +57,7 @@ int key() {
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
 cell_t sysTime() { return clock(); }
-void Store(const char* loc, cell_t x) { *(cell_t*)loc = x; }
+void Store(char* loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(const char* loc) { return *(cell_t*)loc; }
 char *root;
 
@@ -65,14 +65,14 @@ void getInput() {
     fill(tib, 0, sizeof(tib));
     if ((state == STOP_LOAD) && input_fp) {
         fclose((FILE*)input_fp);
-        input_fp = (0 < fileSp) ? fileStk[fileSp--] : 0;
+        input_fp = (0 < fileSp) ? inputStk[fileSp--] : 0;
         state = 0;
     }
     if (input_fp) {
         in = fgets(tib, 190, (FILE*)input_fp);
         if (in != tib) {
             fclose((FILE*)input_fp);
-            input_fp = (0 < fileSp) ? fileStk[fileSp--] : 0;
+            input_fp = (0 < fileSp) ? inputStk[fileSp--] : 0;
         }
     }
     if (! input_fp) {
@@ -91,10 +91,10 @@ int tryOpen(char *root, char *loc, char *fn) {
     strCat(nm, loc);
     strCat(nm, fn);
     // printf("try [%s]\n", nm);
-    FILE *fp = fopen(nm, "rb");
+    cell_t fp = fOpen((cell_t)nm, (cell_t)"rb");
     if (!fp) { return 0; }
-    if (input_fp) { fileStk[++fileSp] = input_fp; }
-    input_fp = (cell_t)fp;
+    if (input_fp) { inputStk[++fileSp] = input_fp; }
+    input_fp = fp;
     return 1;
 }
 
@@ -114,13 +114,13 @@ int lookForFile(char *name) {
 }
 
 char *doUser(char *pc, int ir) {
-    char *cp;
+    cell_t t1, t2, t3;
     switch (ir) {
     case SYSTEM:  system(cpop());
-    RCASE FOPEN : y=cpop(); cp=cpop(); push((cell_t)fopen(cp, y));
-    RCASE FCLOSE: t1=pop(); fclose((FILE*)t1);
-    RCASE FREAD:  t1=pop(); n1=pop(); y=cpop(); push(fread( y, 1, n1, (FILE*)t1));
-    RCASE FWRITE: t1=pop(); n1=pop(); y=cpop(); push(fwrite(y, 1, n1, (FILE*)t1));
+    RCASE FOPEN : t2=pop(); t1=pop(); push(fOpen(t1, t2));
+    RCASE FCLOSE: fClose(pop());
+    RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead(t1, 1, t2, t3));
+    RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
     RCASE FLOAD:  y=cpop(); if (!lookForFile(y)) { printStringF("-file[%s]?-", y); }
     return pc; default: return 0;
     }

@@ -47,6 +47,7 @@ typedef uint8_t  byte;
     #define NAME_LEN           13
     #define NEEDS_ALIGN
     #define _SYS_LOAD_
+    // #define _LITTLEFS_
 
 #endif
 
@@ -63,7 +64,6 @@ enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
 
 // These are defined in the VM
 extern cell_t lstk[LSTK_SZ+1], lsp;
-extern cell_t fileStk[10], fileSp, input_fp, output_fp;
 extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
 extern cell_t inputStk[10], fileSp, input_fp, output_fp;
 extern char tib[256], *in, *y;
@@ -110,7 +110,7 @@ extern int doReg(const char *w);
 extern void c3Init();
 
 // These are functions the VM calls
-extern void Store(const char *addr, cell_t val);
+extern void Store(char *addr, cell_t val);
 extern cell_t Fetch(const char *addr);
 extern void printString(const char *str);
 extern void printChar(char c);
@@ -120,5 +120,12 @@ extern int qKey();
 extern cell_t sysTime();
 extern void sysLoad();
 extern void loadUserWords();
+
+// Files support
+extern void   fileInit();
+extern cell_t fOpen(cell_t nm, cell_t md);
+extern void   fClose(cell_t fp);
+extern cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp);
+extern cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp);
 
 #endif // __C3_H__
