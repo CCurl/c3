@@ -160,8 +160,8 @@ void addWord() {
     nextWord();
     if (isTempWord(WD)) { tempWords[WD[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(WD);
+    if (NAME_LEN < l) { printStringF("-nameTrunc:%s-", WD); l=NAME_LEN; WD[l]=0; }
     --last;
-    if (NAME_LEN < l) { l=NAME_LEN; WD[l]=0; printString("-nameTrunc-"); }
     strCpy(last->name, WD);
     last->len = l;
     last->xt = (cell_t)here;
