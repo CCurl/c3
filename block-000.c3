@@ -19,7 +19,8 @@
 : TUCK  SWAP OVER ; INLINE
 : NIP   SWAP DROP ; INLINE
 : ?DUP  DUP IF DUP THEN ;
-: +! TUCK @ + SWAP ! ; INLINE
+: +! DUP >R @ + R> ! ; INLINE
+: 2+ 1+ 1+ ; INLINE
 
 : T3  \ ( --zstring end )
     +regs   VHERE DUP s8 s9   >IN  @ 1+ s5
@@ -43,8 +44,8 @@
 : space bl EMIT ;          INLINE
 : . (.) space ;            INLINE
 
-: .word     CELL + 2 + QTYPE ; INLINE
-: word-len  CELL + 2 + S-LEN ; INLINE
+: .word     CELL + 2+ QTYPE ; INLINE
+: word-len  CELL + 2+ S-LEN ; INLINE
 : words +regs 0 DUP s1 s3 LAST s2 BEGIN
         r2 code-end < WHILE
         r1+ #9 > IF 0 s1 cr THEN
@@ -67,9 +68,15 @@
 : DOES>  R> (JMP) C, , ;
 : CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;
 : VARIABLE  CREATE 0 V, (EXIT) C, ;
-: val    CREATE 0 v, DOES> @ ;
-: >val   CREATE DOES> CELL - ! ;
+\ usage: val line >val >line ... 12 >line
+: val    CREATE 0 V, 10 C, (EXIT) C, ;
+: >val   VHERE CELL - CONSTANT 8 HERE 1- C! (EXIT) C, ;
 : (val)  VHERE CELL - CONSTANT ;
+\ This definition of >val uses DOES>
+\ it might be more "elegant", but is longer and less efficient
+\ : val    CREATE 0 v, DOES> @ ;
+\ : >val  CREATE DOES> CELL - ! ;
+\ : (val)  VHERE CELL - CONSTANT ;
 : :NONAME  HERE 1 STATE ! ;
 : EXECUTE  >R ;
 : FOR 0 SWAP DO ; INLINE
@@ -77,13 +84,12 @@
 : -if (DUP) C, (jmpz) C, here 0 , ; IMMEDIATE
 : -until (DUP) C,  (jmpz) C, , ; IMMEDIATE
 : -while (jmpnz) C, , ; IMMEDIATE
+: /   /MOD NIP  ; INLINE
+: MOD /MOD DROP ; INLINE
 : 2DUP  OVER OVER ; INLINE
 : 2DROP DROP DROP ; INLINE
-: /   /mod nip  ; INLINE
-: MOD /mod DROP ; INLINE
 : 2*  DUP + ; INLINE
-: 2/  2 / ; INLINE
-: 2+  1+ 1+ ; INLINE
+: 2/  2 /   ; INLINE
 : <=  > 0= ; INLINE
 : >=  < 0= ; INLINE
 : <>  = 0= ; INLINE

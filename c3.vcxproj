@@ -161,7 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c3.h" />
-    <ClInclude Include="LittleFS.h" />
+    <ClCompile Include="file.c" />
     <ClCompile Include="sys-load.c" />
     <ClCompile Include="sys-pc.c">
       <FileType>CppCode</FileType>
