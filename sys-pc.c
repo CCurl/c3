@@ -52,7 +52,7 @@ int key() {
     return x;
 }
 
-#endif
+#endif // IS_LINUX
 
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
@@ -60,6 +60,8 @@ cell_t sysTime() { return clock(); }
 void Store(char* loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(const char* loc) { return *(cell_t*)loc; }
 char *root;
+
+#include "file.h"
 
 void getInput() {
     fill(tib, 0, sizeof(tib));

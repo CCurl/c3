@@ -1,8 +1,5 @@
 // Support for development boards
 
-#include <Arduino.h>
-
-// #define __LITTLEFS__
 #define BTW(x,l,h) ((l<=x) && (x<=h))
 #define PC(c) printChar(c)
 #define RCASE return pc; case
@@ -17,6 +14,7 @@ extern "C" {
     };
 
 #ifdef mySerial
+    void serialInit() { while (!mySerial) ; }
     void printChar(char c) { mySerial.print(c); }
     void printString(const char *s) { mySerial.print(s); }
     int qKey() { return mySerial.available(); }
@@ -25,6 +23,7 @@ extern "C" {
         return mySerial.read();
     }
 #else
+    void serialInit() { }
     void printChar(char c) {}
     void printString(char *s) {}
     int qKey() { return 0; }
@@ -81,13 +80,16 @@ char *doUser(char *pc, int ir) {
             else { printStringF("-noFile[%s]-", (char*)n); }
     return pc; default: return 0;
   }
-}
+
+} // end of extern "C"
+
+#define _LITTLEFS_
+#include "file.h"
 
 void setup() {
+  serialInit();
+  fileInit();
   c3Init();
-  #ifdef __LITTLEFS__
-    fileInit();
-  #endif
   in = (char*)0;
 }
 

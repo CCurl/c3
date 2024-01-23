@@ -47,7 +47,7 @@ typedef uint8_t  byte;
     #define NAME_LEN           13
     #define NEEDS_ALIGN
     #define _SYS_LOAD_
-    // #define _LITTLEFS_
+    //#define _LITTLEFS_
 
 #endif
 
