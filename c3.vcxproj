@@ -157,15 +157,15 @@
     <None Include="string.c3" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="c3.c" />
+    <ClCompile Include="c3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c3.h" />
-    <ClCompile Include="file.c" />
-    <ClCompile Include="sys-load.c" />
-    <ClCompile Include="sys-pc.c">
+    <ClCompile Include="sys-load.cpp" />
+    <ClCompile Include="sys-pc.cpp">
       <FileType>CppCode</FileType>
     </ClCompile>
+    <ClCompile Include="file.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

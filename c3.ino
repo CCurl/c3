@@ -1,12 +1,17 @@
 // Support for development boards
 
-#define BTW(x,l,h) ((l<=x) && (x<=h))
-#define PC(c) printChar(c)
-#define RCASE return pc; case
+#include "c3.h"
 
 #define mySerial Serial
+
+#ifdef mySerial
+void serialInit() { while (!mySerial) ; }
+#else
+void serialInit() { }
+#endif
+
+
 extern "C" {
-    #include "c3.h"
     //typedef long cell_t;
     enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
         OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
@@ -14,7 +19,6 @@ extern "C" {
     };
 
 #ifdef mySerial
-    void serialInit() { while (!mySerial) ; }
     void printChar(char c) { mySerial.print(c); }
     void printString(const char *s) { mySerial.print(s); }
     int qKey() { return mySerial.available(); }
@@ -23,7 +27,6 @@ extern "C" {
         return mySerial.read();
     }
 #else
-    void serialInit() { }
     void printChar(char c) {}
     void printString(char *s) {}
     int qKey() { return 0; }
@@ -82,9 +85,6 @@ char *doUser(char *pc, int ir) {
   }
 
 } // end of extern "C"
-
-#define _LITTLEFS_
-#include "file.h"
 
 void setup() {
   serialInit();

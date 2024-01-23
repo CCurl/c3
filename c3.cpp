@@ -1,14 +1,12 @@
 // c3 - a stack-based VM
 
-#include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
-
 #include "c3.h"
 
-typedef union { cell_t i; flt_t f; char *c; } se_t;
-typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
-typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum {
     STOP = 0, LIT1, LIT, EXIT, CALL, JMP, JMPZ, JMPNZ,
@@ -37,7 +35,6 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-#define BTW(a,b,c)    ((b<=a) && (a<=c))
 #define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
 #define ToCP(x)       (char*)(x)
@@ -54,8 +51,6 @@ enum { // Floating point opcdes
 #define L2            lstk[lsp-2]
 #define IS_IMMEDIATE  1
 #define IS_INLINE     2
-#define NCASE         goto next; case
-#define RCASE         return pc; case
 
 stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
@@ -596,3 +591,7 @@ void c3Init() {
     loadUserWords();
     sysLoad();
 }
+
+#ifdef __cplusplus
+}
+#endif

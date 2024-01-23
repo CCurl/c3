@@ -5,6 +5,8 @@
 
 #ifdef isPC
 
+extern "C" {
+
 enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
 #ifdef IS_WINDOWS
@@ -61,8 +63,6 @@ void Store(char* loc, cell_t x) { *(cell_t*)loc = x; }
 cell_t Fetch(const char* loc) { return *(cell_t*)loc; }
 char *root;
 
-#include "file.h"
-
 void getInput() {
     fill(tib, 0, sizeof(tib));
     if ((state == STOP_LOAD) && input_fp) {
@@ -87,7 +87,7 @@ void getInput() {
     in = tib;
 }
 
-int tryOpen(char *root, char *loc, char *fn) {
+int tryOpen(const char *root, const char *loc, const char *fn) {
     char nm[64];
     strCpy(nm, root);
     strCat(nm, loc);
@@ -100,7 +100,7 @@ int tryOpen(char *root, char *loc, char *fn) {
     return 1;
 }
 
-int lookForFile(char *name) {
+int lookForFile(const char *name) {
 #ifdef IS_LINUX
     if (tryOpen("", "", name)) { return 1; }
     if (tryOpen("", "./", name)) { return 1; }
@@ -119,7 +119,7 @@ char *doUser(char *pc, int ir) {
     cell_t t1, t2, t3;
     switch (ir) {
     case SYSTEM:  system(cpop());
-    RCASE FOPEN : t2=pop(); t1=pop(); push(fOpen(t1, t2));
+    RCASE FOPEN:  t2=pop(); t1=pop(); push(fOpen(t1, t2));
     RCASE FCLOSE: fClose(pop());
     RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead(t1, 1, t2, t3));
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
@@ -139,7 +139,7 @@ void loadUserWords() {
 }
 
 int main(int argc, char *argv[]) {
-    root="";
+    root=(char*)"";
     input_fp = output_fp = 0;
     c3Init();
 
@@ -158,5 +158,7 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
+
+} // extern "C"
 
 #endif // isPC
