@@ -42,12 +42,12 @@ typedef uint8_t  byte;
     //       I use these for the Teensy-4 and the Pico
 #define isBOARD 1
 
-    #define CODE_SZ            64*1024
-    #define VARS_SZ            96*1024
-    #define STK_SZ             32
-    #define LSTK_SZ            30
-    #define REGS_SZ           100
-    #define NAME_LEN           13
+    #define CODE_SZ            96*1024
+    #define VARS_SZ           256*1024
+    #define STK_SZ            256
+    #define LSTK_SZ            60
+    #define REGS_SZ           200
+    #define NAME_LEN           25
     #define NEEDS_ALIGN
     #define _SYS_LOAD_
     #define _LITTLEFS_
