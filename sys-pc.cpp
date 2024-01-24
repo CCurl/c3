@@ -5,7 +5,7 @@
 
 #ifdef isPC
 
-enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
+enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD };
 
 #ifdef IS_WINDOWS
 
@@ -113,6 +113,8 @@ int lookForFile(const char *name) {
     return 0;
 }
 
+void LFF(char *fn) { if (!lookForFile(fn)) { printStringF("-file[%s]?-", fn); } }
+
 char *doUser(char *pc, int ir) {
     cell_t t1, t2, t3;
     switch (ir) {
@@ -121,7 +123,8 @@ char *doUser(char *pc, int ir) {
     RCASE FCLOSE: fClose(pop());
     RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead(t1, 1, t2, t3));
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
-    RCASE FLOAD:  y=cpop(); if (!lookForFile(y)) { printStringF("-file[%s]?-", y); }
+    RCASE FLOAD:  y=cpop(); LFF(y);
+    RCASE BLOAD:  t1=pop(); /* TODO! */ LFF(y);
     return pc; default: return 0;
     }
 }

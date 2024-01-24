@@ -58,11 +58,11 @@ typedef uint8_t  byte;
 
 #ifndef CODE_SZ
     #define CODE_SZ           128*1024
-    #define VARS_SZ        4*1024*1024
-    #define STK_SZ             64
-    #define LSTK_SZ            30
-    #define REGS_SZ           100
-    #define NAME_LEN           21
+    #define VARS_SZ             4*1024*1024
+    #define STK_SZ            256
+    #define LSTK_SZ            60
+    #define REGS_SZ          1000
+    #define NAME_LEN           29
 #endif
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;

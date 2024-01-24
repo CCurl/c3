@@ -438,7 +438,6 @@ void parseF(const char *fmt, ...) {
     va_start(args, fmt);
     vsnprintf(buf, 128, fmt, args);
     va_end(args);
-    // printStringF("line: [%s]\n", buf);
     ParseLine(buf);
 }
 
@@ -500,9 +499,6 @@ void loadC3Words() {
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
     parseF(m1i, "+REGS", REG_NEW);
     parseF(m1i, "-REGS", REG_FREE);
-    // parseF(m1i, "SYS_OPS", SYS_OPS);
-    // parseF(lit, "STR_OPS", STR_OPS);
-    // parseF(lit, "FLT_OPS", FLT_OPS);
 
     // System opcodes ...(INLINE and IMMEDIATE) were defined above
     parseF(m2i, "(.)",       SYS_OPS, DOT);

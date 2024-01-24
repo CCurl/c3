@@ -4,19 +4,13 @@
 
 #define mySerial Serial
 
-#ifdef mySerial
-void serialInit() { while (!mySerial) ; }
-#else
-void serialInit() { }
-#endif
-
-
 enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
     OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
     PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
 };
 
 #ifdef mySerial
+    void serialInit() { while (!mySerial) ; }
     void printChar(char c) { mySerial.print(c); }
     void printString(const char *s) { mySerial.print(s); }
     int qKey() { return mySerial.available(); }
@@ -25,6 +19,7 @@ enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
         return mySerial.read();
     }
 #else
+    void serialInit() { }
     void printChar(char c) {}
     void printString(char *s) {}
     int qKey() { return 0; }
@@ -33,7 +28,7 @@ enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
 
 cell_t sysTime() { return micros(); }
 
-// Store and Fetch are 32-bit only on dev boards
+// Cells are always 32-bit on dev boards (no 64-bit)
 #define S1(x, y) (*(x)=((y)&0xFF))
 #define G1(x, y) (*(x)<<y)
 void Store(char *l, cell_t v) { S1(l,v); S1(l+1,v>>8); S1(l+2,v>>16); S1(l+3,v>>24); }
@@ -67,18 +62,17 @@ char *doUser(char *pc, int ir) {
     RCASE PIN_WRITE:   t = pop(); n = pop(); digitalWrite(t,n);
     RCASE PIN_WRITEA:  t = pop(); n = pop(); analogWrite(t,n);
 
-    RCASE FOPEN:  t=pop(); push(fOpen(pop(), t));
+    RCASE FOPEN:  t=pop(); n=pop(); push(fOpen(n,t));
     RCASE FCLOSE: t=pop(); fClose(t);
     RCASE FREAD:  t=pop(); n=pop(); push(fRead(pop(), 1, n, t));
     RCASE FWRITE: t=pop(); n=pop(); push(fWrite(pop(), 1, n, t));
     RCASE FLOAD:  n=pop(); t=fOpen(n, (cell_t)"rt");
             if (t && input_fp) { inputStk[++fileSp]=input_fp; }
-            if (t) { input_fp = t; fill(tib, 0, sizeof(tib)); }
+            if (t) { input_fp = t; *in = 0; in = (char*)0; }
             else { printStringF("-noFile[%s]-", (char*)n); }
-    RCASE BLOAD:  n=pop(); t=fOpen(n, (cell_t)"rt"); // TODO: This is wrong!
+    RCASE BLOAD:  n=pop(); t=fOpen((cell_t)y, (cell_t)"rt"); // TODO: fix this!
             if (t && input_fp) { inputStk[++fileSp]=input_fp; }
             if (t) { input_fp = t; fill(tib, 0, sizeof(tib)); }
-            else { printStringF("-noFile[%s]-", (char*)n); }
     return pc; default: return 0;
   }
 }
@@ -90,8 +84,12 @@ void setup() {
   in = (char*)0;
 }
 
+void idle() {
+  // TODO
+}
+
 void loop() {
-  if (qKey() == 0) { return; }
+  if (qKey() == 0) { idle(); return; }
   int c = key();
   if (!in) {
       in = tib;
