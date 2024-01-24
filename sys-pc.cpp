@@ -5,8 +5,6 @@
 
 #ifdef isPC
 
-extern "C" {
-
 enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD };
 
 #ifdef IS_WINDOWS
@@ -158,7 +156,5 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
-
-} // extern "C"
 
 #endif // isPC

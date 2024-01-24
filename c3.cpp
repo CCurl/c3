@@ -4,10 +4,6 @@
 #include <math.h>
 #include "c3.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 enum {
     STOP = 0, LIT1, LIT, EXIT, CALL, JMP, JMPZ, JMPNZ,
     STORE, CSTORE, FETCH, CFETCH, DUP, SWAP, OVER, DROP,
@@ -591,7 +587,3 @@ void c3Init() {
     loadUserWords();
     sysLoad();
 }
-
-#ifdef __cplusplus
-}
-#endif

@@ -1,9 +1,5 @@
 // Load the base c3 system
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "c3.h"
 
 // #define _SYS_LOAD_
@@ -132,7 +128,3 @@ extern "C" {
     }
 
 #endif // _SYS_LOAD_
-
-#ifdef __cplusplus
-}
-#endif

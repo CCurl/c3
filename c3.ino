@@ -11,12 +11,10 @@ void serialInit() { }
 #endif
 
 
-extern "C" {
-    //typedef long cell_t;
-    enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
-        OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
-        PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
-    };
+enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
+    OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
+    PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
+};
 
 #ifdef mySerial
     void printChar(char c) { mySerial.print(c); }
@@ -83,8 +81,7 @@ char *doUser(char *pc, int ir) {
             else { printStringF("-noFile[%s]-", (char*)n); }
     return pc; default: return 0;
   }
-
-} // end of extern "C"
+}
 
 void setup() {
   serialInit();
@@ -94,22 +91,21 @@ void setup() {
 }
 
 void loop() {
-    if (qKey() == 0) { return; }
-    int c = key();
-    if (!in) {
-        in = tib;
-        fill(tib, 0, sizeof(tib));
-    }
+  if (qKey() == 0) { return; }
+  int c = key();
+  if (!in) {
+      in = tib;
+      fill(tib, 0, sizeof(tib));
+  }
 
-    if (c == 13) {
-        *(in) = 0;
-        ParseLine(tib);
-        in = 0;
-    } else if ((c==8) || (c==127)) {
-        if (--in < tib) { in = tib; }
-        else { PC(8); PC(32); PC(8); }
-    } else {
-        *(in++) = (31<c) ? 32 : c;
-    }
+  if (c == 13) {
+      *(in) = 0;
+      ParseLine(tib);
+      in = 0;
+  } else if ((c==8) || (c==127)) {
+      if (--in < tib) { in = tib; }
+      else { PC(8); PC(32); PC(8); }
+  } else {
+      *(in++) = (31<c) ? 32 : c;
   }
 }

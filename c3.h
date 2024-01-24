@@ -5,10 +5,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if (defined __x86_64 || defined _WIN64)
     #define FLOAT_T   double
     #define CELL_T    int64_t 
@@ -138,9 +134,5 @@ extern cell_t fOpen(cell_t nm, cell_t md);
 extern void   fClose(cell_t fp);
 extern cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp);
 extern cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // __C3_H__

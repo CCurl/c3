@@ -1,11 +1,11 @@
 app64 := c3
 app32 := c3-32
 
-CXX := clang
+CXX := clang++
 CXXFLAGS32 := -m32 -O2 -DIS_LINUX
 CXXFLAGS64 := -m64 -O3 -DIS_LINUX
 
-srcfiles := $(shell find . -name "*.c")
+srcfiles := $(shell find . -name "*.cpp")
 incfiles := $(shell find . -name "*.h")
 LDLIBS   := -lm
 

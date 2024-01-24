@@ -5,10 +5,6 @@
 
 #ifdef isPC
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
   void   fileInit() { }
   cell_t fOpen(cell_t nm, cell_t md) { return (cell_t)fopen((char*)nm, (char*)md); }
   void   fClose(cell_t fp) { fclose((FILE*)fp); }
@@ -18,10 +14,6 @@ extern "C" {
   cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp) {
       return (cell_t)fwrite((char*)addr, sz, num, (FILE*)fp);
   }
-
-#ifdef __cplusplus
-}
-#endif
 
 #elif defined (_LITTLEFS_)
 
