@@ -7,12 +7,14 @@
 
 #if (defined __x86_64 || defined _WIN64)
     #define FLOAT_T   double
-    #define CELL_T    int64_t 
-    #define UCELL_T   uint64_t 
+    #define CELL_T    int64_t
+    #define UCELL_T   uint64_t
+    #define CELL_SZ   8
 #else
     #define FLOAT_T   float
     #define CELL_T    int32_t 
     #define UCELL_T   uint32_t 
+    #define CELL_SZ   4
 #endif
 
 typedef CELL_T   cell_t;
@@ -20,6 +22,7 @@ typedef UCELL_T  ucell_t;
 typedef FLOAT_T  flt_t;
 typedef uint8_t  byte;
 
+#define ToCP(x)       (char*)(x)
 #define BTW(x,l,h)    ((l<=x) && (x<=h))
 #define PC(c)         printChar(c)
 #define RCASE         return pc; case

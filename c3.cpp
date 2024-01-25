@@ -31,9 +31,7 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-#define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
-#define ToCP(x)       (char*)(x)
 #define DSP           ds.sp
 #define TOS           (ds.stk[DSP].i)
 #define NOS           (ds.stk[DSP-1].i)
@@ -418,6 +416,9 @@ int doWord(const char *w) {
 
 void ParseLine(const char *x) {
     if (DSP < 1) { DSP = 0; }
+    if (state == ALL_DONE) { return; }
+    char *ch = here, *cv = vhere;
+    dict_t *cl = last;
     in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
@@ -430,6 +431,7 @@ void ParseLine(const char *x) {
         input_fp = 0;
         return;
     }
+    if ((cl==last) && (here<ch)) { printChar('^'); here=ch; vhere=cv; } // Run(here); }
 }
 
 void parseF(const char *fmt, ...) {
