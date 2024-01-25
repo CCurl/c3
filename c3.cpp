@@ -373,7 +373,7 @@ next:
 
 int doNum(const char *w) {
     if (isNum(w) == 0) { return 0; }
-    if (state == 0) { return 1; }
+    if (state == ML_MODE) { return 1; }
     if (BTW(TOS, 0, 127)) { CComma(LIT1); CComma(pop()); }
     else { CComma(LIT); Comma(pop()); }
     return 1;
@@ -381,6 +381,7 @@ int doNum(const char *w) {
 
 int doML(const char *w) {
     if ((state) || (!strEq(w,"-ML-"))) { return 0; }
+    state=ML_MODE;
     addWord();
     while (nextWord()) {
         if (strEq(WD,"-MLX-")) { return 1; }
@@ -393,12 +394,13 @@ int doML(const char *w) {
 int doReg(const char *w) {
     char t = isRegOp(w);
     if (t == 0) { return 0; }
-    if (state) { CComma(t); CComma(w[1]-'0'); }
-    else {
-        int h=245;
-        tib[h]=t; tib[h+1]=w[1]-'0'; tib[h+2]=EXIT;
-        Run(&tib[h]);
-    }
+    CComma(t); CComma(w[1]-'0');
+    //if (state) { CComma(t); CComma(w[1]-'0'); }
+    //else {
+    //    int h=245;
+    //    tib[h]=t; tib[h+1]=w[1]-'0'; tib[h+2]=EXIT;
+    //    Run(&tib[h]);
+    //}
     return 1;
 }
 
@@ -406,7 +408,8 @@ int doWord(const char *w) {
     if (doFind(w)==0) { return 0; }
     cell_t f = pop();
     char *xt = cpop();
-    if ((state == 0) || (f & IS_IMMEDIATE)) { Run(xt); return 1; }
+    if (f & IS_IMMEDIATE) { Run(xt); return 1; }
+    // if (state == 0)) { Run(xt); return 1; }
     if (f & IS_INLINE) {
         CComma(*(xt++));
         while (*xt != EXIT) { CComma(*(xt++)); }
@@ -422,7 +425,7 @@ void ParseLine(const char *x) {
     in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
-        if (doML(WD)) { continue; }
+        if (doML(WD)) { state=0; continue; }
         if (doReg(WD)) { continue; }
         if (doWord(WD)) { continue; }
         printStringF("-[word:%s]?-", WD);
@@ -431,7 +434,9 @@ void ParseLine(const char *x) {
         input_fp = 0;
         return;
     }
-    if ((cl==last) && (here<ch)) { printChar('^'); here=ch; vhere=cv; } // Run(here); }
+    if ((cl==last) && (here<ch)) {
+        printChar('^'); here=ch; vhere=cv; Run(here);
+    }
 }
 
 void parseF(const char *fmt, ...) {
@@ -451,8 +456,8 @@ void loadC3Words() {
 
     // Bootstrap ...
     parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
-    parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
-    parseF(m2i, ":", SYS_OPS, COLONDEF);
+    parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE); last->f = IS_IMMEDIATE;
+    parseF(m2i, ":", SYS_OPS, COLONDEF); last->f = IS_IMMEDIATE;
     parseF(m2n, ";", SYS_OPS, ENDWORD); last->f = IS_IMMEDIATE;
 
     // Opcodes ...
