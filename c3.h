@@ -24,9 +24,12 @@ typedef uint8_t  byte;
 
 #define ToCP(x)       (char*)(x)
 #define BTW(x,l,h)    ((l<=x) && (x<=h))
+#define min(a,b)      ((a<b)?(a):(b))
+#define max(a,b)      ((a>b)?(a):(b))
 #define PC(c)         printChar(c)
-#define RCASE         return pc; case
+#define BCASE         break; case
 #define NCASE         goto next; case
+#define RCASE         return pc; case
 
 #if (defined _WIN32 || defined _WIN64)
     #define isPC

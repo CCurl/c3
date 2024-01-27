@@ -5,7 +5,12 @@
 
 #ifdef isPC
 
-enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD };
+enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
+        EDIT_BLK, EDIT_FILE
+};
+
+extern void editBlock(cell_t blkNum);
+extern void editFile(char *fn);
 
 #ifdef IS_WINDOWS
 
@@ -125,6 +130,8 @@ char *doUser(char *pc, int ir) {
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
     RCASE FLOAD:  y=cpop(); LFF(y);
     RCASE BLOAD:  t1=pop(); /* TODO! */ LFF(y);
+    RCASE EDIT_BLK: t1=pop(); editBlock(t1);
+    RCASE EDIT_FILE:t1=pop(); editFile((char*)t1);
     return pc; default: return 0;
     }
 }
@@ -136,6 +143,9 @@ void loadUserWords() {
     parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
     parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
+    parseF("-ML- BLOAD  %d 3 -MLX- inline", BLOAD);
+    parseF("-ML- EDIT   %d 3 -MLX- inline", EDIT_BLK);
+    parseF("-ML- EDITF  %d 3 -MLX- inline", EDIT_FILE);
     ParseLine(": isPC 1 ;");
 }
 
