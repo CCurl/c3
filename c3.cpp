@@ -23,7 +23,8 @@ enum { // System opcodes
 };
 
 enum { // String opcodes
-    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN, STREQ, STREQI, LTRIM, RTRIM
+    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN,
+    STREQ, STREQI, STREQN, LTRIM, RTRIM, FINDC
 };
 
 enum { // Floating point opcdes
@@ -50,7 +51,7 @@ stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
 cell_t inputStk[10], fileSp, input_fp, output_fp;
 cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
-char code[CODE_SZ], vars[VARS_SZ], tib[256], WD[32];
+char code[CODE_SZ], vars[VARS_SZ], tib[TIB_SZ], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
@@ -78,14 +79,19 @@ char *rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) 
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
 
+int strEq(const char *d, const char *s) {
+    while (*(s++) == *(d++)) { if (*(s-1)==0) { return 1; } }
+    return 0;
+}
+
 int strEqI(const char *s, const char *d) {
     while (lower(*s++) == lower(*d++)) { if (*(s-1)==0) { return 1; } }
     return 0;
 }
 
-int strEq(const char *d, const char *s) {
-    while (*(s++) == *(d++)) { if (*(s-1)==0) { return 1; } }
-    return 0;
+int strEqN(const char *s, const char *d, cell_t n) {
+    while (*(s++) == *(d++) && (n)) { --n; }
+    return (n==0) ? 1 : 0;
 }
 
 void printStringF(const char *fmt, ...) {
@@ -245,7 +251,7 @@ void doType(const char *str) {
 }
 
 char *doStringOp(char *pc) {
-    char *d, *s;
+    char *d=NULL, *s=NULL;
     switch(*pc++) {
         case TRUNC:    d=cpop(); d[0] = 0;
         RCASE LCASE:   TOS = lower((int)TOS);
@@ -256,10 +262,12 @@ char *doStringOp(char *pc) {
         RCASE STRLEN:  TOS=strLen(CTOS);
         RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s);
         RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEqI(d, s);
+        RCASE STREQN:  t1=pop(); s=cpop(); d=cpop(); push(strEqN(d, s, t1));
         RCASE LTRIM:   CTOS=lTrim(CTOS);
         RCASE RTRIM:   rTrim(CTOS);
-            return pc;
-        default: printStringF("-strOp:[%d]?-", *(pc-1));
+        RCASE FINDC:   s=cpop(); while (*s && (*s!=TOS)) { ++s; }
+                       TOS = (*s) ? 1 : 0;
+        return pc; default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
     return pc;
 }
@@ -499,6 +507,7 @@ void loadC3Words() {
     parseF(m1i, "ZTYPE", ZTYPE);
     parseF(lit, "(ZTYPE)", ZTYPE);
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
+    parseF(lit, "(-REGS)", REG_FREE);
     parseF(m1i, "+REGS", REG_NEW);
     parseF(m1i, "-REGS", REG_FREE);
 
@@ -526,9 +535,11 @@ void loadC3Words() {
     parseF(m2i, "S-CATC",  STR_OPS, STRCATC);
     parseF(m2i, "S-LEN",   STR_OPS, STRLEN);
     parseF(m2i, "S-EQ",    STR_OPS, STREQ);
-    parseF(m2i, "S-EQ-I",  STR_OPS, STREQI);
+    parseF(m2i, "S-EQI",   STR_OPS, STREQI);
+    parseF(m2i, "S-EQN",   STR_OPS, STREQN);
     parseF(m2i, "S-LTRIM", STR_OPS, LTRIM);
     parseF(m2i, "S-RTRIM", STR_OPS, RTRIM);
+    parseF(m2i, "S-FINDC", STR_OPS, FINDC);
 
     // Float opcodes ...
     parseF(m2i, "F+",    FLT_OPS, FADD);

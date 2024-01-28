@@ -108,11 +108,13 @@ int lookForFile(const char *name) {
     if (tryOpen("", "", name)) { return 1; }
     if (tryOpen("", "./", name)) { return 1; }
     if (tryOpen(root, "/.local/c3/", name)) { return 1; }
+    if (tryOpen(root, "/.local/bin/c3/", name)) { return 1; }
     if (tryOpen(root, "/.local/bin/", name)) { return 1; }
 #elif (defined  IS_WINDOWS)
     if (tryOpen("", "", name)) { return 1; }
     if (tryOpen("", ".\\", name)) { return 1; }
     if (tryOpen(root, "\\c3\\", name)) { return 1; }
+    if (tryOpen(root, "\\bin\\c3\\", name)) { return 1; }
     if (tryOpen(root, "\\bin\\", name)) { return 1; }
 #endif
     return 0;
@@ -128,8 +130,8 @@ char *doUser(char *pc, int ir) {
     RCASE FCLOSE: fClose(pop());
     RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead(t1, 1, t2, t3));
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
-    RCASE FLOAD:  y=cpop(); LFF(y);
-    RCASE BLOAD:  t1=pop(); /* TODO! */ LFF(y);
+    RCASE FLOAD:  LFF(cpop());
+    RCASE BLOAD:  y=&tib[TIB_SZ-16]; sprintf(y, "block-%03d.c3", (int)pop()); LFF(y);
     RCASE EDIT_BLK: t1=pop(); editBlock(t1);
     RCASE EDIT_FILE:t1=pop(); editFile((char*)t1);
     return pc; default: return 0;

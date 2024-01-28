@@ -15,8 +15,9 @@
 #define LLEN          100
 #define SCR_LINES      35
 #define BLOCK_SZ      (MAX_LINES*LLEN)
-#define EDCH(l,o)     edBuf[((scrTop+l)*LLEN)+o]
-#define SHOW(l,v)     lineShow[scrTop+(l)]=v
+#define EDCHAR(l,o)   edBuf[((l)*LLEN)+(o)]
+#define EDCH(l,o)     EDCHAR(scrTop+l,o)
+#define SHOW(l,v)     lineShow[(scrTop+l)]=v
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
 enum { COMMAND = 1, INSERT, REPLACE, QUIT };
@@ -114,8 +115,8 @@ void gotoEOL() {
 
 int toBlock() {
     fill(theBlock, 0, BLOCK_SZ);
-    for (int l=0; l < MAX_LINES; l++) {
-        char *y=&EDCH(l,0);
+    for (int l=0; l<MAX_LINES; l++) {
+        char *y=&EDCHAR(l,0);
         strCat(theBlock,y);
     }
     return strLen(theBlock);
@@ -134,12 +135,12 @@ void toBuf() {
         ch = theBlock[i];
         if (ch == 0) { break; }
         if (ch ==10) {
-            EDCH(l, o) = (char)ch;
+            EDCHAR(l, o) = (char)ch;
             if (MAX_LINES <= (++l)) { return; }
             o=0;
             continue;
         } else if ((o < LLEN) && (ch!=13)) {
-            EDCH(l,o++) = (char)ch;
+            EDCHAR(l,o++) = (char)ch;
         }
     }
     for (int i = 0; i < MAX_LINES; i++) { addLF(i); }
@@ -193,7 +194,7 @@ void insertSpace() {
     for (int o=LLEN-1; off<o; o--) {
         EDCH(line,o) = EDCH(line, o-1);
     }
-    EDCH(line,off)=32;
+    EDCH(line, off)=32;
 }
 
 void insertLine() {
@@ -239,23 +240,18 @@ int doInsertReplace(char c) {
 }
 
 int doCommon(int c) {
-    int l = line, o = off;
-    if (c == 8) { mv(0, -1); }                     // <ctrl-h>
-    else if (c ==  9) { mv(0, 8); }                // <tab>
-    else if (c == 10) { mv(1, 0); }                // <ctrl-j>
-    else if (c == 11) { mv(-1, 0); }               // <ctrl-k>
-    else if (c == 12) { mv(0, 1); }                // <ctrl-l>
-    else if (c == 24) { mv(0, -1); deleteChar(); } // <ctrl-x>
-    return ((l!=line) || (o!=off)) ? 1 : 0;
-}
-
-int doCTL(int c) {
-    if (c==13) { mv(1,-999); }
-    if (c== 5) { scrTop = min(scrTop+1,MAX_LINES-SCR_LINES+1); showAll(); }
-    if (c==25) { scrTop = max(scrTop-1,0); showAll(); }
-    if (c== 4) { scrTop = min(scrTop+15,MAX_LINES-SCR_LINES+1); showAll(); }
-    if (c==21) { scrTop = max(scrTop-15,0); showAll(); }
-    return 1;
+    int l = line, o = off, st = scrTop;
+    if ((c == 8) || (c == 127)) { mv(0, -1); }                  // <backspace>
+    else if (c ==  4) { scrTop = min(scrTop+15,MAX_LINES-SCR_LINES+1); showAll(); } // <ctrl-d>
+    else if (c ==  5) { scrTop = min(scrTop+1, MAX_LINES-SCR_LINES+1); showAll(); } // <ctrl-e>
+    else if (c ==  9) { mv(0, 8); }                             // <tab>
+    else if (c == 10) { mv(1, 0); }                             // <ctrl-j>
+    else if (c == 11) { mv(-1, 0); }                            // <ctrl-k>
+    else if (c == 12) { mv(0, 1); }                             // <ctrl-l>
+    else if (c == 24) { deleteChar(); }                         // <ctrl-x>
+    else if (c == 21) { scrTop = max(scrTop-15,0); showAll(); } // <ctrl-u>
+    else if (c == 25) { scrTop = max(scrTop-1, 0); showAll(); } // <ctrl-y>
+    return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 
 int processEditorChar(int c) {
@@ -264,41 +260,41 @@ int processEditorChar(int c) {
     if (BTW(edMode,INSERT,REPLACE)) {
         return doInsertReplace((char)c);
     }
-    if (c<32) { return doCTL(c); }
 
     switch (c) {
-    case  ' ': mv(0, 1);
-    BCASE 'h': mv(0,-1);
-    BCASE 'l': mv(0,1);
-    BCASE 'j': mv(1,0);
-    BCASE 'k': mv(-1,0);
-    BCASE '_': mv(0,-99);
-    BCASE 'a': mv(0, 1); insertMode();
-    BCASE 'A': gotoEOL(); insertMode();
-    BCASE 'J': joinLines();
-    BCASE '$': gotoEOL();
-    BCASE 'g': mv(-99,-99);
-    BCASE 'G': mv(99,-999);
-    BCASE 'i': insertMode();
-    BCASE 'I': mv(0, -99); insertMode();
-    BCASE 'o': mv(1, -99); insertLine(); insertMode();
-    BCASE 'O': mv(0, -99); insertLine(); insertMode();
-    BCASE 'r': replaceChar(edKey(), 0, 1);
-    BCASE 'R': replaceMode();
-    BCASE 'c': deleteChar(); insertMode();
-    BCASE 'C': c=off; while (c<LLEN) { EDCH(line, c++) = 0; }
-            addLF(line); isDirty=lineShow[line]=1; insertMode();
-    BCASE 'D': deleteLine();
-    BCASE 'x': deleteChar();
-    BCASE 'X': if (0 < off) { --off; deleteChar(); }
-    BCASE 'L': edRdBlk(1);
-    BCASE 'W': isDirty = 1; edSvBlk(1);
-    BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
-    BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
-    BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
-    BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0);
-    BCASE '-': edSvBlk(0); blkNum = max(0, blkNum-1); edRdBlk(0);
-    BCASE 'Q': toBlock(); edMode = QUIT;
+        BCASE  13: mv(1,-999);
+        case  ' ': mv(0, 1);
+        BCASE 'h': mv(0,-1);
+        BCASE 'l': mv(0,1);
+        BCASE 'j': mv(1,0);
+        BCASE 'k': mv(-1,0);
+        BCASE '_': mv(0,-99);
+        BCASE 'a': mv(0, 1); insertMode();
+        BCASE 'A': gotoEOL(); insertMode();
+        BCASE 'J': joinLines();
+        BCASE '$': gotoEOL();
+        BCASE 'g': mv(-99,-99);
+        BCASE 'G': mv(99,-999);
+        BCASE 'i': insertMode();
+        BCASE 'I': mv(0, -99); insertMode();
+        BCASE 'o': mv(1, -99); insertLine(); insertMode();
+        BCASE 'O': mv(0, -99); insertLine(); insertMode();
+        BCASE 'r': replaceChar(edKey(), 0, 1);
+        BCASE 'R': replaceMode();
+        BCASE 'c': deleteChar(); insertMode();
+        BCASE 'C': c=off; while (c<LLEN) { EDCH(line, c) = 0; c++; }
+                addLF(line); DIRTY(line); insertMode();
+        BCASE 'D': deleteLine();
+        BCASE 'x': deleteChar();
+        BCASE 'X': if (0 < off) { --off; deleteChar(); }
+        BCASE 'L': edRdBlk(1);
+        BCASE 'W': isDirty = 1; edSvBlk(1);
+        BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
+        BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
+        BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
+        BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0);
+        BCASE '-': edSvBlk(0); blkNum = max(0, blkNum-1); edRdBlk(0);
+        BCASE 'Q': toBlock(); edMode = QUIT;
     }
     return 1;
 }
