@@ -465,17 +465,20 @@ void loadC3Words() {
 
     // Opcodes ...
     parseF(lit, "(LIT)", LIT);
-    parseF(m1i, "EXIT", EXIT);
     parseF(lit, "(EXIT)", EXIT); last->f = 0;
     parseF(lit, "(CALL)", CALL);
     parseF(lit, "(JMP)", JMP);
     parseF(lit, "(JMPZ)", JMPZ);
     parseF(lit, "(JMPNZ)", JMPNZ);
-    parseF(m1i, "!", STORE);
     parseF(lit, "(STORE)", STORE);
+    parseF(lit, "(FETCH)", FETCH);
+    parseF(lit, "(ZTYPE)", ZTYPE);
+    parseF(lit, "(-REGS)", REG_FREE);
+
+    parseF(m1i, "EXIT", EXIT);
+    parseF(m1i, "!", STORE);
     parseF(m1i, "C!", CSTORE);
     parseF(m1i, "@", FETCH);
-    parseF(lit, "(FETCH)", FETCH);
     parseF(m1i, "C@", CFETCH);
     parseF(m1i, "DUP", DUP);
     parseF(lit, "(DUP)", DUP);
@@ -505,9 +508,7 @@ void loadC3Words() {
     parseF(m1i, "XOR", XOR);
     parseF(m1i, "TYPE", TYPE);
     parseF(m1i, "ZTYPE", ZTYPE);
-    parseF(lit, "(ZTYPE)", ZTYPE);
     // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
-    parseF(lit, "(-REGS)", REG_FREE);
     parseF(m1i, "+REGS", REG_NEW);
     parseF(m1i, "-REGS", REG_FREE);
 
@@ -576,9 +577,9 @@ void loadC3Words() {
     parseF(": (INPUT_FP)  %zu ;", &input_fp);
     parseF(": STATE       %zu ;", &state);
     parseF(": BASE        %zu ;", &base);
-    parseF(": WORD-SZ     #%d ;", sizeof(dict_t));
-    parseF(": BYE  %d STATE !  ;", ALL_DONE);
-    parseF(": CELL %d ; INLINE",   CELL_SZ);
+    parseF(": WORD-SZ     #%d ; INLINE", sizeof(dict_t));
+    parseF(": BYE %d STATE !  ;", ALL_DONE);
+    parseF(": CELL         %d ; INLINE", CELL_SZ);
 }
 
 void c3Init() {

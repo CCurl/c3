@@ -69,16 +69,14 @@
 : DOES>  R> (JMP) C, , ;
 : CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;
 : VARIABLE  CREATE 0 V, (EXIT) C, ;
-\ usage: val line >val >line ... 12 >line
-\ NOTE: 8=opcode for STORE (!), 10=opcode for FETCH (@)
-: val    CREATE 0 V, 10 C, (EXIT) C, ;
-: >val   VHERE CELL - CONSTANT 8 HERE 1- C! (EXIT) C, ;
+\ usage: val line   >val >line ... 23 >line
+: val    CREATE 0 V, (FETCH) C, (EXIT) C, ;
+: >val   VHERE CELL - CONSTANT (STORE) HERE 1- C! (EXIT) C, ;
 : (val)  VHERE CELL - CONSTANT ;
-\ This definition of >val uses DOES>
-\ it might be more "elegant", but is longer and less efficient
-\ : val    CREATE 0 v, DOES> @ ;
+\ These use DOES> ... they might be more 'elegant',
+\ but they are longer and less efficient
+\ : val   CREATE 0 v, DOES> @ ;
 \ : >val  CREATE DOES> CELL - ! ;
-\ : (val)  VHERE CELL - CONSTANT ;
 : :NONAME  HERE 1 STATE ! ;
 : EXECUTE  >R ;
 : FOR 0 SWAP DO ; INLINE
@@ -110,7 +108,7 @@
 : 0SP 0 (sp) ! ;
 : DEPTH (sp) @ 1- ;
 : .S '(' EMIT space depth ?DUP IF
-      0 DO (stk) i 1+ CELL * + @ . LOOP
+        0 DO (stk) I 1+ CELLS + @ . LOOP
     THEN ')' EMIT ;
 : dump ( a n-- ) 0 DO DUP C@ . 1+ LOOP DROP ;
 : BINARY  %10 BASE ! ;
@@ -128,9 +126,9 @@ variable T0 2 CELLS allot
 : FORGET 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
 : FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;
 
-marker
+MARKER
 version 100 /mod ." c3 - v%d.%d - Chris Curl%n"
-here code - ." %d code bytes used, " last here - ." %d bytes free.%n"
-VHERE vars - ." %d variable bytes used, " vars-end VHERE - ." %d bytes free."
-: benches forget " benches.c3" (load) ;
-: sb forget " sandbox.c3" (load) ;
+HERE CODE - ." %d code bytes used, " LAST HERE - ." %d bytes free.%n"
+VHERE VARS - ." %d variable bytes used, " VARS-END VHERE - ." %d bytes free."
+: benches FORGET " benches.c3" (load) ;
+: sb FORGET " sandbox.c3" (load) ;
