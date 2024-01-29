@@ -25,6 +25,7 @@
         ParseLine(": V,  vhere ! CELL allot ;");
         ParseLine(": CELL+ CELL + ; INLINE");
         ParseLine(": CELLS CELL * ; INLINE");
+        ParseLine(": -EXIT (-REGS) C, (EXIT)C, ; IMMEDIATE");
         ParseLine(": DOES>  R> (JMP) C, , ;");
         ParseLine(": CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;");
         ParseLine(": VARIABLE  CREATE 0 V, (EXIT) C, ;");

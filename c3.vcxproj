@@ -161,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c3.h" />
+    <ClCompile Include="editor.cpp" />
     <ClCompile Include="sys-load.cpp" />
     <ClCompile Include="sys-pc.cpp">
       <FileType>CppCode</FileType>
