@@ -266,7 +266,7 @@ char *doStringOp(char *pc) {
         RCASE LTRIM:   CTOS=lTrim(CTOS);
         RCASE RTRIM:   rTrim(CTOS);
         RCASE FINDC:   s=cpop(); while (*s && (*s!=TOS)) { ++s; }
-                       TOS = (*s) ? 1 : 0;
+                       TOS = (*s) ? (cell_t)s : 0;
         return pc; default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
     return pc;
