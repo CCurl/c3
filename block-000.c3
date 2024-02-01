@@ -15,19 +15,22 @@
 : AGAIN  (JMP)  C, ,        ; IMMEDIATE
 : WHILE  (JMPZ) C, HERE 0 , ; IMMEDIATE
 : REPEAT (JMP)  C, SWAP , HERE SWAP ! ; IMMEDIATE
+: -EXIT (-REGS) C, (EXIT) C, ; IMMEDIATE
 
 : TUCK  SWAP OVER ; INLINE
 : NIP   SWAP DROP ; INLINE
 : ?DUP  DUP IF DUP THEN ;
 : +! DUP >R @ + R> ! ; INLINE
 : 2+ 1+ 1+ ; INLINE
+: CELL+ CELL + ; INLINE
+: CELLS CELL * ; INLINE
 
 : T3  \ ( --zstring end )
     +regs   VHERE DUP s8 s9   >IN  @ 1+ s5
     BEGIN r5+ C@ s1
         r1 IF r5 >IN  ! THEN
         r1 0= r1 '"' = OR IF
-            0 r8+ C!   r9 r8 -regs   EXIT
+            0 r8+ C!   r9 r8 -EXIT
         THEN r1   r8+ C!
     AGAIN ;
 : "  T3 STATE @ 0= IF DROP EXIT THEN
@@ -44,39 +47,36 @@
 : space bl EMIT ;          INLINE
 : . (.) space ;            INLINE
 
-: .word     CELL + 2+ QTYPE ; INLINE
-: word-len  CELL + 2+ S-LEN ; INLINE
-: words +regs 0 DUP s1 s3 LAST s2 BEGIN
+: .word     CELL+ 2+ QTYPE ; INLINE
+: word-len  CELL+ 2+ S-LEN ; INLINE
+: WORDS +REGS 0 DUP s1 s3 LAST s2 BEGIN
         r2 code-end < WHILE
         r1+ #9 > IF 0 s1 cr THEN
         r2 word-len #7 > IF i1 THEN
         i3 r2 .word tab
         r2 WORD-SZ + s2
     REPEAT
-    r3 ." (%d words)" -regs ;
+    r3 ." (%d words)" -REGS ;
 
 : ( BEGIN
-    >IN @ C@ DUP 0= IF DROP EXIT THEN
-    1 >IN +! ')' = IF EXIT THEN
+      >IN @ C@ DUP 0= IF DROP EXIT THEN
+      1 >IN +! ')' = IF EXIT THEN
     AGAIN ; IMMEDIATE
 
 : ALLOT  VHERE + (VHERE) ! ;
 : VC, VHERE C! 1 ALLOT ;
 : V,  VHERE ! CELL allot ;
-: CELL+ CELL + ; INLINE
-: CELLS CELL * ; INLINE
 : DOES>  R> (JMP) C, , ;
 : CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;
 : VARIABLE  CREATE 0 V, (EXIT) C, ;
-\ usage: val line >val >line ... 12 >line
-: val    CREATE 0 V, 10 C, (EXIT) C, ;
-: >val   VHERE CELL - CONSTANT 8 HERE 1- C! (EXIT) C, ;
+\ usage: val line   >val >line ... 23 >line
+: val    CREATE 0 V, (FETCH) C, (EXIT) C, ;
+: >val   VHERE CELL - CONSTANT (STORE) HERE 1- C! (EXIT) C, ;
 : (val)  VHERE CELL - CONSTANT ;
-\ This definition of >val uses DOES>
-\ it might be more "elegant", but is longer and less efficient
-\ : val    CREATE 0 v, DOES> @ ;
+\ These use DOES> ... they might be more 'elegant',
+\ but they are longer and less efficient
+\ : val   CREATE 0 v, DOES> @ ;
 \ : >val  CREATE DOES> CELL - ! ;
-\ : (val)  VHERE CELL - CONSTANT ;
 : :NONAME  HERE 1 STATE ! ;
 : EXECUTE  >R ;
 : FOR 0 SWAP DO ; INLINE
@@ -108,7 +108,7 @@
 : 0SP 0 (sp) ! ;
 : DEPTH (sp) @ 1- ;
 : .S '(' EMIT space depth ?DUP IF
-      0 DO (stk) i 1+ CELL * + @ . LOOP
+        0 DO (stk) I 1+ CELLS + @ . LOOP
     THEN ')' EMIT ;
 : dump ( a n-- ) 0 DO DUP C@ . 1+ LOOP DROP ;
 : BINARY  %10 BASE ! ;
@@ -122,13 +122,13 @@
 : loaded? IF 2drop load-abort THEN ;
 variable T0 2 CELLS allot
 : T1 CELLS T0 + ;
-: marker here 0 T1 ! VHERE 1 T1 ! last 2 T1 ! ;
-: forget 0 T1 @ (here) ! 1 T1 @ (VHERE) ! 2 T1 @ (last) ! ;
-: forget-1 last @ (here) ! last word-sz + (last) ! ;
+: MARKER HERE 0 T1 ! VHERE 1 T1 ! LAST 2 T1 ! ;
+: FORGET 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
+: FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;
 
-marker
+MARKER
 version 100 /mod ." c3 - v%d.%d - Chris Curl%n"
-here code - ." %d code bytes used, " last here - ." %d bytes free.%n"
-VHERE vars - ." %d variable bytes used, " vars-end VHERE - ." %d bytes free."
-: benches forget " benches.c3" (load) ;
-: sb forget " sandbox.c3" (load) ;
+HERE CODE - ." %d code bytes used, " LAST HERE - ." %d bytes free.%n"
+VHERE VARS - ." %d variable bytes used, " VARS-END VHERE - ." %d bytes free."
+: benches FORGET " benches.c3" (load) ;
+: sb FORGET " sandbox.c3" (load) ;

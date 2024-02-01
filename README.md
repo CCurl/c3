@@ -208,7 +208,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 36    | XOR        | (A B--C)     | C: A bitwise-XOR B|
 | 37    | TYPE       | (A N--)      | EMIT N chars from address A (Standard Forth TYPE)|
 | 38    | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
-|       | (ZTYPE)    | (--N)        | OPCODE for ZTYPE |
+|       | (ZTYPE)    | (--N)        | OPCODE for ZTYPE|
 | 39,X  | iX         | (--)         | Increment register X|
 | 40,X  | dX         | (--)         | Decrement register X|
 | 41,X  | rX         | (--N)        | N: value of register X|
@@ -217,6 +217,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 44,X  | sX         | (N--)        | Set regiser X to TOS|
 | 45    | +REGS      | (--)         | Allocate 10 new registers (add 10 to REG-BASE)|
 | 46    | -REGS      | (--)         | Restore last set of registers (subtract 10 from REG-BASE)|
+|       | (-REGS)    | (--46)       | Opcode for -REGS|
 
 ### System opcodes are 2-bytes, starting with 47
 |Opcode |Word        |Stack         |Description|
@@ -255,8 +256,10 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 48,7  | S-LEN      | (S--N)       | N: length of string S|
 | 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (case sensitive)|
 | 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (not case sensitive)|
-| 48,10 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]>32)|
-| 48,11 | S-RTRIM    | (S--S)       | S: The string to be right-trimmed|
+| 48,10 | S-EQN      | (S1 S2 N--F) | F: 1 if the first N chars in S1 and S2 are the same, else 0
+| 48,11 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]>32)|
+| 48,12 | S-RTRIM    | (S--S)       | S: The string to be right-trimmed|
+| 48,13 | S-FINDC    | (C S--A|0)   | A: 0 if C not found in S, else addr in S|
 
 ### Floating point opcodes are 2-bytes, starting with 49
 |Opcode |Word        |Stack         |Description|
