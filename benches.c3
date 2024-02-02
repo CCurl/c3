@@ -32,8 +32,6 @@
 : bm6 cr ." Bench 6: number of primes in " dup . ." ... "
     timer swap num-primes . elapsed ;
 
-\ load-abort
-
 250 mil bm1
 250 mil bm2
 250 mil bm3

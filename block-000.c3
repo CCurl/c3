@@ -94,11 +94,11 @@
 : >=  < 0= ; INLINE
 : <>  = 0= ; INLINE
 : RDROP R> DROP ; INLINE
-: ROT   >R SWAP r> SWAP ; INLINE
+: ROT   >R SWAP R> SWAP ; INLINE
 : NEGATE  INVERT 1+ ; INLINE
-: ABS  DUP 0 < IF negate THEN ;
-: MIN  OVER OVER > IF SWAP THEN DROP ;
-: MAX  OVER OVER < IF SWAP THEN DROP ;
+: ABS  DUP 0 < IF NEGATE THEN ;
+: MIN  2DUP > IF SWAP THEN DROP ;
+: MAX  2DUP < IF SWAP THEN DROP ;
 : BTW +regs s3 s2 s1 r2 r1 <= r1 r3 <= and -regs ;
 : I  (I) @ ; INLINE
 : J  (I) 3 CELLS - @ ;
@@ -110,7 +110,6 @@
 : .S '(' EMIT space depth ?DUP IF
         0 DO (stk) I 1+ CELLS + @ . LOOP
     THEN ')' EMIT ;
-: dump ( a n-- ) 0 DO DUP C@ . 1+ LOOP DROP ;
 : BINARY  %10 BASE ! ;
 : DECIMAL #10 BASE ! ;
 : HEX     $10 BASE ! ;
@@ -120,15 +119,18 @@
 : load next-word DROP (load) ;
 : load-abort #99 state ! ;
 : loaded? IF 2drop load-abort THEN ;
-variable T0 2 CELLS allot
+VARIABLE T0 2 CELLS allot
 : T1 CELLS T0 + ;
 : MARKER HERE 0 T1 ! VHERE 1 T1 ! LAST 2 T1 ! ;
 : FORGET 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
 : FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;
 
 MARKER
-version 100 /mod ." c3 - v%d.%d - Chris Curl%n"
+
+." c3 - "  version 10000 /mod s0 100 /mod r0  ." v%d.%d.%d - Chris Curl%n"
 HERE CODE - ." %d code bytes used, " LAST HERE - ." %d bytes free.%n"
+CODE-END LAST - dup s0 ." %d dictionary bytes used, " r0 word-sz / ." %d words.%n"
 VHERE VARS - ." %d variable bytes used, " VARS-END VHERE - ." %d bytes free."
-: benches FORGET " benches.c3" (load) ;
-: sb FORGET " sandbox.c3" (load) ;
+
+: benches " benches.c3" (load) ;
+: sb " sandbox.c3" (load) ;
