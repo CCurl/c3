@@ -6,7 +6,6 @@
 
 #ifndef __EDITOR__
 
-    void editFile(char *fn) {}
     void editBlock(cell_t blockNum) {}
 
 #else
@@ -113,7 +112,7 @@ void gotoEOL() {
     while (EDCH(line, off) != 10) { ++off; }
 }
 
-int toBlock() {
+cell_t toBlock() {
     fill(theBlock, 0, BLOCK_SZ);
     for (int l=0; l<MAX_LINES; l++) {
         char *y=&EDCHAR(l,0);
@@ -162,12 +161,16 @@ void edRdBlk(int force) {
 
 void edSvBlk(int force) {
     if (isDirty || force) {
-        toBlock();
+        cell_t len = toBlock();
+        while (1<len) {
+            if (theBlock[len-2] == 10) { theBlock[len-1]=0; --len; }
+            else { break; }
+        }
         char fn[32];
         sprintf(fn, "block-%03d.c3", (int)blkNum);
         cell_t fp = fOpen((cell_t)fn, (cell_t)"wb");
         if (fp) {
-            fWrite((cell_t)theBlock, 1, BLOCK_SZ, fp);
+            fWrite((cell_t)theBlock, 1, len, fp);
             fClose(fp);
         }
         isDirty = 0;
@@ -262,11 +265,11 @@ int processEditorChar(int c) {
     }
 
     switch (c) {
-        BCASE  13: mv(1,-999);
-        case  ' ': mv(0, 1);
+        case   13: mv(1,-99);
+        BCASE ' ': mv(0, 1);
         BCASE 'h': mv(0,-1);
-        BCASE 'l': mv(0,1);
-        BCASE 'j': mv(1,0);
+        BCASE 'l': mv(0, 1);
+        BCASE 'j': mv(1, 0);
         BCASE 'k': mv(-1,0);
         BCASE '_': mv(0,-99);
         BCASE 'a': mv(0, 1); insertMode();
@@ -317,7 +320,5 @@ void editBlock(cell_t blk) {
     GotoXY(1, SCR_LINES + 3);
     CursorOn();
 }
-
-void editFile(char *fn) {}
 
 #endif // __EDITOR__

@@ -6,7 +6,7 @@
 #ifdef isPC
 
 enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
-        EDIT_BLK, EDIT_FILE
+        EDIT_BLK
 };
 
 extern void editBlock(cell_t blkNum);
@@ -133,7 +133,6 @@ char *doUser(char *pc, int ir) {
     RCASE FLOAD:  LFF(cpop());
     RCASE BLOAD:  y=&tib[TIB_SZ-16]; sprintf(y, "block-%03d.c3", (int)pop()); LFF(y);
     RCASE EDIT_BLK: t1=pop(); editBlock(t1);
-    RCASE EDIT_FILE:t1=pop(); editFile((char*)t1);
     return pc; default: return 0;
     }
 }
@@ -147,7 +146,6 @@ void loadUserWords() {
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
     parseF("-ML- BLOAD  %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT   %d 3 -MLX- inline", EDIT_BLK);
-    parseF("-ML- EDITF  %d 3 -MLX- inline", EDIT_FILE);
     ParseLine(": isPC 1 ;");
 }
 

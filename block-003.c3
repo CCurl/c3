@@ -1,10 +1,11 @@
-\ string.c3 - some string words
+\ block-003.c3 - some string words
 
 ' COUNT loaded?
 
 \ Just some temp addresses
 : pad1 VHERE  256 + ;
 : pad2 pad1   256 + ;
+: pad3 pad2   256 + ;
 
 \ Words for NULL-Terminated strings
 : S-CATN  ( str num -- )  ITOA S-CAT  ; INLINE

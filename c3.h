@@ -51,8 +51,8 @@ typedef uint8_t  byte;
     #define CODE_SZ            96*1024
     #define VARS_SZ           256*1024
     #define STK_SZ            256
-    #define LSTK_SZ            60
-    #define REGS_SZ            20*10
+    #define LSTK_SZ            45
+    #define REGS_SZ            25*10
     #define TIB_SZ            512
     #define NAME_LEN           25
     #define NEEDS_ALIGN
