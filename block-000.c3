@@ -116,7 +116,7 @@
 : ? @ . ;
 : RSHIFT ( N1 S--N2 ) 0 DO 2/ LOOP ;
 : LSHIFT ( N1 S--N2 ) 0 DO 2* LOOP ;
-: load next-word DROP (load) ;
+: load-f next-word DROP (load) ;
 : load-abort #99 state ! ;
 : loaded? IF 2drop load-abort THEN ;
 VARIABLE T0 2 CELLS allot
@@ -132,5 +132,5 @@ HERE CODE - ." %d code bytes used, " LAST HERE - ." %d bytes free.%n"
 CODE-END LAST - dup s0 ." %d dictionary bytes used, " r0 word-sz / ." %d words.%n"
 VHERE VARS - ." %d variable bytes used, " VARS-END VHERE - ." %d bytes free."
 
-: benches 200 bload ;
+: benches 200 load ;
 : sb 900 load ;

@@ -7,12 +7,13 @@
 #ifndef __EDITOR__
 
     void editBlock(cell_t blockNum) {}
+    cell_t edScrH = 0;
 
 #else
 
-#define MAX_LINES     500
+#define MAX_LINES     150
 #define LLEN          100
-#define SCR_LINES      35
+#define SCR_LINES     edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)
 #define EDCHAR(l,o)   edBuf[((l)*LLEN)+(o)]
 #define EDCH(l,o)     EDCHAR(scrTop+l,o)
@@ -25,6 +26,7 @@ int line, off, blkNum, edMode, scrTop;
 int isDirty, lineShow[MAX_LINES];
 char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32], *msg = NULL;
 char yanked[LLEN];
+cell_t edScrH = 35; // default is 35, can be set from c3 using '50 (scr-h) !'
 
 void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
 void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
@@ -40,6 +42,8 @@ int edKey() { return key(); }
 void NormLO() {
     line = min(max(line, 0), SCR_LINES-1);
     off = min(max(off,0), LLEN-1);
+    if (scrTop < 0) { scrTop=0; }
+    if (scrTop > (MAX_LINES-SCR_LINES)) { scrTop=MAX_LINES-SCR_LINES; }
 }
 
 void showAll() {
@@ -245,15 +249,15 @@ int doInsertReplace(char c) {
 int doCommon(int c) {
     int l = line, o = off, st = scrTop;
     if ((c == 8) || (c == 127)) { mv(0, -1); }                  // <backspace>
-    else if (c ==  4) { scrTop = min(scrTop+15,MAX_LINES-SCR_LINES+1); showAll(); } // <ctrl-d>
-    else if (c ==  5) { scrTop = min(scrTop+1, MAX_LINES-SCR_LINES+1); showAll(); } // <ctrl-e>
+    else if (c ==  4) { scrTop += (SCR_LINES/2); NormLO(); showAll(); } // <ctrl-d>
+    else if (c ==  5) { scrTop += 1; NormLO(); showAll(); }             // <ctrl-e>
     else if (c ==  9) { mv(0, 8); }                             // <tab>
     else if (c == 10) { mv(1, 0); }                             // <ctrl-j>
     else if (c == 11) { mv(-1, 0); }                            // <ctrl-k>
     else if (c == 12) { mv(0, 1); }                             // <ctrl-l>
     else if (c == 24) { deleteChar(); }                         // <ctrl-x>
-    else if (c == 21) { scrTop = max(scrTop-15,0); showAll(); } // <ctrl-u>
-    else if (c == 25) { scrTop = max(scrTop-1, 0); showAll(); } // <ctrl-y>
+    else if (c == 21) { scrTop -= (SCR_LINES/2); NormLO(); showAll(); } // <ctrl-u>
+    else if (c == 25) { scrTop -= 1; NormLO(); showAll(); }             // <ctrl-y>
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 

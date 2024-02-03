@@ -10,7 +10,7 @@ enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
 };
 
 extern void editBlock(cell_t blkNum);
-extern void editFile(char *fn);
+extern cell_t edScrH;
 
 #ifdef IS_WINDOWS
 
@@ -124,6 +124,7 @@ void LFF(char *fn) { if (!lookForFile(fn)) { printStringF("-file[%s]?-", fn); } 
 
 char *doUser(char *pc, int ir) {
     cell_t t1, t2, t3;
+    char fn[16];
     switch (ir) {
     case SYSTEM:  system(cpop());
     RCASE FOPEN:  t2=pop(); t1=pop(); push(fOpen(t1, t2));
@@ -131,7 +132,7 @@ char *doUser(char *pc, int ir) {
     RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead(t1, 1, t2, t3));
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
     RCASE FLOAD:  LFF(cpop());
-    RCASE BLOAD:  y=&tib[TIB_SZ-16]; sprintf(y, "block-%03d.c3", (int)pop()); LFF(y);
+    RCASE BLOAD:  sprintf(fn, "block-%03d.c3", (int)pop()); lookForFile(fn);
     RCASE EDIT_BLK: t1=pop(); editBlock(t1);
     return pc; default: return 0;
     }
@@ -144,8 +145,9 @@ void loadUserWords() {
     parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
     parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
-    parseF("-ML- BLOAD  %d 3 -MLX- inline", BLOAD);
+    parseF("-ML- LOAD   %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT   %d 3 -MLX- inline", EDIT_BLK);
+    parseF(": (scr-h)   %zu ; ", (cell_t)&edScrH);
     ParseLine(": isPC 1 ;");
 }
 
