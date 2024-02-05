@@ -17,6 +17,8 @@
         i 3 prime? IF i9 THEN
     2 +LOOP r9 ;
 
+: fib ( n--fib ) DUP 2 < IF DROP 1 EXIT THEN 1- DUP fib SWAP 1- fib + ;
+
 : T0 dup ." %d iterations ..." ;
 : bm1 cr ." Bench 1: decrement loop, " T0
     timer swap begin 1- -while drop elapsed ;
@@ -31,6 +33,8 @@
     timer swap T1 elapsed ;
 : bm6 cr ." Bench 6: number of primes in " dup . ." ... "
     timer swap num-primes . elapsed ;
+: bm7 cr ." Bench 7: Fibonacci number for: " DUP . ." ... "
+    timer swap fib . elapsed ;
 
 250 mil bm1
 250 mil bm2
@@ -38,3 +42,4 @@
 250 mil bm4
 250 mil bm5
   1 mil bm6
+ 35     bm7
