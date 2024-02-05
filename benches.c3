@@ -17,7 +17,8 @@
         i 3 prime? IF i9 THEN
     2 +LOOP r9 ;
 
-: T0 dup ." %d iterations ..." ;
+: T0 dup 
+    ." %d iterations ..." ;
 : bm1 cr ." Bench 1: decrement loop, " T0
     timer swap begin 1- -while drop elapsed ;
 : bm2 cr ." Bench 2: register decrement loop, " T0

@@ -33,10 +33,8 @@
             0 r8+ C!   r9 r8 -EXIT
         THEN r1   r8+ C!
     AGAIN ;
-: "  T3 STATE @ 0= IF DROP EXIT THEN
-        (VHERE) ! (LIT) C, , ; IMMEDIATE
-: ." T3 STATE @ 0= IF DROP ZTYPE EXIT THEN
-        (VHERE) ! (LIT) C, , (ZTYPE) C, ; IMMEDIATE
+: "  T3 (VHERE) ! (LIT) C, , ; IMMEDIATE
+: ." T3 (VHERE) ! (LIT) C, , (ZTYPE) C, ; IMMEDIATE
 
 : code-end  code code-sz + ;
 : vars-end  vars vars-sz + ;
@@ -67,12 +65,14 @@
 : VC, VHERE C! 1 ALLOT ;
 : V,  VHERE ! CELL allot ;
 : DOES>  R> (JMP) C, , ;
-: CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;
-: VARIABLE  CREATE 0 V, (EXIT) C, ;
+: T4 
+    CREATE HERE CELL - ! ;
+: CONSTANT  T4 (EXIT) C, ; IMMEDIATE
+: VARIABLE  CREATE (EXIT) C, ; IMMEDIATE
 \ usage: val line   >val >line ... 23 >line
-: val    CREATE 0 V, (FETCH) C, (EXIT) C, ;
-: >val   VHERE CELL - CONSTANT (STORE) HERE 1- C! (EXIT) C, ;
-: (val)  VHERE CELL - CONSTANT ;
+: val    CREATE (FETCH) C, (EXIT) C, 0 V, ;
+: >val   VHERE CELL - T4 (STORE) C, (EXIT) C, ;
+: (val)  VHERE CELL - T4 (EXIT) C, ;
 \ These use DOES> ... they might be more 'elegant',
 \ but they are longer and less efficient
 \ : val   CREATE 0 v, DOES> @ ;
@@ -120,8 +120,10 @@
 : load next-word DROP (load) ;
 : load-abort #99 state ! ;
 : loaded? IF 2drop load-abort THEN ;
-variable T0 2 CELLS allot
-: T1 CELLS T0 + ;
+VARIABLE t0
+2 CELLS allot
+: T1 CELLS
+    t0 + ;
 : MARKER HERE 0 T1 ! VHERE 1 T1 ! LAST 2 T1 ! ;
 : FORGET 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
 : FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;
