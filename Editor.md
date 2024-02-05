@@ -22,7 +22,7 @@ There are 3 modes in the c3 editor:
 | [ctrl]+Y | Scroll up 1 line |
 | [ctrl]+D | Scroll down 1/2 screen |
 | [ctrl]+U | Scroll up 1/2 screen |
-| [ctrl]+X | Delete the char under the cursor |
+| [ctrl]+X | Move left 1 char and delete the char under the cursor |
 
 ### COMMAND mode
 
@@ -31,13 +31,13 @@ The movement keys are similar to those in VI:
 | Key  | Action|
 | :--  | :-- |
 | H    | Left 1 char |
-| [BL] | Right 1 char |
 | J    | Down 1 line |
 | K    | Up 1 line |
 | L    | Right 1 char |
-| [CR] | Goto the beginning of the next line |
 | $    | Goto the end of the line |
 | _    | Goto the beginning of the line |
+| [BL] | Right 1 char |
+| [CR] | Goto the beginning of the next line |
 | a    | Append: move right 1 char and go into INSERT mode |
 | A    | Append: goto the end of the line and go into INSERT mode |
 | c    | Change: Delete the current char and go into INSERT mode |

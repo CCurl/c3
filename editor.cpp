@@ -6,14 +6,14 @@
 
 #ifndef __EDITOR__
 
-    void editBlock(cell_t blockNum) {}
-    cell_t edScrH = 0;
+void editBlock(cell_t blockNum) {}
+cell_t edScrH = 0;
 
 #else
 
 #define MAX_LINES     150
 #define LLEN          100
-#define SCR_LINES     edScrH
+#define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)
 #define EDCHAR(l,o)   edBuf[((l)*LLEN)+(o)]
 #define EDCH(l,o)     EDCHAR(scrTop+l,o)
