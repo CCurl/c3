@@ -85,18 +85,9 @@ void showStatus() {
     printString("- Block Editor v0.1 - ");
     printStringF("Block# %03d%s", blkNum, isDirty ? " *" : "");
     printStringF("%s- %s", msg ? msg : " ", mode);
+    printStringF("  [%d:%d]", (line+scrTop)+1, off+1);
     ClearEOL();
     if (msg && (1 < ++cnt)) { msg = NULL; cnt = 0; }
-}
-
-void showHelp() {
-	return;
-    GotoXY(1, SCR_LINES+2);
-    printString("  (h/j/k/l/tab/spc/bs/_/$) Move Cursor (g) Top (G) Bottom");
-    printString("\r\n  (x) Del (X) Del-Prev (r) Replace 1 (i) Insert (R) Replace");
-    printString("\r\n  (W) Write (L) Reload (+) Next (-) Prev (Q) Quit");
-    printString("\r\n  (^A) Define (^B) Comment (^C) Inline (^D) Var");
-    printString("\r\n  (^E) Machine (^F) Compile (^G) Interpret");
 }
 
 void showEditor() {
@@ -223,6 +214,7 @@ void joinLines() {
 }
 
 void replaceChar(char c, int force, int mov) {
+    if (!BTW(c,32,126) && (!force)) { return; }
     for (int o=off-1; 0<=o; --o) {
         int ch = EDCH(line, o);
         if (ch && (ch != 10)) { break; }
@@ -246,18 +238,25 @@ int doInsertReplace(char c) {
     return 1;
 }
 
+void scroll(int amt) {
+    int st = scrTop;
+    scrTop += amt;
+    NormLO();
+    if (st != scrTop) { mv(-amt, 0); showAll(); }
+}
+
 int doCommon(int c) {
     int l = line, o = off, st = scrTop;
-    if ((c == 8) || (c == 127)) { mv(0, -1); }                  // <backspace>
-    else if (c ==  4) { scrTop += (SCR_LINES/2); NormLO(); showAll(); } // <ctrl-d>
-    else if (c ==  5) { scrTop += 1; NormLO(); showAll(); }             // <ctrl-e>
-    else if (c ==  9) { mv(0, 8); }                             // <tab>
-    else if (c == 10) { mv(1, 0); }                             // <ctrl-j>
-    else if (c == 11) { mv(-1, 0); }                            // <ctrl-k>
-    else if (c == 12) { mv(0, 1); }                             // <ctrl-l>
-    else if (c == 24) { deleteChar(); }                         // <ctrl-x>
-    else if (c == 21) { scrTop -= (SCR_LINES/2); NormLO(); showAll(); } // <ctrl-u>
-    else if (c == 25) { scrTop -= 1; NormLO(); showAll(); }             // <ctrl-y>
+    if ((c == 8) || (c == 127)) { mv(0, -1); }        // <backspace>
+    else if (c ==  4) { scroll(SCR_LINES/2); }        // <ctrl-d>
+    else if (c ==  5) { scroll(1); }                  // <ctrl-e>
+    else if (c ==  9) { mv(0, 8); }                   // <tab>
+    else if (c == 10) { mv(1, 0); }                   // <ctrl-j>
+    else if (c == 11) { mv(-1, 0); }                  // <ctrl-k>
+    else if (c == 12) { mv(0, 1); }                   // <ctrl-l>
+    else if (c == 24) { mv(0,-1); deleteChar(); }     // <ctrl-x>
+    else if (c == 21) { scroll(-SCR_LINES/2); }       // <ctrl-u>
+    else if (c == 25) { scroll(-1); }                 // <ctrl-y>
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 
@@ -291,7 +290,7 @@ int processEditorChar(int c) {
         BCASE 'c': deleteChar(); insertMode();
         BCASE 'C': c=off; while (c<LLEN) { EDCH(line, c) = 0; c++; }
                 addLF(line); DIRTY(line); insertMode();
-        BCASE 'D': deleteLine();
+        BCASE 'D': strCpy(yanked, &EDCH(line, 0)); deleteLine();
         BCASE 'x': deleteChar();
         BCASE 'X': if (0 < off) { --off; deleteChar(); }
         BCASE 'L': edRdBlk(1);
@@ -299,8 +298,8 @@ int processEditorChar(int c) {
         BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
         BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
-        BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0);
-        BCASE '-': edSvBlk(0); blkNum = max(0, blkNum-1); edRdBlk(0);
+        BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0); line=off=0;
+        BCASE '-': edSvBlk(0); blkNum = max(0, blkNum-1); edRdBlk(0); line=off=0;
         BCASE 'Q': toBlock(); edMode = QUIT;
     }
     return 1;
@@ -315,7 +314,6 @@ void editBlock(cell_t blk) {
     edRdBlk(0);
     commandMode();
     showAll();
-    showHelp();
     while (edMode != QUIT) {
         showEditor();
         showStatus();
