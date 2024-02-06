@@ -403,7 +403,7 @@ int doReg(const char *w) {
     if (t == 0) { return 0; }
     if (state) { CComma(t); CComma(w[1]-'0'); }
     else {
-        int h=245;
+        int h=TIB_SZ-10;
         tib[h]=t; tib[h+1]=w[1]-'0'; tib[h+2]=EXIT;
         Run(&tib[h]);
     }
