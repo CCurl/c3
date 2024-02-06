@@ -1,5 +1,7 @@
 \ block-200.c3 - Some benchmarks
 
+: rl forget 200 load ; : ed 200 edit ;
+
 : ms ." (%d usec)" ;
 : elapsed timer swap - ms ;
 : mil #1000 dup * * ;
@@ -31,9 +33,9 @@
 : T1 1- DUP IF T1 EXIT THEN DROP ;
 : bm5 cr ." Bench 5: empty tail-call, " T0
     timer swap T1 elapsed ;
-: bm6 cr ." Bench 6: number of primes in " dup . ." ... "
+: bm6 cr DUP ." Bench 6: number of primes in %d ... "
     timer swap num-primes . elapsed ;
-: bm7 cr ." Bench 7: Fibonacci number for: " DUP . ." ... "
+: bm7 cr DUP ." Bench 7: Fibonacci number for: %d ... "
     timer swap fib . elapsed ;
 
 250 mil bm1

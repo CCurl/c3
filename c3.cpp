@@ -226,10 +226,10 @@ int isNum(const char *wd) {
 
 void doType(const char *str) {
     if (!str) { str=cpop(); }
-    for (int i = 0; i < str[i]; i++) {
-        char c = str[i];
+    while (*str) {
+        char c=*(str++);
         if (c == '%') {
-            c = str[++i];
+            c = *(str++);
             if (c == 0) { return; }
             else if (c=='b') { printString(iToA(pop(), 2)); }
             else if (c=='c') { printChar((char)pop()); }
