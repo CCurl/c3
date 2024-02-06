@@ -6,18 +6,17 @@
 : elapsed timer swap - ms ;
 : mil #1000 dup * * ;
 
-: prime? BEGIN ( n 3--f )
+: prime? ( n--f )
+    3 BEGIN
         2DUP /MOD SWAP IF
             OVER < IF DROP EXIT THEN
         ELSE 
             DROP = EXIT
         THEN
-        1+ 1+
+        2+
     AGAIN ;
 
-: num-primes 4 s9  11 DO
-        i 3 prime? IF i9 THEN
-    2 +LOOP r9 ;
+: num-primes 4 s9 11 DO I prime? IF i9 THEN 2 +LOOP r9 ;
 
 : fib ( n--fib ) DUP 2 < IF DROP 1 EXIT THEN 1- DUP fib SWAP 1- fib + ;
 
