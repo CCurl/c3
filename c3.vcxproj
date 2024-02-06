@@ -156,7 +156,6 @@
     <None Include="LICENSE" />
     <None Include="makefile" />
     <None Include="README.md" />
-    <None Include="benches.c3" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c3.cpp" />
