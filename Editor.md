@@ -1,4 +1,4 @@
-# The c4 editor
+# The c3 editor
 
 The c3 editor is a minialistic editor inspired by, and somewhat similar to, an extremely stripped-down version of VI.
 
