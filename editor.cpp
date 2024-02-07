@@ -248,7 +248,8 @@ void scroll(int amt) {
 void edDelX(int c) {
     if (c==0) { c = key(); }
     if (c=='d') { strCpy(yanked, &EDCH(line, 0)); deleteLine(); }
-    if (c == '$') {
+    else if (c=='X') { if (0<off) { --off; deleteChar(); } }
+    else if (c=='$') {
         c=off; while ((c<LLEN) && EDCH(line,c)) { EDCH(line,c)=0; c++; }
         addLF(line); DIRTY(line);
     }
@@ -276,10 +277,10 @@ void edCommand() {
     edReadLine(buf, sizeof(buf));
     GotoXY(1, SCR_LINES+3); ClearEOL();
     if (strEq(buf,"w")) { edSvBlk(0); }
-    if (strEq(buf,"w!")) { edSvBlk(1); }
-    if (strEq(buf,"wq")) { edSvBlk(0); edMode=QUIT; }
-    if (strEq(buf,"q!")) { edMode=QUIT; }
-    if (strEq(buf,"q")) {
+    else if (strEq(buf,"w!")) { edSvBlk(1); }
+    else if (strEq(buf,"wq")) { edSvBlk(0); edMode=QUIT; }
+    else if (strEq(buf,"q!")) { edMode=QUIT; }
+    else if (strEq(buf,"q")) {
         if (isDirty) { printString("(use 'q!' to quit without saving)"); }
         else { edMode=QUIT; }
     }
@@ -332,7 +333,7 @@ int processEditorChar(int c) {
         BCASE 'd': edDelX(0);
         BCASE 'D': edDelX('$');
         BCASE 'x': deleteChar();
-        BCASE 'X': if (off) { --off; deleteChar(); }
+        BCASE 'X': edDelX('X');
         BCASE 'L': edRdBlk(1);
         BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
         BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);

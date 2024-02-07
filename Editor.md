@@ -58,12 +58,12 @@ The movement keys are similar to those in VI:
 | O    | Insert an empty line ABOVE the current line and change to INSERT mode |
 | p    | Paste the YANK buffer into a new line BELOW the current line |
 | P    | Paste the YANK buffer into a new line ABOVE the current line |
-| Q    | Quit the editor |
-| r    | Replace the char under the cursor with the next key typed (if printable) |
-| R    | Replace: change to Replace mode |
+| r    | Replace the char under the cursor with the next key pressed (if printable) |
+| R    | Change to REPLACE mode |
 | x    | Delete the char under the cursor |
 | X    | Delete the char to the left of the cursor |
 | Y    | Copy the current line into the YANK buffer |
+| :    | Change to COMMAND mode |
 | +    | Save the current block and read/edit the next block |
 | -    | Save the current block and read/edit the previous block |
 
@@ -89,4 +89,4 @@ COMMAND mode is invoked when pressing ':' in NORMAL mode.
 | w!      | Write the current block, even if it has NOT changed |
 | q       | Quit, if the current block has NOT changed |
 | q!      | Quit, even if the current block has changed |
-| wq      | Write the current block same as ':w' ':q' |
+| wq      | Write the current block and quit (same as ':w' ':q') |
