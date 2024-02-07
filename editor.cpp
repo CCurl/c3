@@ -20,7 +20,7 @@ cell_t edScrH = 0;
 #define SHOW(l,v)     lineShow[(scrTop+l)]=v
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
-enum { COMMAND = 1, INSERT, REPLACE, QUIT };
+enum { NORMAL = 1, INSERT, REPLACE, QUIT };
 char theBlock[BLOCK_SZ];
 int line, off, blkNum, edMode, scrTop;
 int isDirty, lineShow[MAX_LINES];
@@ -34,7 +34,7 @@ void ClearEOL() { printString("\x1B[K"); }
 void CursorOn() { printString("\x1B[?25h"); }
 void CursorOff() { printString("\x1B[?25l"); }
 void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:40); }
-void commandMode() { edMode=COMMAND; strCpy(mode, "command"); }
+void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
 void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
 void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
 int edKey() { return key(); }
@@ -245,6 +245,46 @@ void scroll(int amt) {
     if (st != scrTop) { mv(-amt, 0); showAll(); }
 }
 
+void edDelX(int c) {
+    if (c==0) { c = key(); }
+    if (c=='d') { strCpy(yanked, &EDCH(line, 0)); deleteLine(); }
+    if (c == '$') {
+        c=off; while ((c<LLEN) && EDCH(line,c)) { EDCH(line,c)=0; c++; }
+        addLF(line); DIRTY(line);
+    }
+}
+
+int edReadLine(char *buf, int sz) {
+    int len = 0;
+    CursorOn();
+    while (len<(sz-1)) {
+        char c = key();
+        if (c==27) { len=0; break; }
+        if (c==13) { break; }
+        if ((c==127) || (c==8) && (len)) { --len; printStringF("%c %c",8,8); }
+        if (BTW(c,32,126)) { buf[len++]=c; printChar(c); }
+    }
+    CursorOff();
+    buf[len]=0;
+    return len;
+}
+
+void edCommand() {
+    char buf[32];
+    GotoXY(1, SCR_LINES+3); ClearEOL();
+    printChar(':');
+    edReadLine(buf, sizeof(buf));
+    GotoXY(1, SCR_LINES+3); ClearEOL();
+    if (strEq(buf,"w")) { edSvBlk(0); }
+    if (strEq(buf,"w!")) { edSvBlk(1); }
+    if (strEq(buf,"wq")) { edSvBlk(0); edMode=QUIT; }
+    if (strEq(buf,"q!")) { edMode=QUIT; }
+    if (strEq(buf,"q")) {
+        if (isDirty) { printString("(use 'q!' to quit without saving)"); }
+        else { edMode=QUIT; }
+    }
+}
+
 int doCommon(int c) {
     int l = line, o = off, st = scrTop;
     if ((c == 8) || (c == 127)) { mv(0, -1); }        // <backspace>
@@ -254,14 +294,14 @@ int doCommon(int c) {
     else if (c == 10) { mv(1, 0); }                   // <ctrl-j>
     else if (c == 11) { mv(-1, 0); }                  // <ctrl-k>
     else if (c == 12) { mv(0, 1); }                   // <ctrl-l>
-    else if (c == 24) { mv(0,-1); deleteChar(); }     // <ctrl-x>
+    else if (c == 24) { edDelX('X'); }                // <ctrl-x>
     else if (c == 21) { scroll(-SCR_LINES/2); }       // <ctrl-u>
     else if (c == 25) { scroll(-1); }                 // <ctrl-y>
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 
 int processEditorChar(int c) {
-    if (c==27) { commandMode(); return 1; }
+    if (c==27) { normalMode(); return 1; }
     if (doCommon(c)) { return 1; }
     if (BTW(edMode,INSERT,REPLACE)) {
         return doInsertReplace((char)c);
@@ -287,20 +327,19 @@ int processEditorChar(int c) {
         BCASE 'O': mv(0, -99); insertLine(); insertMode();
         BCASE 'r': replaceChar(edKey(), 0, 1);
         BCASE 'R': replaceMode();
-        BCASE 'c': deleteChar(); insertMode();
-        BCASE 'C': c=off; while (c<LLEN) { EDCH(line, c) = 0; c++; }
-                addLF(line); DIRTY(line); insertMode();
-        BCASE 'D': strCpy(yanked, &EDCH(line, 0)); deleteLine();
+        BCASE 'c': deleteChar();; insertMode();
+        BCASE 'C': edDelX('$'); insertMode();
+        BCASE 'd': edDelX(0);
+        BCASE 'D': edDelX('$');
         BCASE 'x': deleteChar();
-        BCASE 'X': if (0 < off) { --off; deleteChar(); }
+        BCASE 'X': if (off) { --off; deleteChar(); }
         BCASE 'L': edRdBlk(1);
-        BCASE 'W': isDirty = 1; edSvBlk(1);
         BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
         BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0); line=off=0;
         BCASE '-': edSvBlk(0); blkNum = max(0, blkNum-1); edRdBlk(0); line=off=0;
-        BCASE 'Q': toBlock(); edMode = QUIT;
+        BCASE ':': edCommand();
     }
     return 1;
 }
@@ -312,14 +351,14 @@ void editBlock(cell_t blk) {
     CLS();
     CursorOff();
     edRdBlk(0);
-    commandMode();
+    normalMode();
     showAll();
     while (edMode != QUIT) {
         showEditor();
         showStatus();
         processEditorChar(edKey());
     }
-    GotoXY(1, SCR_LINES + 3);
+    GotoXY(1, SCR_LINES+3);
     CursorOn();
 }
 

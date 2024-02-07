@@ -3,7 +3,7 @@
 The c3 editor is a minialistic editor inspired by, and somewhat similar to, an extremely stripped-down version of VI.
 
 There are 3 modes in the c3 editor:
-- COMMAND
+- NORMAL
 - INSERT
 - REPLACE
 
@@ -23,8 +23,9 @@ There are 3 modes in the c3 editor:
 | [ctrl]+D | Scroll down 1/2 screen |
 | [ctrl]+U | Scroll up 1/2 screen |
 | [ctrl]+X | Move left 1 char and delete the char under the cursor |
+| [escape] | Go to NORMAL mode |
 
-### COMMAND mode
+### NORMAL mode
 
 The movement keys are similar to those in VI:
 
@@ -38,26 +39,28 @@ The movement keys are similar to those in VI:
 | _    | Goto the beginning of the line |
 | [BL] | Right 1 char |
 | [CR] | Goto the beginning of the next line |
-| a    | Append: move right 1 char and go into INSERT mode |
-| A    | Append: goto the end of the line and go into INSERT mode |
-| c    | Change: Delete the current char and go into INSERT mode |
-| C    | Change: Delete to the end of the line and go into INSERT mode |
-| D    | Delete the current line into the YANK buffer |
+| a    | Append: move right 1 char and change to INSERT mode |
+| A    | Append: goto the end of the line and change to INSERT mode |
+| c    | Change: Delete the current char and change to INSERT mode (same as 'xi') |
+| C    | Change: Delete to the end of the line and change to INSERT mode (same as 'd$A') |
+| dd   | Copy the current line into the YANK buffer and delete the line |
+| d$   | Delete to the end of the line |
+| D    | Delete to the end of the line (same as 'd$') |
 | g    | Goto the top-left of the screen |
 | G    | Goto the bottom-left of the screen |
-| i    | Insert: go into INSERT mode |
-| I    | Insert: goto the beginning of the line and go into INSERT mode |
+| i    | Insert: change to INSERT mode |
+| I    | Insert: goto the beginning of the line and change to INSERT mode |
 | J    | Join the current and next lines together |
 | L    | Load: discard all changes and reload the current block |
-| o    | Insert an empty line below the current line and go into INSERT mode |
-| O    | Insert an empty line above the current line and go into INSERT mode |
-| p    | Paste copy the YANK buffer into a new line below the current line |
-| P    | Paste copy the YANK buffer into a new line above the current line |
+| o    | Insert an empty line below the current line and change to INSERT mode |
+| O    | Insert an empty line above the current line and change to INSERT mode |
+| p    | Paste the YANK buffer into a new line below the current line |
+| P    | Paste the YANK buffer into a new line above the current line |
 | Q    | Quit the editor |
-| r    | Replace the char under the cursor with the next key typed |
-| R    | Insert: goto the beginning of the line and go into INSERT mode |
+| r    | Replace the char under the cursor with the next key typed (if printable) |
+| R    | Replace: change to Replace mode |
 | x    | Delete the char under the cursor |
-| X    | Move left one char and delete the char under the cursor |
+| X    | Move left and delete the char |
 | W    | Write the current block |
 | X    | Move left 1 char and delete the char to the left the cursor |
 | Y    | Copy the current line into the YANK buffer |
