@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
         else { reg[i] = (cell_t)argv[i]; }
     }
 #ifndef _SYS_LOAD_
-    lookForFile("block-000.c3");
+    lookForFile("block-001.c3");
 #endif
     while (state != ALL_DONE) {
         getInput();

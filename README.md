@@ -113,7 +113,7 @@ The above words are defined as follows:
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-Everything else can be defined from those. See file 'block-000.c3' for details.
+Everything else can be defined from those. See file 'block-001.c3' for details.
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be called "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
 
@@ -156,7 +156,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## c3 Opcode / Word reference
 
-### NOTE: See file 'block-000.c3' for the implementation of the words defined in the base c3 system.
+### NOTE: See file 'block-001.c3' for the implementation of the words defined in the base c3 system.
 
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
@@ -324,7 +324,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 
-### Words defined in block-000.c3
+### Words defined in block-001.c3
 | WORD         | STACK          | Description|
 | :--          | :--            | :--|
 | \\           | (--)           | Line comment |
@@ -423,7 +423,7 @@ On startup, c3 does the following to bootstrap itself:
 - The first parameter (if provided) is assumed to be the root folder for searching.
 1. Create words to define its primitives.
 2. Create system-information words.
-3. Try to load block-000.c3 from the following locations (in order):
+3. Try to load block-001.c3 from the following locations (in order):
     - The current folder, "."
     - On Windows:
       - (root)\c3
