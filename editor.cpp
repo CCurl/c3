@@ -13,6 +13,8 @@ cell_t edScrH = 0;
 
 #define MAX_LINES     150
 #define LLEN          100
+#define SCR_HEIGHT    35
+
 #define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)
 #define EDCHAR(l,o)   edBuf[((l)*LLEN)+(o)]
@@ -26,7 +28,7 @@ int line, off, blkNum, edMode, scrTop;
 int isDirty, lineShow[MAX_LINES];
 char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32], *msg = NULL;
 char yanked[LLEN];
-cell_t edScrH = 35; // default is 35, can be set from c3 using '50 (scr-h) !'
+cell_t edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
 
 void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
 void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
@@ -41,9 +43,8 @@ int edKey() { return key(); }
 
 void NormLO() {
     line = min(max(line, 0), SCR_LINES-1);
-    off = min(max(off,0), LLEN-1);
-    if (scrTop < 0) { scrTop=0; }
-    if (scrTop > (MAX_LINES-SCR_LINES)) { scrTop=MAX_LINES-SCR_LINES; }
+    off = min(max(off, 0), LLEN-1);
+    scrTop = min(max(scrTop, 0), MAX_LINES-SCR_LINES);
 }
 
 void showAll() {
@@ -58,11 +59,9 @@ char edChar(int l, int o) {
 
 void showCursor() {
     char c = EDCH(line, off);
-    if (c == 0) c = 'X';
-    if (c < 32) c += ('a'-1);
     GotoXY(off + 1, line + 1);
     Color(0, 47);
-    printChar(c);
+    printChar(max(c,32));
     Color(7, 0);
 }
 
@@ -103,23 +102,24 @@ void mv(int l, int o) {
 }
 
 void gotoEOL() {
-    mv(0, -99);
-    while (EDCH(line, off) != 10) { ++off; }
+    char *ln = &EDCH(line, 0);
+    off = strLen(ln)-1;
+    mv(0,0);
 }
 
 cell_t toBlock() {
     fill(theBlock, 0, BLOCK_SZ);
-    for (int l=0; l<MAX_LINES; l++) {
-        char *y=&EDCHAR(l,0);
-        strCat(theBlock,y);
+    for (int i=0; i<MAX_LINES; i++) {
+        char *y = &EDCHAR(i,0);
+        strCat(theBlock, y);
     }
     return strLen(theBlock);
 }
 
 void addLF(int l) {
-    int o, lc = 0;
-    for (o = 0; EDCH(l, o); ++o) { lc = EDCH(l, o); }
-    if (lc != 10) { EDCH(l, o) = 10; }
+    char *ln = &EDCH(l, 0);
+    int len = strLen(ln);
+    if ((len==0) || (ln[len-1]!=10)) { ln[len]=10; ln[len+1]=0; }
 }
 
 void toBuf() {
@@ -128,12 +128,12 @@ void toBuf() {
     for (int i = 0; i < BLOCK_SZ; i++) {
         ch = theBlock[i];
         if (ch == 0) { break; }
-        if (ch ==10) {
+        if (ch == 10) {
             EDCHAR(l, o) = (char)ch;
             if (MAX_LINES <= (++l)) { return; }
             o=0;
             continue;
-        } else if ((o < LLEN) && (ch!=13)) {
+        } else if ((o < LLEN) && BTW(ch,32,126)) {
             EDCHAR(l,o++) = (char)ch;
         }
     }
