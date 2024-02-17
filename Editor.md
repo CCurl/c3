@@ -1,8 +1,8 @@
 # The c3 editor
 
-The c3 editor is a minialistic editor inspired by, and somewhat similar to, an extremely stripped-down version of VI.
+The c3 editor is an editor inspired by, and similar to, a stripped-down version of VI.
 
-There are 3 modes in the c3 editor:
+There are 4 modes in the c3 editor:
 - NORMAL
 - INSERT
 - REPLACE
