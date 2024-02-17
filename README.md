@@ -3,7 +3,7 @@
 ## What is c3?
 - c3 is a stack-based, byte-coded VM.
 - c3's opcodes implement many of the standard Forth operations.
-- c3 supports IEEE 754 double-precision (64-bit) floating point numbers.
+- c3 supports IEEE-754 double-precision (64-bit) floating point numbers.
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations: rX, sX, iX, dX, rX+, and rX-.
 - c3 provides 10 temporary words, T0 thru T9.
