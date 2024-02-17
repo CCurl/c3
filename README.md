@@ -20,7 +20,7 @@ The goals for c3 are:
 - c3 is NOT an ANSI-standard Forth system.
 - Strings in c3 are null-terminated, not counted.
 - The user can add counted strings if desired.
-- There are 2 separate memory areas: CODE and VARIABLE.
+- There are 2 separate memory areas: CODE and VARS.
 - The dictionary starts at the end of the CODE area and grows down.
 - The dictionary search is not case-sensitive.
 
