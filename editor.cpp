@@ -93,10 +93,19 @@ void showEditor() {
     for (int i = 0; i < SCR_LINES; i++) { showLine(i); }
 }
 
+void scroll(int amt) {
+    int st = scrTop;
+    scrTop += amt;
+    if (st != scrTop) { line -= amt; showAll(); }
+    NormLO();
+}
+
 void mv(int l, int o) {
     SHOW(line,1);
     line += l;
     off += o;
+    if (line < 0) { scroll(line); }
+    if (SCR_LINES <= line) { scroll(line-SCR_LINES+1); }
     NormLO();
     SHOW(line,1);
 }
@@ -238,13 +247,6 @@ int doInsertReplace(char c) {
     return 1;
 }
 
-void scroll(int amt) {
-    int st = scrTop;
-    scrTop += amt;
-    NormLO();
-    if (st != scrTop) { mv(-amt, 0); showAll(); }
-}
-
 void edDelX(int c) {
     if (c==0) { c = key(); }
     if (c=='d') { strCpy(yanked, &EDCH(line, 0)); deleteLine(); }
@@ -320,8 +322,8 @@ int processEditorChar(int c) {
         BCASE 'A': gotoEOL(); insertMode();
         BCASE 'J': joinLines();
         BCASE '$': gotoEOL();
-        BCASE 'g': mv(-99,-99);
-        BCASE 'G': mv(99,-999);
+        BCASE 'g': mv(-(SCR_LINES-1),-99);
+        BCASE 'G': mv(SCR_LINES-1,-99);
         BCASE 'i': insertMode();
         BCASE 'I': mv(0, -99); insertMode();
         BCASE 'o': mv(1, -99); insertLine(); insertMode();
