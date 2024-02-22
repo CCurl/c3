@@ -24,8 +24,8 @@ typedef uint8_t  byte;
 
 #define ToCP(x)       (char*)(x)
 #define BTW(x,l,h)    ((l<=x) && (x<=h))
-#define min(a,b)      ((a<b)?(a):(b))
-#define max(a,b)      ((a>b)?(a):(b))
+#define MIN(a,b)      ((a<b)?(a):(b))
+#define MAX(a,b)      ((a>b)?(a):(b))
 #define PC(c)         printChar(c)
 #define BCASE         break; case
 #define NCASE         goto next; case
@@ -51,8 +51,8 @@ typedef uint8_t  byte;
     #define CODE_SZ            96*1024
     #define VARS_SZ           256*1024
     #define STK_SZ            256
-    #define LSTK_SZ            45
-    #define REGS_SZ            25*10
+    #define LSTK_SZ            3*15      // 15 nested loops
+    #define REGS_SZ           10*25      // 25 nested +REGS
     #define TIB_SZ            512
     #define NAME_LEN           25
     #define NEEDS_ALIGN
@@ -67,8 +67,8 @@ typedef uint8_t  byte;
     #define CODE_SZ           128*1024
     #define VARS_SZ             4*1024*1024
     #define STK_SZ            256
-    #define LSTK_SZ            60
-    #define REGS_SZ           100*10
+    #define LSTK_SZ            3*50      // 50 nested loops
+    #define REGS_SZ           10*50      // 50 nested +REGS
     #define TIB_SZ           1024
     #define NAME_LEN           29
 #endif
@@ -142,5 +142,9 @@ extern cell_t fOpen(cell_t nm, cell_t md);
 extern void   fClose(cell_t fp);
 extern cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp);
 extern cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp);
+
+// Editor
+extern void editBlock(cell_t blkNum);
+extern cell_t edScrH;
 
 #endif // __C3_H__

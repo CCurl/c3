@@ -42,9 +42,9 @@ void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
 int edKey() { return key(); }
 
 void NormLO() {
-    line = min(max(line, 0), SCR_LINES-1);
-    off = min(max(off, 0), LLEN-1);
-    scrTop = min(max(scrTop, 0), MAX_LINES-SCR_LINES);
+    line = MIN(MAX(line, 0), SCR_LINES-1);
+    off = MIN(MAX(off, 0), LLEN-1);
+    scrTop = MIN(MAX(scrTop, 0), MAX_LINES-SCR_LINES);
 }
 
 void showAll() {
@@ -61,7 +61,7 @@ void showCursor() {
     char c = EDCH(line, off);
     GotoXY(off + 1, line + 1);
     Color(0, 47);
-    printChar(max(c,32));
+    printChar(MAX(c,32));
     Color(7, 0);
 }
 
@@ -264,7 +264,7 @@ int edReadLine(char *buf, int sz) {
         char c = key();
         if (c==27) { len=0; break; }
         if (c==13) { break; }
-        if ((c==127) || (c==8) && (len)) { --len; printStringF("%c %c",8,8); }
+        if (((c==127) || (c==8)) && (0<len)) { --len; printStringF("%c %c",8,8); }
         if (BTW(c,32,126)) { buf[len++]=c; printChar(c); }
     }
     CursorOff();
@@ -341,14 +341,14 @@ int processEditorChar(int c) {
         BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0); line=off=0;
-        BCASE '-': edSvBlk(0); blkNum = max(0, blkNum-1); edRdBlk(0); line=off=0;
+        BCASE '-': edSvBlk(0); blkNum = MAX(0, blkNum-1); edRdBlk(0); line=off=0;
         BCASE ':': edCommand();
     }
     return 1;
 }
 
 void editBlock(cell_t blk) {
-    blkNum = max((int)blk, 0);
+    blkNum = MAX((int)blk, 0);
     line = off = scrTop = 0;
     msg = NULL;
     CLS();

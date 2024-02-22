@@ -6,7 +6,8 @@
 
 enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
     OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
-    PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA
+    PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA,
+    EDIT_BLK
 };
 
 #ifdef mySerial
@@ -48,6 +49,7 @@ void loadUserWords() {
     parseF("-ML- FWRITE      %d 3 -MLX- inline", FWRITE);
     parseF("-ML- FLOAD       %d 3 -MLX- inline", FLOAD);
     parseF("-ML- BLOAD       %d 3 -MLX- inline", BLOAD);
+    parseF("-ML- EDIT        %d 3 -MLX- inline", EDIT_BLK);
     parseF(": isPC 0 ;");
 }
 
@@ -73,6 +75,7 @@ char *doUser(char *pc, int ir) {
     RCASE BLOAD:  n=pop(); t=fOpen((cell_t)y, (cell_t)"rt"); // TODO: fix this!
             if (t && input_fp) { inputStk[++fileSp]=input_fp; }
             if (t) { input_fp = t; fill(tib, 0, sizeof(tib)); }
+    RCASE EDIT_BLK: t=pop(); editBlock(t);
     return pc; default: return 0;
   }
 }

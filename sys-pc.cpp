@@ -1,7 +1,6 @@
 // Support for PCs
 
 #include "c3.h"
-#include <time.h>
 
 #ifdef isPC
 
@@ -9,17 +8,16 @@ enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
         EDIT_BLK
 };
 
-extern void editBlock(cell_t blkNum);
-extern cell_t edScrH;
-
 #ifdef IS_WINDOWS
 
+    #include <time.h>
     #include <conio.h>
     int qKey() { return _kbhit(); }
     int key() { return _getch(); }
 
 #elif (defined IS_LINUX)
 
+#include <time.h>
 #include <unistd.h>
 #include <termios.h>
 static struct termios normT, rawT;
@@ -62,8 +60,8 @@ int key() {
 void printChar(const char c) { fputc(c, output_fp ? (FILE*)output_fp : stdout); }
 void printString(const char* s) { fputs(s, output_fp ? (FILE*)output_fp : stdout); }
 cell_t sysTime() { return clock(); }
-void Store(char* loc, cell_t x) { *(cell_t*)loc = x; }
-cell_t Fetch(const char* loc) { return *(cell_t*)loc; }
+void Store(char *loc, cell_t x) { *(cell_t*)loc = x; }
+cell_t Fetch(const char *loc) { return *(cell_t*)loc; }
 char *root;
 
 void getInput() {
