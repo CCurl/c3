@@ -132,5 +132,6 @@ HERE CODE - ." %d code bytes used, " LAST HERE - ." %d bytes free.%n"
 CODE-END LAST - dup s0 ." %d dictionary bytes used, " r0 word-sz / ." %d words.%n"
 VHERE VARS - ." %d variable bytes used, " VARS-END VHERE - ." %d bytes free."
 
+: help 999 load ;
 : benches 200 load ;
 : sb 900 load ;

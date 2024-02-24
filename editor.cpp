@@ -11,6 +11,7 @@ cell_t edScrH = 0;
 
 #else
 
+// NOTE: the screen height can be set from c3 using '50 (scr-h) !'
 #define MAX_LINES     150
 #define LLEN          100
 #define SCR_HEIGHT    35
@@ -26,9 +27,9 @@ enum { NORMAL = 1, INSERT, REPLACE, QUIT };
 char theBlock[BLOCK_SZ];
 int line, off, blkNum, edMode, scrTop;
 int isDirty, lineShow[MAX_LINES];
-char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32], *msg = NULL;
-char yanked[LLEN];
-cell_t edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
+char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32];
+char yanked[LLEN], *msg = NULL;
+cell_t edScrH = SCR_HEIGHT;
 
 void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
 void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
@@ -199,7 +200,7 @@ void deleteLine() {
 
 void insertSpace() {
     for (int o=LLEN-1; off<o; o--) {
-        EDCH(line,o) = EDCH(line, o-1);
+        EDCH(line, o) = EDCH(line, o-1);
     }
     EDCH(line, off)=32;
 }
@@ -215,7 +216,7 @@ void insertLine() {
 
 void joinLines() {
     gotoEOL();
-    EDCH(line, off) = 0;
+    EDCH(line, off) = 0;    // Remove the LF
     toBlock();
     toBuf();
     showAll();
@@ -227,7 +228,7 @@ void replaceChar(char c, int force, int mov) {
     for (int o=off-1; 0<=o; --o) {
         int ch = EDCH(line, o);
         if (ch && (ch != 10)) { break; }
-        EDCH(line,o)=32;
+        EDCH(line, o)=32;
     }
     EDCH(line, off)=c;
     DIRTY(line);
@@ -330,7 +331,7 @@ int processEditorChar(int c) {
         BCASE 'O': mv(0, -99); insertLine(); insertMode();
         BCASE 'r': replaceChar(edKey(), 0, 1);
         BCASE 'R': replaceMode();
-        BCASE 'c': deleteChar();; insertMode();
+        BCASE 'c': deleteChar(); insertMode();
         BCASE 'C': edDelX('$'); insertMode();
         BCASE 'd': edDelX(0);
         BCASE 'D': edDelX('$');
