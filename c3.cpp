@@ -44,8 +44,8 @@ enum { // Floating point opcdes
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
 #define L2            lstk[lsp-2]
-#define IS_IMMEDIATE  1
-#define IS_INLINE     2
+#define IS_IMMEDIATE  0x01
+#define IS_INLINE     0x02
 
 stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp;
@@ -97,9 +97,10 @@ int strEqN(const char *s, const char *d, cell_t n) {
 void printStringF(const char *fmt, ...) {
     char *buf = (char*)last;
     buf -= 256;
+    if (buf<here) { buf=here+1; }
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buf, 200, fmt, args);
+    vsnprintf(buf, 250, fmt, args);
     va_end(args);
     printString(buf);
 }
@@ -187,8 +188,8 @@ int doFind(const char *nm) {
 
 // ( --n | <null> )
 int isBase10(const char *wd) {
-    cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
-    if (isNeg && (*(++wd) == 0)) { return 0; }
+    cell_t x = 0, isNeg = 0;
+    if (*wd == '-') { isNeg=1; ++wd; }
     if (!BTW(*wd, '0', '9')) { return 0; }
     while (BTW(*wd, '0', '9')) { x = (x*10)+(*(wd++)-'0'); }
     if (*wd == 0) { push(isNeg ? -x : x); return 1; }
@@ -276,21 +277,21 @@ char *doSysOp(char *pc) {
     switch(*pc++) {
         case INLINE: last->f = IS_INLINE;
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-        RCASE DOT: printString(iToA(pop(), (int)base));
-        RCASE ITOA: TOS = (cell_t)iToA(TOS, (int)base);
-        RCASE ATOI: push(isNum(cpop()));
+        RCASE DOT:   printString(iToA(pop(), (int)base));
+        RCASE ITOA:  TOS = (cell_t)iToA(TOS, (int)base);
+        RCASE ATOI:  push(isNum(cpop()));
         RCASE COLONDEF: addWord(); state=1;
-        RCASE ENDWORD: state=0; CComma(EXIT);
-        RCASE CREATE: addWord(); CComma(LIT); Comma((cell_t)vhere);
-        RCASE FIND: push(doFind(ToCP(0)));
-        RCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
-        RCASE TIMER: push(sysTime());
+        RCASE ENDWORD:  state=0; CComma(EXIT);
+        RCASE CREATE:   addWord(); CComma(LIT); Comma((cell_t)vhere);
+        RCASE FIND:   push(doFind(ToCP(0)));
+        RCASE WORD:   t1=nextWord(); push((cell_t)WD); push(t1);
+        RCASE TIMER:  push(sysTime());
         RCASE CCOMMA: CComma(pop());
-        RCASE COMMA: Comma(pop());
-        RCASE KEY:  push(key());
-        RCASE QKEY: push(qKey());
-        RCASE EMIT: printChar((char)pop());
-        RCASE QTYPE: printString(cpop());
+        RCASE COMMA:  Comma(pop());
+        RCASE KEY:    push(key());
+        RCASE QKEY:   push(qKey());
+        RCASE EMIT:   printChar((char)pop());
+        RCASE QTYPE:  printString(cpop());
             return pc; 
         default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
@@ -300,13 +301,13 @@ char *doSysOp(char *pc) {
 char *doFloatOp(char *pc) {
     flt_t x;
     switch(*pc++) {
-        case  FADD: x = fpop(); FTOS += x;
-        RCASE FSUB: x = fpop(); FTOS -= x;
-        RCASE FMUL: x = fpop(); FTOS *= x;
-        RCASE FDIV: x = fpop(); FTOS /= x;
-        RCASE FEQ:  x = fpop(); TOS = (x == FTOS);
-        RCASE FLT:  x = fpop(); TOS = (x > FTOS);
-        RCASE FGT:  x = fpop(); TOS = (x < FTOS);
+        case  FADD: x=fpop(); FTOS += x;
+        RCASE FSUB: x=fpop(); FTOS -= x;
+        RCASE FMUL: x=fpop(); FTOS *= x;
+        RCASE FDIV: x=fpop(); FTOS /= x;
+        RCASE FEQ:  x=fpop(); TOS = (x == FTOS);
+        RCASE FLT:  x=fpop(); TOS = (x > FTOS);
+        RCASE FGT:  x=fpop(); TOS = (x < FTOS);
         RCASE F2I:  TOS = (cell_t)FTOS;
         RCASE I2F:  FTOS = (flt_t)TOS;
         RCASE FDOT: printStringF("%g", fpop());
@@ -327,7 +328,7 @@ next:
         NCASE LIT: push(Fetch(pc)); pc += CELL_SZ;
         NCASE EXIT: if (RSP<1) { RSP=0; return; } pc=rpop();
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rpush(y); }          // fall-thru
-        case  JMP: pc = CpAt(pc);
+        case  JMP:  pc = CpAt(pc);
         NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE STORE:  Store(CTOS, NOS);  DSP-=2; if (DSP < 1) { DSP = 0; }
@@ -356,9 +357,9 @@ next:
         NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE INDEX: push((cell_t)&L0);
         NCASE COM: TOS = ~TOS;
-        NCASE AND: t1=pop(); TOS = (TOS & t1);
-        NCASE OR:  t1=pop(); TOS = (TOS | t1);
-        NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
+        NCASE AND: t1=pop(); TOS &= t1;
+        NCASE OR:  t1=pop(); TOS |= t1;
+        NCASE XOR: t1=pop(); TOS ^= t1;
         NCASE TYPE: t1=pop(); y=cpop(); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE ZTYPE: doType(0);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
