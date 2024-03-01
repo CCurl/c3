@@ -105,9 +105,9 @@ int lookForFile(const char *name) {
 #ifdef IS_LINUX
     if (tryOpen("", "", name)) { return 1; }
     if (tryOpen("", "./", name)) { return 1; }
-    if (tryOpen(root, "/.local/c3/", name)) { return 1; }
-    if (tryOpen(root, "/.local/bin/c3/", name)) { return 1; }
-    if (tryOpen(root, "/.local/bin/", name)) { return 1; }
+    if (tryOpen(root, "/bin/c3/", name)) { return 1; }
+    if (tryOpen(root, "/bin/c3/", name)) { return 1; }
+    if (tryOpen(root, "/bin/", name)) { return 1; }
 #elif (defined  IS_WINDOWS)
     if (tryOpen("", "", name)) { return 1; }
     if (tryOpen("", ".\\", name)) { return 1; }

@@ -23,5 +23,5 @@ clean:
 	rm -f $(app64) $(app32)
 
 bin: $(app64) $(app32)
-	cp -u -p $(app64) ~/.local/bin/
-	cp -u -p $(app32) ~/.local/bin/
+	cp -u -p $(app64) ~/bin/
+	cp -u -p $(app32) ~/bin/
