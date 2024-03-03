@@ -3,7 +3,7 @@
 ## What is c3?
 - c3 is a stack-based, byte-coded VM.
 - c3's opcodes implement many of the standard Forth operations.
-- c3 supports IEEE 754 double-precision (64-bit) floating point numbers.
+- c3 supports IEEE-754 double-precision (64-bit) floating point numbers.
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations: rX, sX, iX, dX, rX+, and rX-.
 - c3 provides 10 temporary words, T0 thru T9.
@@ -20,7 +20,7 @@ The goals for c3 are:
 - c3 is NOT an ANSI-standard Forth system.
 - Strings in c3 are null-terminated, not counted.
 - The user can add counted strings if desired.
-- There are 2 separate memory areas: CODE and VARIABLE.
+- There are 2 separate memory areas: CODE and VARS.
 - The dictionary starts at the end of the CODE area and grows down.
 - The dictionary search is not case-sensitive.
 
@@ -65,7 +65,9 @@ An example usage of temporary words:
 ```
 
 ## Inline words
-In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copies the contents of the word (up to, but not including the first EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space as well. This is especially true on a 64-bit system, where the CELL size is 8. **Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
+In c3, an "INLINE" word is like a macro. When compiling a word that is INLINE, c3 copies the contents of the word (up to, but not including the first EXIT) to the target, as opposed to compiling a CALL to the word. This improves performance and often saves space as well. This is especially true on a 64-bit system, where the CELL size is 8.
+
+**Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
 
 ## Notes on output formatting in ZTYPE and '."':
 - %b: output TOS as a binary number
@@ -84,24 +86,34 @@ In c3, an "INLINE" word is like a macro ... when compiling INLINE words, c3 copi
 For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
 
 ## Bootstrapping c3
-To bootstrap itself, c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-". For example, the c3 opcode for "return from subroutine" is 3, and "duplicate the top of the stack" is 12. So in the beginning of sys-load.h, I define aliases for the opcodes.
+When c3 starts, it defines aliases for the c3 VM opcodes.
 
-- The first four words defined in c3 are:
-  - 'INLINE'    - mark the last word as inline
-  - 'IMMEDIATE' - mark the last word as immediate
-  - ':'         - define a new c3 word
-  - ';'         - end word definition
+c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-".
 
+For example, the c3 opcode for "exit word" is 3, and "duplicate the top of the stack" is 12. Some examples:
+
+|WORD     |Opcode|Description|
+|:--      |--:   |:--|
+|EXIT     |3     |Exit word|
+|DUP      |12    |Duplicate TOS|
+|INLINE   |47,0  |Mark the last word as INLINE|
+|IMMEDIATE|47,1  |Mark the last word as IMMEDIATE|
+|:        |47,6  |Define a new word|
+|;        |47,7  |End word definition|
+
+The above words are defined as follows:
 ```
+  -ML- EXIT 3 3 -MLX-
+  -ML- DUP 12 3 -MLX-
   -ML- INLINE 47 0 3 -MLX-
-  -ML- INLINE 47 1 3 -MLX-
-  -ML- INLINE 47 6 3 -MLX-
-  -ML- INLINE 47 7 3 -MLX-
+  -ML- IMMEDIATE 47 1 3 -MLX-
+  -ML- : 47 6 3 -MLX-
+  -ML- ; 47 7 3 -MLX-
 ```
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-Everything in c3 is defined from those. See file 'sys-load.h' for details.
+Everything else can be defined from those. See file 'block-001.c3' for details.
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be called "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
 
@@ -144,24 +156,33 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## c3 Opcode / Word reference
 
-### NOTE: See the sys-load.h file for the implementation of the words defined in the base c3 system.
+### NOTE: See file 'block-001.c3' for the implementation of the words defined in the base c3 system.
 
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
 |  0    | STOP       | (--)         | Stops the runtime engine|
 |  1    | LIT1       | (--B)        | Pushes next BYTE onto the stack|
 |  2    | LIT        | (--N)        | Pushes next CELL onto the stack|
-|  3    | EXIT       | (--)         | Exit subroutine|
+|       | (LIT)      | (--N)        | OPCODE for LITERAL (INLINE) |
+|  3    | EXIT       | (--)         | Exit word|
+|       | (EXIT)     | (--N)        | OPCODE for EXIT (INLINE) |
 |  4    | CALL       | (--)         | Call: next CELL is address, handles call-tail optimization|
-|  5    | JUMP       | (--)         | Jump: next CELL is address|
-|  6    | JUMPZ      | (N--)        | Jump if TOS==0: next CELL is address|
-|  7    | JUMPNZ     | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
+|       | (CALL)     | (--N)        | OPCODE for CALL (INLINE) |
+|  5    | JMP        | (--)         | Jump: next CELL is address|
+|       | (JMP)      | (--N)        | OPCODE for JMP |
+|  6    | JMPZ       | (N--)        | Jump if TOS==0: next CELL is address|
+|       | (JMPZ)     | (--N)        | OPCODE for JMPZ |
+|  7    | JMPNZ      | (N--N)       | Jump if TOS!=0: next CELL is address (no POP!)|
+|       | (JMPNZ)    | (--N)        | OPCODE for JMPNZ |
 |  8    | !          | (N A--)      | Store CELL N to address A|
+|       | (STORE)    | (--N)        | OPCODE for STORE (!) |
 |  9    | C!         | (B A--)      | Store BYTE B to address A|
 | 10    | @          | (A--N)       | Fetch CELL N FROM address A|
+|       | (FETCH)    | (--N)        | OPCODE for FETCH (@) |
 | 11    | C@         | (A--B)       | Fetch BYTE B FROM address A|
 | 12    | DUP        | (N--N N)     | Duplicate TOS|
-| 15    | DROP       | (A B--A)     | Drop TOS|
+|       | (DUP)      | (--N)        | OPCODE for DUP |
+| 15    | DROP       | (A B--A)     | Discard TOS|
 | 13    | SWAP       | (A B--B A)   | Swap TOS and NOS|
 | 14    | OVER       | (A B--A B A) | Push a copy of NOS|
 | 16    | +          | (A B--C)     | C: A + B|
@@ -187,6 +208,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 36    | XOR        | (A B--C)     | C: A bitwise-XOR B|
 | 37    | TYPE       | (A N--)      | EMIT N chars from address A (Standard Forth TYPE)|
 | 38    | ZTYPE      | (A--)        | Output formatted chars at address A to (output_fp)|
+|       | (ZTYPE)    | (--N)        | OPCODE for ZTYPE|
 | 39,X  | iX         | (--)         | Increment register X|
 | 40,X  | dX         | (--)         | Decrement register X|
 | 41,X  | rX         | (--N)        | N: value of register X|
@@ -195,6 +217,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 44,X  | sX         | (N--)        | Set regiser X to TOS|
 | 45    | +REGS      | (--)         | Allocate 10 new registers (add 10 to REG-BASE)|
 | 46    | -REGS      | (--)         | Restore last set of registers (subtract 10 from REG-BASE)|
+|       | (-REGS)    | (--46)       | Opcode for -REGS|
 
 ### System opcodes are 2-bytes, starting with 47
 |Opcode |Word        |Stack         |Description|
@@ -233,8 +256,10 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | 48,7  | S-LEN      | (S--N)       | N: length of string S|
 | 48,8  | S-EQ       | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (case sensitive)|
 | 48,9  | S-EQI      | (S1 S2--F)   | F: 1 if S1 = S2, else 0 (not case sensitive)|
-| 48,10 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]>32)|
-| 48,11 | S-RTRIM    | (S--S)       | S: The string to be right-trimmed|
+| 48,10 | S-EQN      | (S1 S2 N--F) | F: 1 if the first N chars in S1 and S2 are the same, else 0
+| 48,11 | S-LTRIM    | (S1--S2)     | S2: Address >= S1 where (S2[0]=0) or (S2[0]>32)|
+| 48,12 | S-RTRIM    | (S--S)       | S: The string to be right-trimmed|
+| 48,13 | S-FINDC    | (C S--A|0)   | A: 0 if C not found in S, else addr in S|
 
 ### Floating point opcodes are 2-bytes, starting with 49
 |Opcode |Word        |Stack         |Description|
@@ -299,19 +324,9 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 
-### Other built-in c3 words
-| WORD |STACK |Description|
-| :-- | :-- | :--|
-| (LIT)        | (--N)          | OPCODE for LITERAL (INLINE) |
-| (EXIT)       | (--N)          | OPCODE for EXIT (INLINE) |
-| (CALL)       | (--N)          | OPCODE for CALL (INLINE) |
-| (JMP)        | (--N)          | OPCODE for JMP |
-| (JMPZ)       | (--N)          | OPCODE for JMPZ |
-| (JMPNZ)      | (--N)          | OPCODE for JMPNZ |
-| (STORE)      | (--N)          | OPCODE for STORE |
-| (FETCH)      | (--N)          | OPCODE for FETCH |
-| (DUP)        | (--N)          | OPCODE for DUP |
-| (ZTYPE)      | (--N)          | OPCODE for ZTYPE |
+### Words defined in block-001.c3
+| WORD         | STACK          | Description|
+| :--          | :--            | :--|
 | \\           | (--)           | Line comment |
 | [            | (--)           | Set STATE=0 |
 | ]            | (--)           | SET STATE=1 |
@@ -404,15 +419,34 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | FORGET-1     | (--)           | Remove the most recent entry from the dictionary |
 
 ## c3 startup behavior
-When c3 starts:
-- For every parameter on the command line:
-  - IF c3 can open the argv[N] as a file, queue it up to be loaded.
+On startup, c3 does the following to bootstrap itself:
+- The first parameter (if provided) is assumed to be the root folder for searching.
+1. Create words to define its primitives.
+2. Create system-information words.
+3. Try to load block-001.c3 from the following locations (in order):
+    - The current folder, "."
+    - On Windows:
+      - (root)\c3
+      - (root)\bin
+    - On Linux:
+      - (root)/.local/c3
+      - (root)/.local/bin
+
+- For every other parameter on the command line:
+  - IF c3 can open argv[N] as a file, queue it up to be loaded.
   - IF argv[N] can be converted to a number, set rN to that number
   - - ELSE, set rN to argv[N] (e.g. - rN QTYPE will output the parameter)
 ### Example:
 ```
-Running this: c3 $100 test.txt
-will set r1 to #256 and r2 to the address where "test.txt" starts.
+Running this (under Linux): "c3 ~ $100 test.txt" will:
+- Set the root folder for startup file searches to "~"
+- Set r2 to #256
+- Set r3 to the address where "test.txt" starts.
+
+Running this (under Windows): "c3 e: $100 test.txt" will:
+- Set the root folder for startup file searches to "e:"
+- Set r2 to #256
+- Set r3 to the address where "test.txt" starts.
 ```
 
 ## Adding new opcodes to c3
@@ -425,14 +459,14 @@ Here is the process:
 - For a global opcode:
   - In c3.c, add the new opcode(s) to the appropriate enum.
   - In c3.c, add a NCASE to run() to for each new opcode.
-  - In sys-load.h, add a "-ML-" line to LoadStartupWords() for each new opcode.
+  - In c3.c, add a "-ML-" line to LoadC3Words() for each new opcode.
   - Update your README.md.
 
 - For a target-specific opcode:
-  - All work is done in the target's *.h file (e.g. - sys-pc.h).
+  - All work is done in the target's *.c file (e.g. - sys-pc.c).
   - Add the new opcodes(s) to the enum.
   - Target-specific opcodes should have values above 100.
-  - Edit LoadStartupWords() and add a "-ML-" line for each new opcode.
+  - Edit LoadUserWords() and add a "-ML-" line for each new opcode.
   - For example: to define opcode 120 as "NEWOP" ... ParseLine("-ML- NEWOP 120 3 -MLX- INLINE");
   - In doUser(), add cases for the new opcode(s).
   - Update your README.md.

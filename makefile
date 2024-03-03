@@ -1,11 +1,11 @@
 app64 := c3
 app32 := c3-32
 
-CXX := clang
-CXXFLAGS32 := -m32 -O2 
-CXXFLAGS64 := -m64 -O3 
+CXX := clang++
+CXXFLAGS32 := -m32 -O2 -DIS_LINUX
+CXXFLAGS64 := -m64 -O3 -DIS_LINUX
 
-srcfiles := $(shell find . -name "*.c")
+srcfiles := $(shell find . -name "*.cpp")
 incfiles := $(shell find . -name "*.h")
 LDLIBS   := -lm
 
@@ -22,5 +22,6 @@ $(app32): $(srcfiles) $(incfiles)
 clean:
 	rm -f $(app64) $(app32)
 
-bin: $(app64)
-	cp -u -p $(app64) ~/.local/bin/
+bin: $(app64) $(app32)
+	cp -u -p $(app64) ~/bin/
+	cp -u -p $(app32) ~/bin/

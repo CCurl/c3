@@ -1,3 +1,5 @@
+\ block-004.c3 - memory words
+
 ' cmove loaded?
 
 : cmove ( src dst num-- )
