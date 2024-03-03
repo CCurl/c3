@@ -32,7 +32,8 @@
   }
   void   fClose(cell_t fp) { File x=File((FileImpl*)fp); x.close(); }
   cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp) {
-      File x=File((FileImpl*)fp); return x.read((char*)addr,(sz*num));
+      File x=File((FileImpl*)fp);
+      return x.read((char*)addr,(sz*num));
   }
   cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp) {
       File x=File((FileImpl*)fp);
