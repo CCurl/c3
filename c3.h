@@ -142,6 +142,8 @@ extern cell_t fOpen(cell_t nm, cell_t md);
 extern void   fClose(cell_t fp);
 extern cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp);
 extern cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp);
+extern int readBlock(int num, char *blk, int sz);
+extern int writeBlock(int num, char *blk, int sz);
 
 // Editor
 extern void editBlock(cell_t blkNum);

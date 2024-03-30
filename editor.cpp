@@ -1,20 +1,20 @@
 // editor.cpp - A simple block editor
+//
+// NOTE: A huge thanks to Alain Theroux. This editor was inspired by
+//       his editor and is a shameful reverse-engineering of it. :D
 
 #include "c3.h"
+#include <string.h>
 
 #define __EDITOR__
 
 #ifndef __EDITOR__
-
-void editBlock(cell_t blockNum) {}
-cell_t edScrH = 0;
-
+void doEditor() { printString("-noEdit-"); }
 #else
 
-// NOTE: the screen height can be set from c3 using '50 (scr-h) !'
 #define MAX_LINES     150
 #define LLEN          100
-#define SCR_HEIGHT    35
+#define SCR_HEIGHT     25
 
 #define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)
@@ -24,41 +24,41 @@ cell_t edScrH = 0;
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
 enum { NORMAL = 1, INSERT, REPLACE, QUIT };
-char theBlock[BLOCK_SZ];
-int line, off, blkNum, edMode, scrTop;
-int isDirty, lineShow[MAX_LINES];
-char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32];
-char yanked[LLEN], *msg = NULL;
-cell_t edScrH = SCR_HEIGHT;
+static char theBlock[BLOCK_SZ];
+static int line, off, blkNum, edMode, scrTop;
+static int isDirty, lineShow[MAX_LINES];
+static char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32], *msg = NULL;
+static char yanked[LLEN];
+cell_t edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
 
-void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
-void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
-void ClearEOL() { printString("\x1B[K"); }
-void CursorOn() { printString("\x1B[?25h"); }
-void CursorOff() { printString("\x1B[?25l"); }
-void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:40); }
-void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
-void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
-void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
-int edKey() { return key(); }
+static void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
+static void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
+static void ClearEOL() { printString("\x1B[K"); }
+static void CursorOn() { printString("\x1B[?25h"); }
+static void CursorOff() { printString("\x1B[?25l"); }
+static void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:40); }
+static void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
+static void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
+static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
+static int edKey() { return key(); }
 
-void NormLO() {
+static void NormLO() {
     line = MIN(MAX(line, 0), SCR_LINES-1);
     off = MIN(MAX(off, 0), LLEN-1);
     scrTop = MIN(MAX(scrTop, 0), MAX_LINES-SCR_LINES);
 }
 
-void showAll() {
+static void showAll() {
     for (int i = 0; i < MAX_LINES; i++) { lineShow[i] = 1; }
 }
 
-char edChar(int l, int o) {
+static char edChar(int l, int o) {
     char c = EDCH(l,o);
     if (c==0) { return c; }
     return BTW(c,32,126) ? c : ' ';
 }
 
-void showCursor() {
+static void showCursor() {
     char c = EDCH(line, off);
     GotoXY(off + 1, line + 1);
     Color(0, 47);
@@ -66,7 +66,7 @@ void showCursor() {
     Color(7, 0);
 }
 
-void showLine(int l) {
+static void showLine(int l) {
     int sl = scrTop+l;
     if (!lineShow[sl]) { return; }
     SHOW(l,0);
@@ -90,18 +90,18 @@ void showStatus() {
     if (msg && (1 < ++cnt)) { msg = NULL; cnt = 0; }
 }
 
-void showEditor() {
+static void showEditor() {
     for (int i = 0; i < SCR_LINES; i++) { showLine(i); }
 }
 
-void scroll(int amt) {
+static void scroll(int amt) {
     int st = scrTop;
     scrTop += amt;
     if (st != scrTop) { line -= amt; showAll(); }
     NormLO();
 }
 
-void mv(int l, int o) {
+static void mv(int l, int o) {
     SHOW(line,1);
     line += l;
     off += o;
@@ -111,13 +111,13 @@ void mv(int l, int o) {
     SHOW(line,1);
 }
 
-void gotoEOL() {
+static void gotoEOL() {
     char *ln = &EDCH(line, 0);
     off = strLen(ln)-1;
     mv(0,0);
 }
 
-cell_t toBlock() {
+static cell_t toBlock() {
     fill(theBlock, 0, BLOCK_SZ);
     for (int i=0; i<MAX_LINES; i++) {
         char *y = &EDCHAR(i,0);
@@ -126,13 +126,13 @@ cell_t toBlock() {
     return strLen(theBlock);
 }
 
-void addLF(int l) {
+static void addLF(int l) {
     char *ln = &EDCH(l, 0);
     int len = strLen(ln);
     if ((len==0) || (ln[len-1]!=10)) { ln[len]=10; ln[len+1]=0; }
 }
 
-void toBuf() {
+static void toBuf() {
     int o = 0, l = 0, ch;
     fill(edBuf, 0, BLOCK_SZ);
     for (int i = 0; i < BLOCK_SZ; i++) {
@@ -150,39 +150,29 @@ void toBuf() {
     for (int i = 0; i < MAX_LINES; i++) { addLF(i); }
 }
 
-void edRdBlk(int force) {
-    char fn[32];
+static void edRdBlk(int force) {
     fill(theBlock, 0, BLOCK_SZ);
-    sprintf(fn, "block-%03d.c3", (int)blkNum);
-    cell_t fp = fOpen((cell_t)fn, (cell_t)"rb");
-    if (fp) {
-        fRead((cell_t)theBlock, BLOCK_SZ, 1, fp);
-        fClose(fp);
-    }
+    readBlock(blkNum, theBlock, BLOCK_SZ);
     toBuf();
     showAll();
     isDirty = 0;
 }
 
-void edSvBlk(int force) {
+static void edSvBlk(int force) {
     if (isDirty || force) {
         cell_t len = toBlock();
         while (1<len) {
             if (theBlock[len-2] == 10) { theBlock[len-1]=0; --len; }
             else { break; }
         }
-        char fn[32];
-        sprintf(fn, "block-%03d.c3", (int)blkNum);
-        cell_t fp = fOpen((cell_t)fn, (cell_t)"wb");
-        if (fp) {
-            fWrite((cell_t)theBlock, 1, len, fp);
-            fClose(fp);
-        }
+        writeBlock(blkNum, theBlock, len);
+        sprintf(tBuf, " - %d bytes ", (int)len);
+        msg = &tBuf[0];
         isDirty = 0;
     }
 }
 
-void deleteChar() {
+static void deleteChar() {
     for (int o = off; o < (LLEN - 2); o++) {
         EDCH(line,o) = EDCH(line, o+1);
     }
@@ -190,7 +180,7 @@ void deleteChar() {
     addLF(line);
 }
 
-void deleteLine() {
+static void deleteLine() {
     EDCH(line,0) = 0;
     toBlock();
     toBuf();
@@ -198,14 +188,14 @@ void deleteLine() {
     isDirty = 1;
 }
 
-void insertSpace() {
+static void insertSpace() {
     for (int o=LLEN-1; off<o; o--) {
-        EDCH(line, o) = EDCH(line, o-1);
+        EDCH(line,o) = EDCH(line, o-1);
     }
     EDCH(line, off)=32;
 }
 
-void insertLine() {
+static void insertLine() {
     insertSpace();
     EDCH(line, off)=10;
     toBlock();
@@ -214,21 +204,21 @@ void insertLine() {
     isDirty = 1;
 }
 
-void joinLines() {
+static void joinLines() {
     gotoEOL();
-    EDCH(line, off) = 0;    // Remove the LF
+    EDCH(line, off) = 0;
     toBlock();
     toBuf();
     showAll();
     isDirty = 1;
 }
 
-void replaceChar(char c, int force, int mov) {
+static void replaceChar(char c, int force, int mov) {
     if (!BTW(c,32,126) && (!force)) { return; }
     for (int o=off-1; 0<=o; --o) {
         int ch = EDCH(line, o);
         if (ch && (ch != 10)) { break; }
-        EDCH(line, o)=32;
+        EDCH(line,o)=32;
     }
     EDCH(line, off)=c;
     DIRTY(line);
@@ -236,7 +226,7 @@ void replaceChar(char c, int force, int mov) {
     if (mov) { mv(0, 1); }
 }
 
-int doInsertReplace(char c) {
+static int doInsertReplace(char c) {
     if (c==13) {
         if (edMode == REPLACE) { mv(1, -999); }
         else { insertLine(); mv(1,-99); }
@@ -248,7 +238,7 @@ int doInsertReplace(char c) {
     return 1;
 }
 
-void edDelX(int c) {
+static void edDelX(int c) {
     if (c==0) { c = key(); }
     if (c=='d') { strCpy(yanked, &EDCH(line, 0)); deleteLine(); }
     else if (c=='X') { if (0<off) { --off; deleteChar(); } }
@@ -258,14 +248,14 @@ void edDelX(int c) {
     }
 }
 
-int edReadLine(char *buf, int sz) {
+static int edReadLine(char *buf, int sz) {
     int len = 0;
     CursorOn();
     while (len<(sz-1)) {
         char c = key();
         if (c==27) { len=0; break; }
         if (c==13) { break; }
-        if (((c==127) || (c==8)) && (0<len)) { --len; printStringF("%c %c",8,8); }
+        if ((c==127) || ((c==8) && (len))) { --len; printStringF("%c %c",8,8); }
         if (BTW(c,32,126)) { buf[len++]=c; printChar(c); }
     }
     CursorOff();
@@ -273,7 +263,7 @@ int edReadLine(char *buf, int sz) {
     return len;
 }
 
-void edCommand() {
+static void edCommand() {
     char buf[32];
     GotoXY(1, SCR_LINES+3); ClearEOL();
     printChar(':');
@@ -289,7 +279,7 @@ void edCommand() {
     }
 }
 
-int doCommon(int c) {
+static int doCommon(int c) {
     int l = line, o = off, st = scrTop;
     if ((c == 8) || (c == 127)) { mv(0, -1); }        // <backspace>
     else if (c ==  4) { scroll(SCR_LINES/2); }        // <ctrl-d>
@@ -304,7 +294,7 @@ int doCommon(int c) {
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 
-int processEditorChar(int c) {
+static int processEditorChar(int c) {
     if (c==27) { normalMode(); return 1; }
     if (doCommon(c)) { return 1; }
     if (BTW(edMode,INSERT,REPLACE)) {
@@ -331,7 +321,7 @@ int processEditorChar(int c) {
         BCASE 'O': mv(0, -99); insertLine(); insertMode();
         BCASE 'r': replaceChar(edKey(), 0, 1);
         BCASE 'R': replaceMode();
-        BCASE 'c': deleteChar(); insertMode();
+        BCASE 'c': deleteChar();; insertMode();
         BCASE 'C': edDelX('$'); insertMode();
         BCASE 'd': edDelX(0);
         BCASE 'D': edDelX('$');
@@ -348,8 +338,9 @@ int processEditorChar(int c) {
     return 1;
 }
 
-void editBlock(cell_t blk) {
-    blkNum = MAX((int)blk, 0);
+void editBlock(cell_t Blk) {
+    blkNum = Blk;
+    blkNum = MAX(blkNum, 0);
     line = off = scrTop = 0;
     msg = NULL;
     CLS();
@@ -366,4 +357,4 @@ void editBlock(cell_t blk) {
     CursorOn();
 }
 
-#endif // __EDITOR__
+#endif //  __EDITOR__
