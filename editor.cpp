@@ -1,15 +1,13 @@
 // editor.cpp - A simple block editor
-//
-// NOTE: A huge thanks to Alain Theroux. This editor was inspired by
-//       his editor and is a shameful reverse-engineering of it. :D
 
 #include "c3.h"
 #include <string.h>
 
-#define __EDITOR__
+#define CELL          cell_t
 
 #ifndef __EDITOR__
-void doEditor() { printString("-noEdit-"); }
+void editBlock(CELL Blk) { printString("-noEdit-"); }
+CELL edScrH = 0; // can be set from c3 using '50 (scr-h) !'
 #else
 
 #define MAX_LINES     150
@@ -29,7 +27,7 @@ static int line, off, blkNum, edMode, scrTop;
 static int isDirty, lineShow[MAX_LINES];
 static char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32], *msg = NULL;
 static char yanked[LLEN];
-cell_t edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
+CELL edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
 
 static void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
 static void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
@@ -117,7 +115,7 @@ static void gotoEOL() {
     mv(0,0);
 }
 
-static cell_t toBlock() {
+static CELL toBlock() {
     fill(theBlock, 0, BLOCK_SZ);
     for (int i=0; i<MAX_LINES; i++) {
         char *y = &EDCHAR(i,0);
@@ -160,7 +158,7 @@ static void edRdBlk(int force) {
 
 static void edSvBlk(int force) {
     if (isDirty || force) {
-        cell_t len = toBlock();
+        CELL len = toBlock();
         while (1<len) {
             if (theBlock[len-2] == 10) { theBlock[len-1]=0; --len; }
             else { break; }
@@ -338,9 +336,8 @@ static int processEditorChar(int c) {
     return 1;
 }
 
-void editBlock(cell_t Blk) {
-    blkNum = Blk;
-    blkNum = MAX(blkNum, 0);
+void editBlock(CELL Blk) {
+    blkNum = MAX(Blk, 0);
     line = off = scrTop = 0;
     msg = NULL;
     CLS();
