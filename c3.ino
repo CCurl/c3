@@ -64,17 +64,15 @@ char *doUser(char *pc, int ir) {
     RCASE PIN_WRITE:   t = pop(); n = pop(); digitalWrite(t,n);
     RCASE PIN_WRITEA:  t = pop(); n = pop(); analogWrite(t,n);
 
-    RCASE FOPEN:  t=pop(); n=pop(); push(fOpen(n,t));
+    RCASE FOPEN:  t=pop(); n=pop(); push(fOpen((char*)n, (char*)t));
     RCASE FCLOSE: t=pop(); fClose(t);
-    RCASE FREAD:  t=pop(); n=pop(); push(fRead(pop(), 1, n, t));
-    RCASE FWRITE: t=pop(); n=pop(); push(fWrite(pop(), 1, n, t));
-    RCASE FLOAD:  n=pop(); t=fOpen(n, (cell_t)"rt");
-            if (t && input_fp) { inputStk[++fileSp]=input_fp; }
+    RCASE FREAD:  t=pop(); n=pop(); push(fRead((char*)pop(), 1, (int)n, t));
+    RCASE FWRITE: t=pop(); n=pop(); push(fWrite((char*)pop(), 1, (int)n, t));
+    RCASE FLOAD:  n=pop(); t=fOpen((char*)n, "rt");
+            if (t && input_fp) { ipush(input_fp); }
             if (t) { input_fp = t; *in = 0; in = (char*)0; }
             else { printStringF("-noFile[%s]-", (char*)n); }
-    RCASE BLOAD:  n=pop(); t=fOpen((cell_t)y, (cell_t)"rt"); // TODO: fix this!
-            if (t && input_fp) { inputStk[++fileSp]=input_fp; }
-            if (t) { input_fp = t; fill(tib, 0, sizeof(tib)); }
+    RCASE BLOAD:  blockLoad((int)pop());
     RCASE EDIT_BLK: t=pop(); editBlock(t);
     return pc; default: return 0;
   }

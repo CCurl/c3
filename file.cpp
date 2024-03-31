@@ -1,29 +1,38 @@
-// NOTE: this is a .h file because the PC version is straight C, while the Arduino version is CPP
-// We need to suport both at the same time.
+// Support for files, either standard or LittleFS
 
-#include "c3.h"
+#include "file.h"
 
-#define BLOCK_FN "block-%03d.c3"
+static char block_fn[16];
+CELL_T inputStk[ISTK_SZ+1], input_sp, input_fp;
+
+void ipush(CELL_T x) { if (input_sp < ISTK_SZ) inputStk[++input_sp] = x; }
+CELL_T ipop() { return (0 < input_sp) ? inputStk[input_sp--] : 0; }
+
+void setBlockFN(const char *fn) {
+	strCpy(block_fn, fn);
+}
 
 #ifdef isPC
 
-    void   fileInit() { }
-    cell_t fOpen(cell_t nm, cell_t md) { return (cell_t)fopen((char*)nm, (char*)md); }
-    void   fClose(cell_t fp) { fclose((FILE*)fp); }
-    cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp) {
-        return (cell_t)fread((char*)addr, sz, num, (FILE*)fp);
+    void   fileInit() { input_fp = input_sp = 0; }
+    CELL_T fOpen(const char *nm, const char *md) { return (CELL_T)fopen(nm, md); }
+    void   fClose(CELL_T fp) { fclose((FILE*)fp); }
+    
+	int fRead(char *buf, int sz, int num, CELL_T fp) {
+        return (int)fread(buf, sz, num, (FILE*)fp);
     }
-    cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp) {
-        return (cell_t)fwrite((char*)addr, sz, num, (FILE*)fp);
+
+    int fWrite(char *buf, int sz, int num, CELL_T fp) {
+        return (int)fwrite(buf, sz, num, (FILE*)fp);
     }
 
     int writeBlock(int num, char *blk, int sz) {
         char fn[32];
-        sprintf(fn, BLOCK_FN, num);
+        sprintf(fn, block_fn, num);
         num = 0;
         FILE *x = fopen(fn, "wb");
         if (x) {
-            num = fwrite(blk, 1, sz, x);
+            num = (int)fwrite(blk, 1, sz, x);
             fclose(x);
         }
         return num;
@@ -31,7 +40,7 @@
 
     int readBlock(int num, char *blk, int sz) {
         char fn[32];
-        sprintf(fn, BLOCK_FN, num);
+        sprintf(fn, block_fn, num);
         num = 0;
         FILE *x = fopen(fn, "rb");
         if (x) {
@@ -41,22 +50,18 @@
         return num;
     }
 
+	int fReadLine(CELL_T fh, char *buf, int sz) {
+		if (fgets(buf, sz, (FILE*)fh) == buf) { return strLen(buf); }
+		return -1;
+	}
+
 #elif defined (_LITTLEFS_)
-#include "r4.h"
-
-#ifdef __LITTLEFS__
-
-// shared with __FILE__
-static byte fdsp = 0;
-static CELL fstack[STK_SZ + 1];
-CELL input_fp;
-
-void fpush(CELL v) { if (fdsp < STK_SZ) { fstack[++fdsp] = v; } }
-CELL fpop() { return (fdsp) ? fstack[fdsp--] : 0; }
-// shared with __FILE__
 
 // LittleFS uses NEXT
-#undef NEXT
+#ifdef NEXT
+    #undef NEXT
+#endif
+
 #include <LittleFS.h>
 
 LittleFS_Program myFS;
@@ -69,6 +74,7 @@ void fileInit() {
 	// myFS.quickFormat();
 	printString("\r\nLittleFS: initialized");
 	printStringF("\r\nBytes total: %llu, used: %llu", myFS.totalSize(), myFS.usedSize());
+	input_fp = input_sp = 0;
 	for (int i=0;i<=NFILES;i++) { files[i] = File(); }
 }
 
@@ -79,32 +85,32 @@ int freeFile() {
 	return 0;
 }
 
-CELL fileOpenI(const char *fn, const char *md) {
+CELL_T fOpen(const char *fn, const char *mode) {
 	int fh = freeFile();
+	int wr = (mode[0] == 'w') ? 1 : 0;
 	if (0 < fh) {
-		files[fh] = myFS.open(fn, (md[0]=='w') ? FILE_WRITE_BEGIN : FILE_READ);
-        if (md[0]=='w') { files[fh].truncate(); }
+		files[fh] = myFS.open((char*)fn, (wr) ? FILE_WRITE_BEGIN : FILE_READ);
+        if (wr) { files[fh].truncate(); }
 	}
 	return fh;
 }
 
 // fO (fn md -- fh) - FileOpen
-void fileOpen() {
+void fOpenF() {
 	char *md = (char *)pop();
-	char *fn = AOS;
-	TOS = fileOpenI(fn, md);
+	char *fn = (char *)pop();
+	push(fOpen(fn, md));
 }
 
 // fC (fh--) - File Close
-void fileClose() {
-	CELL fh = pop();
-	if (BTWI(fh, 1, NFILES) &&((bool)files[fh])) {
+void fClose(CELL_T fh) {
+	if (BTW(fh, 1, NFILES) &&((bool)files[fh])) {
 		files[fh].close();
 	}
 }
 
 // fD (nm--) - File Delete
-void fileDelete() {
+void fDelete() {
 	char *nm = (char *)pop();
     myFS.remove(nm);
 }
@@ -112,84 +118,74 @@ void fileDelete() {
 // fR (fh--c n) - File Read
 // fh: File handle, c: char read, n: num chars read
 // n=0: End of file or file error
-void fileRead() {
-	int ndx = TOS;
-	push(0);
-	NOS = TOS = 0;
-	if (BTWI(ndx, 1, NFILES)) {
-		char c;
-		TOS = files[ndx].read(&c, 1);
-		NOS = TOS ? c : 0;
-	}
+int fRead(char *buf, int num, int sz, CELL_T fh) {
+	return (BTW(fh, 1, NFILES)) ? (int)files[fh].read(buf, num) : -1;
 }
 
 // fW (c fh--n) - File Write
 // fh: File handle, c: char to write, n: num chars written
 // n=0: File not open or error
-void fileWrite() {
-	int fh = pop();
-	char c = (char)TOS;
-	TOS = 0;
-	if (BTWI(fh, 1, NFILES)) {
-		TOS = files[fh].write(&c,1);
-	}
+int fWrite(char *buf, int num, int sz, CELL_T fh) {
+	return (BTW(fh, 1, NFILES)) ? (int)files[fh].write(buf, num) : -1;
 }
 
-int readBlock(int num, char *blk, int sz) {
+int readBlock(int blk, char *buf, int sz) {
 	char fn[32];
-	sprintf(fn, "block-%03d", num);
-	num = 0;
+	int num = 0;
+	sprintf(fn, block_fn, blk);
 	File x = myFS.open(fn, FILE_READ);
 	if ((bool)x) {
-		num = x.read(blk, sz);
+		num = (int)x.read(buf, sz);
 		x.close();
 	}
 	return num;
 }
 
-// bR (num addr sz--f)
+// bR (blk buf sz--f)
 void readBlock1() {
-    CELL t1 = pop();
-    char *n1 = (char*)pop();
-    TOS = readBlock(TOS, (char*)n1, t1);
+    CELL_T sz = pop();
+    char *buf = (char*)pop();
+    CELL_T blk = pop();
+    push(readBlock(blk, (char*)buf, sz));
 }
 
-int writeBlock(int num, char *blk, int sz) {
+int writeBlock(int blk, char *buf, int sz) {
 	char fn[32];
-	sprintf(fn, "block-%03d", num);
-	num = 0;
+	int num = 0;
+	sprintf(fn, block_fn, blk);
 	File x = myFS.open(fn, FILE_WRITE_BEGIN);
 	if ((bool)x) {
         x.truncate();
-        num = x.write(blk, sz);
+        num = x.write(buf, sz);
 		x.close();
 	}
 	return num;
 }
 
-// bW (num addr sz--f)
+// bW (blk buf sz--f)
 void writeBlock1() {
-    CELL t1 = pop();
-    char *n1 = (char*)pop();
-    TOS = writeBlock(TOS, (char*)n1, t1);
+    CELL_T sz = pop();
+    char *buf = (char*)pop();
+    CELL_T blk = pop();
+    push(writeBlock(blk, buf, sz));
 }
 
 // fL - File readLine
-int fileReadLine(CELL fh, char *buf) {
+int fReadLine(CELL_T fh, char *buf, int sz) {
 	int n = -1;
 	buf[0] = 0;
-	if (BTWI(fh, 1, NFILES) && (0 < files[fh].available())) {
-		n = files[fh].readBytesUntil(10, buf, 256);
+	if (BTW(fh, 1, NFILES) && (0 < files[fh].available())) {
+		n = files[fh].readBytesUntil(10, buf, sz);
 		buf[n] = 0;
 	}
 	return n;
 }
 
 // bL - Block Load
-void blockLoad(CELL num) {
+void blockLoad(int blk) {
 	char fn[32];
-	sprintf(fn, "block-%03ld", num);
-	CELL fh = fileOpenI(fn, "r");
+	sprintf(fn, block_fn, blk);
+	CELL_T fh = fOpen(fn, "r");
 	if (files[fh].available()) {
 		if (input_fp) {
 			fpush(input_fp);
@@ -201,15 +197,13 @@ void blockLoad(CELL num) {
 // bA - Block load Abort
 void loadAbort() {}
 
-#endif // __LITTLEFS__
-
 #else
 
   void   fileInit() { }
   static void nf() { printString("-noFile-"); }
-  cell_t fOpen(cell_t nm, cell_t md) { nf(); return 0; }
-  void   fClose(cell_t fp) { nf(); }
-  cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp) { nf(); return 0; }
-  cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp) { nf(); return 0; }
+  CELL_T fOpen(const char *nm, const char *md) { nf(); return 0; }
+  void   fClose(CELL_T fp) { nf(); }
+  int fRead(char *buf, int sz, int num, CELL_T fp) { nf(); return 0; }
+  int fWrite(char *buf, int sz, int num, CELL_T fp) { nf(); return 0; }
 
 #endif

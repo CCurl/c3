@@ -65,17 +65,19 @@ cell_t Fetch(const char *loc) { return *(cell_t*)loc; }
 char *root;
 
 void getInput() {
+    in = tib;
     fill(tib, 0, sizeof(tib));
     if ((state == STOP_LOAD) && input_fp) {
-        fclose((FILE*)input_fp);
-        input_fp = (0 < fileSp) ? inputStk[fileSp--] : 0;
+        fClose(input_fp);
+        input_fp = ipop();
         state = 0;
+        return;
     }
     if (input_fp) {
         in = fgets(tib, 190, (FILE*)input_fp);
         if (in != tib) {
-            fclose((FILE*)input_fp);
-            input_fp = (0 < fileSp) ? inputStk[fileSp--] : 0;
+            fClose(input_fp);
+            input_fp = ipop();
         }
     }
     if (! input_fp) {
@@ -85,7 +87,6 @@ void getInput() {
         in = fgets(tib, sizeof(tib), stdin);
         output_fp = tmp;
     }
-    in = tib;
 }
 
 int tryOpen(const char *root, const char *loc, const char *fn) {
@@ -94,9 +95,9 @@ int tryOpen(const char *root, const char *loc, const char *fn) {
     strCat(nm, loc);
     strCat(nm, fn);
     // printf("try [%s]\n", nm);
-    cell_t fp = fOpen((cell_t)nm, (cell_t)"rb");
+    cell_t fp = fOpen(nm, "rb");
     if (!fp) { return 0; }
-    if (input_fp) { inputStk[++fileSp] = input_fp; }
+    if (input_fp) { ipush(input_fp); }
     input_fp = fp;
     return 1;
 }
@@ -125,10 +126,10 @@ char *doUser(char *pc, int ir) {
     char fn[16];
     switch (ir) {
     case SYSTEM:  system(cpop());
-    RCASE FOPEN:  t2=pop(); t1=pop(); push(fOpen(t1, t2));
+    RCASE FOPEN:  t2=pop(); t1=pop(); push(fOpen((char*)t1, (char*)t2));
     RCASE FCLOSE: fClose(pop());
-    RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead(t1, 1, t2, t3));
-    RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite(t1, 1, t2, t3));
+    RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead((char*)t1, 1, (int)t2, t3));
+    RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite((char*)t1, 1, (int)t2, t3));
     RCASE FLOAD:  LFF(cpop());
     RCASE BLOAD:  sprintf(fn, "block-%03d.c3", (int)pop()); lookForFile(fn);
     RCASE EDIT_BLK: t1=pop(); editBlock(t1);

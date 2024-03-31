@@ -80,9 +80,8 @@ typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 // These are defined in the VM
-extern cell_t lstk[LSTK_SZ + 1], lsp;
+extern cell_t lstk[LSTK_SZ + 1], lsp, output_fp;
 extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
-extern cell_t inputStk[10], fileSp, input_fp, output_fp;
 extern char tib[TIB_SZ], *in, *y, *here;
 extern char vars[VARS_SZ];
 
@@ -139,13 +138,7 @@ extern void sysLoad();
 extern void loadUserWords();
 
 // Files support
-extern void   fileInit();
-extern cell_t fOpen(cell_t nm, cell_t md);
-extern void   fClose(cell_t fp);
-extern cell_t fRead(cell_t addr, cell_t sz, cell_t num, cell_t fp);
-extern cell_t fWrite(cell_t addr, cell_t sz, cell_t num, cell_t fp);
-extern int readBlock(int num, char *blk, int sz);
-extern int writeBlock(int num, char *blk, int sz);
+#include "file.h"
 
 // Editor
 extern void editBlock(cell_t blkNum);

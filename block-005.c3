@@ -9,4 +9,4 @@
 : cls     ( -- )       ." %e[2J%e[1;1H" ;
 : clr-eol ( -- )       ." %e[0K" ;
 : color   ( bg fg-- )  ." %e[%d;%dm" ;
-: fg      ( -- )       40 swap color ;
+: fg      ( fg-- )     40 swap color ;

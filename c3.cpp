@@ -48,8 +48,7 @@ enum { // Floating point opcdes
 #define IS_INLINE     0x02
 
 stk_t ds, rs;
-cell_t lstk[LSTK_SZ+1], lsp;
-cell_t inputStk[10], fileSp, input_fp, output_fp;
+cell_t lstk[LSTK_SZ+1], lsp, output_fp;
 cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
 char code[CODE_SZ], vars[VARS_SZ], tib[TIB_SZ], WD[32];
 char *here, *vhere, *in, *y;
@@ -426,8 +425,6 @@ int doWord(const char *w) {
 void ParseLine(const char *x) {
     if (DSP < 1) { DSP = 0; }
     if (state == ALL_DONE) { return; }
-    char *ch = here, *cv = vhere;
-    dict_t *cl = last;
     in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
@@ -436,11 +433,9 @@ void ParseLine(const char *x) {
         if (doWord(WD)) { continue; }
         printStringF("-[word:%s]?-", WD);
         if (state) { here = ToCP((last++)->xt); state = 0; }
-        while (fileSp) { fClose(inputStk[fileSp--]); }
-        input_fp = 0;
+        while (input_fp) { fClose(input_fp); input_fp = ipop(); }
         return;
     }
-    if ((cl==last) && (here<ch)) { printChar('^'); here=ch; vhere=cv; } // Run(here); }
 }
 
 void parseF(const char *fmt, ...) {
@@ -594,6 +589,7 @@ void c3Init() {
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
 
+    setBlockFN("block-%03d.c3");
     loadC3Words();
     loadUserWords();
     sysLoad();
