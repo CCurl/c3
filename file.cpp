@@ -44,7 +44,7 @@ void setBlockFN(const char *fn) {
         num = 0;
         FILE *x = fopen(fn, "rb");
         if (x) {
-            num = fread(blk, 1, sz, x);
+            num = (int)fread(blk, 1, sz, x);
             fclose(x);
         }
         return num;

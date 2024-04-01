@@ -115,7 +115,7 @@ static void gotoEOL() {
     mv(0,0);
 }
 
-static CELL toBlock() {
+static int toBlock() {
     fill(theBlock, 0, BLOCK_SZ);
     for (int i=0; i<MAX_LINES; i++) {
         char *y = &EDCHAR(i,0);
@@ -158,7 +158,7 @@ static void edRdBlk(int force) {
 
 static void edSvBlk(int force) {
     if (isDirty || force) {
-        CELL len = toBlock();
+        int len = toBlock();
         while (1<len) {
             if (theBlock[len-2] == 10) { theBlock[len-1]=0; --len; }
             else { break; }
@@ -337,7 +337,7 @@ static int processEditorChar(int c) {
 }
 
 void editBlock(CELL Blk) {
-    blkNum = MAX(Blk, 0);
+    blkNum = MAX((int)Blk, 0);
     line = off = scrTop = 0;
     msg = NULL;
     CLS();
