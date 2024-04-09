@@ -111,7 +111,8 @@ static void mv(int l, int o) {
 
 static void gotoEOL() {
     char *ln = &EDCH(line, 0);
-    off = strLen(ln)-1;
+    off = 0;
+    while (31<ln[off]) { ++off; }
     mv(0,0);
 }
 
@@ -125,9 +126,9 @@ static int toBlock() {
 }
 
 static void addLF(int l) {
-    char *ln = &EDCH(l, 0);
-    int len = strLen(ln);
-    if ((len==0) || (ln[len-1]!=10)) { ln[len]=10; ln[len+1]=0; }
+    char *ln = &EDCH(l, 0), x=0;
+    while (31 < ln[x]) { ++x; }
+    ln[x++] = 10; ln[x] = 0;
 }
 
 static void toBuf() {
@@ -145,7 +146,9 @@ static void toBuf() {
             EDCHAR(l,o++) = (char)ch;
         }
     }
+    l = scrTop; scrTop = 0;
     for (int i = 0; i < MAX_LINES; i++) { addLF(i); }
+    scrTop = l;
 }
 
 static void edRdBlk(int force) {
