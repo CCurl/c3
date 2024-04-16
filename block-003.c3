@@ -12,6 +12,15 @@
 : S-SCATN ( num str -- )  SWAP S-CATN ; INLINE
 : S-SCPY  ( src dst -- )  SWAP S-CPY  ; INLINE
 : S-SCAT  ( src dst -- )  SWAP S-CAT  ; INLINE
+: S-END   ( str -- end )  DUP S-LEN + ; INLINE
+
+\ S-CATLEN ( dst src len -- ) concat <len> chars from src to dst
+: S-CATLEN +regs s3 s2 S-END s1
+    r3 0 DO r2 C@ ?DUP IF r1+ C! i2 THEN LOOP
+    0 r1 C!  -regs ;
+
+\ S-CPYLEN ( dst src len -- ) copy <len> chars from src to dst
+: S-CPYLEN >R >R 0 OVER C! R> R> S-CATLEN ;
 
 \ S-FIND ( LF STR -- ADDR|0 ) looks for string LF in string at STR
 \   ADDR: 0 if not found, else address in STR
@@ -24,8 +33,8 @@
      AGAIN ;
 
 \ Words for Counted strings
-: sc-len ( str -- len ) C@ ; INLINE
-: COUNT ( sc -- a n ) 1+ DUP 1- sc-len ; INLINE
+: SC-LEN ( str -- len ) C@ ; INLINE
+: COUNT  ( sc -- a n ) 1+ DUP 1- SC-LEN ; INLINE
 
 : sz->sc ( sz sc -- ) +REGS s2 s1
     r1 S-LEN r2+ C!
