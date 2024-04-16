@@ -8,21 +8,22 @@
 : pad3 pad2   256 + ;
 
 \ Words for NULL-Terminated strings
-: S-CATN  ( str num -- )  ITOA S-CAT  ; INLINE
-: S-SCATN ( num str -- )  SWAP S-CATN ; INLINE
-: S-SCPY  ( src dst -- )  SWAP S-CPY  ; INLINE
-: S-SCAT  ( src dst -- )  SWAP S-CAT  ; INLINE
-: S-END   ( str -- end )  DUP S-LEN + ; INLINE
+: S-CATN  ( str num -- )  ITOA S-CAT   ; INLINE
+: S-SCATN ( num str -- )  SWAP S-CATN  ; INLINE
+: S-SCPY  ( src dst -- )  SWAP S-CPY   ; INLINE
+: S-SCAT  ( src dst -- )  SWAP S-CAT   ; INLINE
+: S-SCATC ( ch dst -- )   SWAP S-CATC  ; INLINE
+: S-END   ( str -- end )  DUP  S-LEN + ; INLINE
 
-\ S-CATLEN ( dst src len -- ) concat <len> chars from src to dst
-: S-CATLEN +regs s3 s2 S-END s1
+\ S-CPYLEN ( DST SRC LEN -- ) Copy LEN bytes from SRC to DST
+: S-CPYLEN +regs s3 s2 s1
     r3 0 DO r2 C@ ?DUP IF r1+ C! i2 THEN LOOP
-    0 r1 C!  -regs ;
+    -regs ;
 
-\ S-CPYLEN ( dst src len -- ) copy <len> chars from src to dst
-: S-CPYLEN >R >R 0 OVER C! R> R> S-CATLEN ;
+\ S-CATLEN ( DST SRC LEN -- ) Concat LEN bytes from SRC to DST
+: S-CATLEN  >R >R  S-END  R> R>  S-CPYLEN ;
 
-\ S-FIND ( LF STR -- ADDR|0 ) looks for string LF in string at STR
+\ S-FIND ( LF STR -- ADDR|0 ) Look for string LF in STR
 \   ADDR: 0 if not found, else address in STR
 : S-FIND +regs s2 s1
     r1 C@ s6  r1 S-LEN s3
@@ -33,8 +34,8 @@
      AGAIN ;
 
 \ Words for Counted strings
-: SC-LEN ( str -- len ) C@ ; INLINE
-: COUNT  ( sc -- a n ) 1+ DUP 1- SC-LEN ; INLINE
+: sc-len ( str -- len ) C@ ; INLINE
+: COUNT ( sc -- a n ) 1+ DUP 1- sc-len ; INLINE
 
 : sz->sc ( sz sc -- ) +REGS s2 s1
     r1 S-LEN r2+ C!
