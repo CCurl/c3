@@ -7,12 +7,12 @@
 
 #ifndef __EDITOR__
 void editBlock(CELL Blk) { printString("-noEdit-"); }
-CELL edScrH = 0; // can be set from c3 using '50 (scr-h) !'
+CELL edScrH = 0;
 #else
 
 #define MAX_LINES     150
 #define LLEN          100
-#define SCR_HEIGHT     25
+#define SCR_HEIGHT     40
 
 #define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)

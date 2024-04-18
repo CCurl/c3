@@ -146,7 +146,6 @@ void loadUserWords() {
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
     parseF("-ML- LOAD   %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT   %d 3 -MLX- inline", EDIT_BLK);
-    parseF(": (scr-h)   %zu ; ", (cell_t)&edScrH);
     ParseLine(": isPC 1 ;");
 }
 

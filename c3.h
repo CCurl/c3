@@ -50,11 +50,11 @@ typedef uint8_t  byte;
     //       I use these for the Teensy-4 and the Pico
 #define isBOARD 1
 
-    #define CODE_SZ            96*1024
+    #define CODE_SZ            64*1024
     #define VARS_SZ           256*1024
     #define STK_SZ            256
-    #define LSTK_SZ            3*15      // 15 nested loops
-    #define REGS_SZ           10*25      // 25 nested +REGS
+    #define LSTK_SZ             3*25      // 25 nested loops
+    #define REGS_SZ            10*25      // 25 nested +REGS
     #define TIB_SZ            512
     #define NAME_LEN           25
     #define NEEDS_ALIGN
@@ -63,14 +63,14 @@ typedef uint8_t  byte;
 
 #endif
 
-    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240201 };
+    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240416 };
 
 #ifndef CODE_SZ
-    #define CODE_SZ           128*1024
+    #define CODE_SZ            96*1024
     #define VARS_SZ             4*1024*1024
     #define STK_SZ            256
-    #define LSTK_SZ            3*50      // 50 nested loops
-    #define REGS_SZ           10*50      // 50 nested +REGS
+    #define LSTK_SZ             3*50      // 50 nested loops
+    #define REGS_SZ            10*50      // 50 nested +REGS
     #define TIB_SZ           1024
     #define NAME_LEN           29
 #endif
@@ -80,7 +80,7 @@ typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
 typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
 
 // These are defined in the VM
-extern cell_t lstk[LSTK_SZ + 1], lsp, output_fp;
+extern cell_t lstk[LSTK_SZ+1], lsp, output_fp;
 extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
 extern char tib[TIB_SZ], *in, *y, *here;
 extern char vars[VARS_SZ];

@@ -554,6 +554,7 @@ void loadC3Words() {
 
     // System information words
     parseF(": VERSION     #%d ;", VERSION);
+    parseF(": (scr-h)     %zu ; ", (cell_t)&edScrH);
     parseF(": (SP)        %zu ;", &DSP);
     parseF(": (RSP)       %zu ;", &RSP);
     parseF(": (LSP)       %zu ;", &lsp);

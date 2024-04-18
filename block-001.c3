@@ -48,7 +48,7 @@
 : . (.) space ;            INLINE
 
 : .word     CELL+ 2+ QTYPE ; INLINE
-: word-len  CELL+ 2+ S-LEN ; INLINE
+: word-len  CELL+ 1+ C@ ; INLINE
 : WORDS +REGS 0 DUP s1 s3 LAST s2 BEGIN
         r2 code-end < WHILE
         r1+ #9 > IF 0 s1 cr THEN
@@ -65,11 +65,11 @@
 
 : ALLOT  VHERE + (VHERE) ! ;
 : VC, VHERE C! 1 ALLOT ;
-: V,  VHERE ! CELL allot ;
+: V,  VHERE ! CELL ALLOT ;
 : DOES>  R> (JMP) C, , ;
 : CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;
 : VARIABLE  CREATE 0 V, (EXIT) C, ;
-\ usage: val line   >val >line ... 23 >line
+\ usage: val line   (val) (line)  >val >line ... 23 >line
 : val    CREATE 0 V, (FETCH) C, (EXIT) C, ;
 : >val   VHERE CELL - CONSTANT (STORE) HERE 1- C! (EXIT) C, ;
 : (val)  VHERE CELL - CONSTANT ;
