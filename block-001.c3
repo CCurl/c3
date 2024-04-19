@@ -117,7 +117,8 @@
 : ? @ . ;
 : RSHIFT ( N1 S--N2 ) 0 DO 2/ LOOP ;
 : LSHIFT ( N1 S--N2 ) 0 DO 2* LOOP ;
-: load-f next-word DROP (load) ;
+: THRU >R 1- R> DO I LOAD -LOOP ;
+: INCLUDE next-word DROP (load) ;
 : load-abort #99 state ! ;
 : loaded? IF 2drop load-abort THEN ;
 VARIABLE T0 2 CELLS allot
