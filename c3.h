@@ -63,7 +63,7 @@ typedef uint8_t  byte;
 
 #endif
 
-    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240416 };
+    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240420 };
 
 #ifndef CODE_SZ
     #define CODE_SZ            96*1024

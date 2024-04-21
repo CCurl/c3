@@ -14,17 +14,18 @@ There are 4 modes in the c3 editor:
 
 | Key      | Action |
 | :--      | :-- |
-| [ctrl]+H | Left 1 char |
-| [ctrl]+J | Down 1 line |
-| [ctrl]+K | Up 1 line |
-| [ctrl]+L | Right 1 char |
+| [ctrl]+h | Left 1 char |
+| [ctrl]+j | Down 1 line |
+| [ctrl]+k | Up 1 line |
+| [ctrl]+l | Right 1 char |
 | [tab]    | Right 8 chars |
-| [ctrl]+I | Right 8 chars |
-| [ctrl]+E | Scroll down 1 line |
-| [ctrl]+Y | Scroll up 1 line |
-| [ctrl]+D | Scroll down 1/2 screen |
-| [ctrl]+U | Scroll up 1/2 screen |
-| [ctrl]+X | Delete the char to the left of the cursor |
+| [ctrl]+i | Right 8 chars |
+| [ctrl]+e | Scroll down 1 line |
+| [ctrl]+y | Scroll up 1 line |
+| [ctrl]+d | Scroll down 1/2 screen |
+| [ctrl]+u | Scroll up 1/2 screen |
+| [ctrl]+x | Delete the char to the left of the cursor |
+| [ctrl]+z | Delete the char under the cursor |
 | [escape] | Change to NORMAL mode |
 
 ### NORMAL mode
@@ -33,10 +34,10 @@ The movement keys are similar to those in VI:
 
 | Key  | Action|
 | :--  | :-- |
-| H    | Left 1 char |
-| J    | Down 1 line |
-| K    | Up 1 line |
-| L    | Right 1 char |
+| h    | Left 1 char |
+| j    | Down 1 line |
+| k    | Up 1 line |
+| l    | Right 1 char |
 | $    | Goto the end of the line |
 | _    | Goto the beginning of the line |
 | [SP] | Right 1 char |
@@ -45,6 +46,7 @@ The movement keys are similar to those in VI:
 | A    | Append: goto the end of the line and change to INSERT mode |
 | c    | Change: Delete the current char and change to INSERT mode (same as 'xi') |
 | C    | Change: Delete to the end of the line and change to INSERT mode (same as 'd$A') |
+| d.   | Delete the char under the cursor (same as 'x') |
 | dd   | Copy the current line into the YANK buffer and delete the line |
 | d$   | Delete to the end of the line |
 | D    | Delete to the end of the line (same as 'd$') |

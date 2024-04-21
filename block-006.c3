@@ -15,4 +15,4 @@ marker
 : words-n +REGS last s2 0 s1 0 DO
         r2 .word ?cr r2 word-sz + s2
     LOOP -REGS ;
-." words added: %n" 10 words-n
+." words added: %n" 7 words-n

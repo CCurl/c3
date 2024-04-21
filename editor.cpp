@@ -181,6 +181,14 @@ static void deleteChar() {
     addLF(line);
 }
 
+static void deleteWord() {
+    char ch = lower(EDCH(line, off));
+    while (BTW(ch,'a','z') || BTW(ch,'0','9')) {
+        deleteChar();
+        ch = lower(EDCH(line, off));
+    }
+}
+
 static void deleteLine() {
     EDCH(line,0) = 0;
     toBlock();
@@ -242,6 +250,8 @@ static int doInsertReplace(char c) {
 static void edDelX(int c) {
     if (c==0) { c = key(); }
     if (c=='d') { strCpy(yanked, &EDCH(line, 0)); deleteLine(); }
+    else if (c=='w') { deleteWord(); }
+    else if (c=='.') { deleteChar(); }
     else if (c=='X') { if (0<off) { --off; deleteChar(); } }
     else if (c=='$') {
         c=off; while ((c<LLEN) && EDCH(line,c)) { EDCH(line,c)=0; c++; }
@@ -282,7 +292,9 @@ static void edCommand() {
 
 static int doCommon(int c) {
     int l = line, o = off, st = scrTop;
-    if ((c == 8) || (c == 127)) { mv(0, -1); }        // <backspace>
+    if (((c == 8) || (c == 127)) && (0 < off)) {      // <backspace>
+        mv(0, -1); if (edMode == INSERT) { deleteChar(); }
+    }
     else if (c ==  4) { scroll(SCR_LINES/2); }        // <ctrl-d>
     else if (c ==  5) { scroll(1); }                  // <ctrl-e>
     else if (c ==  9) { mv(0, 8); }                   // <tab>
@@ -292,6 +304,7 @@ static int doCommon(int c) {
     else if (c == 24) { edDelX('X'); }                // <ctrl-x>
     else if (c == 21) { scroll(-SCR_LINES/2); }       // <ctrl-u>
     else if (c == 25) { scroll(-1); }                 // <ctrl-y>
+    else if (c == 26) { edDelX('.'); }                // <ctrl-z>
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 
@@ -322,11 +335,11 @@ static int processEditorChar(int c) {
         BCASE 'O': mv(0, -99); insertLine(); insertMode();
         BCASE 'r': replaceChar(edKey(), 0, 1);
         BCASE 'R': replaceMode();
-        BCASE 'c': deleteChar();; insertMode();
+        BCASE 'c': edDelX('.'); insertMode();
         BCASE 'C': edDelX('$'); insertMode();
         BCASE 'd': edDelX(0);
         BCASE 'D': edDelX('$');
-        BCASE 'x': deleteChar();
+        BCASE 'x': edDelX('.');
         BCASE 'X': edDelX('X');
         BCASE 'L': edRdBlk(1);
         BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
