@@ -105,6 +105,8 @@ void loop() {
       if (--in < tib) { in = tib; }
       else { PC(8); PC(32); PC(8); }
   } else {
-      *(in++) = (31<c) ? 32 : c;
+      c = (c<32) ? 32 : c;
+      *(in++) = c;
+      PC(c);
   }
 }
