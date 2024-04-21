@@ -187,6 +187,7 @@ static void deleteWord() {
         deleteChar();
         ch = lower(EDCH(line, off));
     }
+    while (EDCH(line,off)==' ') { deleteChar(); }
 }
 
 static void deleteLine() {

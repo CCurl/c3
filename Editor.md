@@ -47,8 +47,9 @@ The movement keys are similar to those in VI:
 | c    | Change: Delete the current char and change to INSERT mode (same as 'xi') |
 | C    | Change: Delete to the end of the line and change to INSERT mode (same as 'd$A') |
 | d.   | Delete the char under the cursor (same as 'x') |
-| dd   | Copy the current line into the YANK buffer and delete the line |
 | d$   | Delete to the end of the line |
+| dd   | Copy the current line into the YANK buffer and delete the line |
+| dw   | Delete to the end of the current word |
 | D    | Delete to the end of the line (same as 'd$') |
 | g    | Goto the top-left of the screen |
 | G    | Goto the bottom-left of the screen |
