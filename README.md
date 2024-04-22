@@ -30,22 +30,24 @@ The names of the register words are case-sensitive: (r0-r9, not R0-R9).
 
 **Note:** The support for registers is built into c3, so they do NOT show up in "WORDS".
 
-- +regs   allocate 10 new registers.
-- r4      push register 4 to the stack.
-- r4+     push register 4 to the stack, then increment it.
-- r4-     push register 4 to the stack, then decrement it.
-- s4      set register 4 from TOS.
-- i4      increment register 4.
-- d4      decrement register 4.
-- -regs   restore the registers to their previous values.
+| Operation | Description |
+|:--|:--|
+| +regs |  allocate 10 new registers.
+| r4    |  push register 4 to the stack.
+| r4+   |  push register 4 to the stack, then increment it.
+| r4-   |  push register 4 to the stack, then decrement it.
+| s4    |  set register 4 from TOS.
+| i4    |  increment register 4.
+| d4    |  decrement register 4.
+| -regs |  restore the registers to their previous values.
 
 Some example uses of registers:
 ```
    : btw  ( n l h--f )  +regs  s3 s2 s1  r2 r1 <   r1 r3 <  and  -regs ;
    : btwi ( n l h--f )  +regs  s3 s2 s1  r2 r1 <=  r1 r3 <= and  -regs ;
    : 2swap ( a b c d--c d a b )  +regs  s4 s3 s2 s1  r3 r4 r1 r2  -regs ;
-   : move ( f t n-- ) +regs  s3 s2 s1  r3 0 do  r1+ c@ r2+ c!  loop  -regs ;
-   : fill ( a c n-- ) +regs  s3 s2 s1  r3 0 do  r2 r1+ c!      loop  -regs ;
+   : cmove ( f t n-- ) +regs  s3 s2 s1  r3 0 do  r1+ c@ r2+ c!  loop  -regs ;
+   : cfill ( a c n-- ) +regs  s3 s2 s1  r3 0 do  r2 r1+ c!      loop  -regs ;
 ```
 
 ## Temporary words
