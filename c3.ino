@@ -97,16 +97,15 @@ void loop() {
       fill(tib, 0, sizeof(tib));
   }
 
-  if (c == 13) {
+  if (c==9) { c = 32; }
+  if (c==13) {
       *(in) = 0;
       ParseLine(tib);
       in = 0;
   } else if ((c==8) || (c==127)) {
-      if (--in < tib) { in = tib; }
+      if ((--in) < tib) { in = tib; }
       else { PC(8); PC(32); PC(8); }
   } else {
-      c = (c<32) ? 32 : c;
-      *(in++) = c;
-      PC(c);
+      if (BTW(c,32,126)) { *(in++) = c; PC(c); }
   }
 }
