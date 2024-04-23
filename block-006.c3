@@ -4,7 +4,8 @@
 
 marker
 
-3 5 thru
+3 load
+5 load
 
 : ls   " ls -l"   system ;
 : pwd  " pwd"     system ;

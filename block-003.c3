@@ -19,8 +19,14 @@
     r2 0 DO  r3 r1+ C!  LOOP
     -REGS ;
 
-: CMOVE ( SRC DST NUM -- ) +REGS  s3 s2 s1
+: CMOVE ( SRC DST NUM -- )
+    +REGS  s3 s2 s1
     r3 0 DO  r1+ C@ r2+ C!  LOOP
+    -REGS ;
+
+: CMOVE> ( SRC DST NUM-- )
+    +REGS s3  r3 1- + s2  r3 1- + s1
+    r3 0 DO  r1- C@ r2- C!  LOOP
     -REGS ;
 
 : S-CPYLEN ( DST SRC LEN -- ) \ Copy LEN bytes from SRC to DST
