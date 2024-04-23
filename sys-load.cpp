@@ -25,7 +25,7 @@
         ParseLine(": V,  vhere ! CELL allot ;");
         ParseLine(": CELL+ CELL + ; INLINE");
         ParseLine(": CELLS CELL * ; INLINE");
-        ParseLine(": -EXIT (-REGS) C, (EXIT)C, ; IMMEDIATE");
+        ParseLine(": -EXIT (-REGS) C, (EXIT) C, ; IMMEDIATE");
         ParseLine(": DOES>  R> (JMP) C, , ;");
         ParseLine(": CONSTANT  CREATE HERE CELL - ! (EXIT) C, ;");
         ParseLine(": VARIABLE  CREATE 0 V, (EXIT) C, ;");
@@ -36,7 +36,7 @@
         ParseLine(": EXEC  >R ;");
         ParseLine(": IF    (jmpz) c, here 0 , ; IMMEDIATE");
         ParseLine(": ELSE  (jmp) c, here SWAP 0 , here SWAP ! ; IMMEDIATE");
-        ParseLine(": THEN  here SWAP ! ; IMMEDIATE");
+        ParseLine(": THEN  here SWAP !  ; IMMEDIATE");
         ParseLine(": BEGIN  here        ; IMMEDIATE");
         ParseLine(": UNTIL  (jmpz) c, , ; IMMEDIATE");
         ParseLine(": AGAIN  (jmp) c, ,  ; IMMEDIATE");

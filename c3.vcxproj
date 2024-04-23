@@ -148,10 +148,11 @@
     <None Include="block-001.c3" />
     <None Include="block-002.c3" />
     <None Include="block-003.c3" />
-    <None Include="block-004.c3" />
     <None Include="block-005.c3" />
+    <None Include="block-006.c3" />
     <None Include="block-044.c3" />
     <None Include="block-200.c3" />
+    <None Include="block-999.c3" />
     <None Include="c3.ino" />
     <None Include="Editor.md" />
     <None Include="LICENSE" />
