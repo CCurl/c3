@@ -15,10 +15,16 @@
 : S-SCATC ( ch dst -- )   SWAP S-CATC  ; INLINE
 : S-END   ( str -- end )  DUP  S-LEN + ; INLINE
 
+: FILL ( DST NUM CH -- ) +REGS s3 s2 s1
+    r2 0 DO  r3 r1+ C!  LOOP
+    -REGS ;
+
+: CMOVE ( SRC DST NUM -- ) +REGS  s3 s2 s1
+    r3 0 DO r1+ C@ r2+ C! LOOP
+    -REGS ;
+
 : S-CPYLEN ( DST SRC LEN -- ) \ Copy LEN bytes from SRC to DST
-    +regs s3 s2 s1
-    r3 0 DO  r2 C@  ?DUP  IF r1+ C! i2 THEN  LOOP
-    0 r1 C!  -regs ;
+    >R SWAP R> CMOVE ;
 
 : S-CATLEN ( DST SRC LEN -- ) \ Concat LEN bytes from SRC to DST
     >R >R  S-END  R> R>  S-CPYLEN ;
