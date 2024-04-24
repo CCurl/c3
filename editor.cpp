@@ -10,9 +10,8 @@ void editBlock(CELL Blk) { printString("-noEdit-"); }
 CELL edScrH = 0;
 #else
 
-#define MAX_LINES     150
 #define LLEN          100
-#define SCR_HEIGHT     40
+#define SCR_HEIGHT     35
 
 #define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)

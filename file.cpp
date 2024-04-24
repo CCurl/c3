@@ -205,5 +205,8 @@ void loadAbort() {}
   void   fClose(CELL_T fp) { nf(); }
   int fRead(char *buf, int sz, int num, CELL_T fp) { nf(); return 0; }
   int fWrite(char *buf, int sz, int num, CELL_T fp) { nf(); return 0; }
+  void blockLoad(int num) { nf(); }
+  int readBlock(int blk, char *buf, int sz) { nf(); return 0; }
+  int writeBlock(int blk, char *buf, int sz) { nf(); return 0; }
 
 #endif

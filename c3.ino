@@ -2,9 +2,10 @@
 
 #include "c3.h"
 
-#define mySerial Serial
+// #define mySerial Serial // Teensy
+#define mySerial SerialUSB // Pico
 
-enum { FOPEN=101, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
+enum { xFOPEN=101, xFCLOSE, xFREAD, xFWRITE, FLOAD, BLOAD,
     OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
     PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA,
     EDIT_BLK
@@ -43,11 +44,11 @@ void loadUserWords() {
     parseF("-ML- APIN@       %d 3 -MLX- inline", PIN_READA);
     parseF("-ML- DPIN!       %d 3 -MLX- inline", PIN_WRITE);
     parseF("-ML- APIN!       %d 3 -MLX- inline", PIN_WRITEA);
-    parseF("-ML- FOPEN       %d 3 -MLX- inline", FOPEN);
-    parseF("-ML- FCLOSE      %d 3 -MLX- inline", FCLOSE);
-    parseF("-ML- FREAD       %d 3 -MLX- inline", FREAD);
-    parseF("-ML- FWRITE      %d 3 -MLX- inline", FWRITE);
-    parseF("-ML- FLOAD       %d 3 -MLX- inline", FLOAD);
+    parseF("-ML- FOPEN       %d 3 -MLX- inline", xFOPEN);
+    parseF("-ML- FCLOSE      %d 3 -MLX- inline", xFCLOSE);
+    parseF("-ML- FREAD       %d 3 -MLX- inline", xFREAD);
+    parseF("-ML- FWRITE      %d 3 -MLX- inline", xFWRITE);
+    parseF("-ML- (LOAD)      %d 3 -MLX- inline", FLOAD);
     parseF("-ML- BLOAD       %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT        %d 3 -MLX- inline", EDIT_BLK);
     parseF(": isPC 0 ;");
@@ -64,10 +65,10 @@ char *doUser(char *pc, int ir) {
     RCASE PIN_WRITE:   t = pop(); n = pop(); digitalWrite(t,n);
     RCASE PIN_WRITEA:  t = pop(); n = pop(); analogWrite(t,n);
 
-    RCASE FOPEN:  t=pop(); n=pop(); push(fOpen((char*)n, (char*)t));
-    RCASE FCLOSE: t=pop(); fClose(t);
-    RCASE FREAD:  t=pop(); n=pop(); push(fRead((char*)pop(), 1, (int)n, t));
-    RCASE FWRITE: t=pop(); n=pop(); push(fWrite((char*)pop(), 1, (int)n, t));
+    RCASE xFOPEN:  t=pop(); n=pop(); push(fOpen((char*)n, (char*)t));
+    RCASE xFCLOSE: t=pop(); fClose(t);
+    RCASE xFREAD:  t=pop(); n=pop(); push(fRead((char*)pop(), 1, (int)n, t));
+    RCASE xFWRITE: t=pop(); n=pop(); push(fWrite((char*)pop(), 1, (int)n, t));
     RCASE FLOAD:  n=pop(); t=fOpen((char*)n, "rt");
             if (t && input_fp) { ipush(input_fp); }
             if (t) { input_fp = t; *in = 0; in = (char*)0; }
@@ -80,8 +81,10 @@ char *doUser(char *pc, int ir) {
 
 void setup() {
   serialInit();
+  printString("Hello ...");
   fileInit();
   c3Init();
+  printString(" ok\r\n");
   in = (char*)0;
 }
 
@@ -101,6 +104,7 @@ void loop() {
   if (c==13) {
       *(in) = 0;
       ParseLine(tib);
+      printString(" ok\r\n");
       in = 0;
   } else if ((c==8) || (c==127)) {
       if ((--in) < tib) { in = tib; }

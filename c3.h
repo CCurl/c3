@@ -50,22 +50,25 @@ typedef uint8_t  byte;
     //       I use these for the Teensy-4 and the Pico
 #define isBOARD 1
 
+    #define MAX_LINES          64
     #define CODE_SZ            64*1024
-    #define VARS_SZ           256*1024
+    #define VARS_SZ            64*1024
     #define STK_SZ            256
     #define LSTK_SZ             3*25      // 25 nested loops
     #define REGS_SZ            10*25      // 25 nested +REGS
     #define TIB_SZ            512
-    #define NAME_LEN           25
+    #define NAME_LEN           17
     #define NEEDS_ALIGN
+    #define __EDITOR__
     #define _SYS_LOAD_
-    #define _LITTLEFS_
+    // #define _LITTLEFS_
 
 #endif
 
     enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240420 };
 
 #ifndef CODE_SZ
+    #define MAX_LINES     150
     #define CODE_SZ            96*1024
     #define VARS_SZ             4*1024*1024
     #define STK_SZ            256

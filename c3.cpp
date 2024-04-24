@@ -431,7 +431,7 @@ void ParseLine(const char *x) {
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
         if (doWord(WD)) { continue; }
-        printStringF("-[word:%s]?-", WD);
+        printStringF("-[word:%s](%s)?-", WD, x);
         if (state) { here = ToCP((last++)->xt); state = 0; }
         while (input_fp) { fClose(input_fp); input_fp = ipop(); }
         return;
@@ -554,27 +554,27 @@ void loadC3Words() {
 
     // System information words
     parseF(": VERSION     #%d ;", VERSION);
-    parseF(": (scr-h)     %zu ; ", (cell_t)&edScrH);
-    parseF(": (SP)        %zu ;", &DSP);
-    parseF(": (RSP)       %zu ;", &RSP);
-    parseF(": (LSP)       %zu ;", &lsp);
-    parseF(": (HERE)      %zu ;", &here);
-    parseF(": (LAST)      %zu ;", &last);
-    parseF(": (STK)       %zu ;", &ds.stk[0].i);
-    parseF(": (RSTK)      %zu ;", &rs.stk[0].c);
-    parseF(": TIB         %zu ;", &tib[0]);
-    parseF(": >IN         %zu ;", &in);
-    parseF(": CODE        %zu ;", &code[0]);
-    parseF(": CODE-SZ     #%d ;", CODE_SZ);
-    parseF(": VARS        %zu ;", &vars[0]);
-    parseF(": VARS-SZ     #%d ;", VARS_SZ);
-    parseF(": (VHERE)     %zu ;", &vhere);
-    parseF(": (REGS)      %zu ;", &reg[0]);
-    parseF(": (OUTPUT_FP) %zu ;", &output_fp);
-    parseF(": (INPUT_FP)  %zu ;", &input_fp);
-    parseF(": STATE       %zu ;", &state);
-    parseF(": BASE        %zu ;", &base);
-    parseF(": WORD-SZ     #%d ; INLINE", sizeof(dict_t));
+    parseF(": (scr-h)     $%lx ;", (cell_t)&edScrH);
+    parseF(": (SP)        $%lx ;", (cell_t)&DSP);
+    parseF(": (RSP)       $%lx ;", (cell_t)&RSP);
+    parseF(": (LSP)       $%lx ;", (cell_t)&lsp);
+    parseF(": (HERE)      $%lx ;", (cell_t)&here);
+    parseF(": (LAST)      $%lx ;", (cell_t)&last);
+    parseF(": (STK)       $%lx ;", (cell_t)&ds.stk[0].i);
+    parseF(": (RSTK)      $%lx ;", (cell_t)&rs.stk[0].c);
+    parseF(": TIB         $%lx ;", (cell_t)&tib[0]);
+    parseF(": >IN         $%lx ;", (cell_t)&in);
+    parseF(": CODE        $%lx ;", (cell_t)&code[0]);
+    parseF(": CODE-SZ     $%lx ;", (cell_t)CODE_SZ);
+    parseF(": VARS        $%lx ;", (cell_t)&vars[0]);
+    parseF(": VARS-SZ     $%lx ;", (cell_t)VARS_SZ);
+    parseF(": (VHERE)     $%lx ;", (cell_t)&vhere);
+    parseF(": (REGS)      $%lx ;", (cell_t)&reg[0]);
+    parseF(": (OUTPUT_FP) $%lx ;", (cell_t)&output_fp);
+    parseF(": (INPUT_FP)  $%lx ;", (cell_t)&input_fp);
+    parseF(": STATE       $%lx ;", (cell_t)&state);
+    parseF(": BASE        $%lx ;", (cell_t)&base);
+    parseF(": WORD-SZ     $%lx ; INLINE", (cell_t)sizeof(dict_t));
     parseF(": BYE %d STATE !  ;", ALL_DONE);
     parseF(": CELL         %d ; INLINE", CELL_SZ);
 }
@@ -582,14 +582,16 @@ void loadC3Words() {
 void c3Init() {
     here = &code[0];
     vhere = &vars[0];
-    last = (dict_t*)&code[CODE_SZ];
+    cell_t x = (cell_t)&code[CODE_SZ];
+    while ((long)x & 0x03) { --x; }
+    last = (dict_t*)x;
     base = 10;
     DSP = RSP = reg_base = 0;
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
-
+    
     setBlockFN("block-%03d.c3");
     loadC3Words();
     loadUserWords();
