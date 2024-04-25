@@ -575,7 +575,9 @@ void loadC3Words() {
     parseF(": STATE       $%lx ;", (cell_t)&state);
     parseF(": BASE        $%lx ;", (cell_t)&base);
     parseF(": WORD-SZ     $%lx ; INLINE", (cell_t)sizeof(dict_t));
+#ifdef isPC
     parseF(": BYE %d STATE !  ;", ALL_DONE);
+#endif
     parseF(": CELL         %d ; INLINE", CELL_SZ);
 }
 

@@ -24,12 +24,15 @@ typedef uint8_t  byte;
 
 #define ToCP(x)       (char*)(x)
 #define BTW(x,l,h)    ((l<=x) && (x<=h))
-#define MIN(a,b)      ((a<b)?(a):(b))
-#define MAX(a,b)      ((a>b)?(a):(b))
 #define PC(c)         printChar(c)
 #define BCASE         break; case
 #define NCASE         goto next; case
 #define RCASE         return pc; case
+
+#ifndef MIN
+    #define MIN(a,b)      ((a)<(b))?(a):(b)
+    #define MAX(a,b)      ((a)>(b))?(a):(b)
+#endif
 
 #if (defined _WIN32 || defined _WIN64)
     #define isPC
@@ -47,16 +50,17 @@ typedef uint8_t  byte;
 
     // Not a PC, must be a development board
     // NOTE: Change these values for a specific board
+    //       For the Pico, I use: https://github.com/earlephilhower/arduino-pico
     //       I use these for the Teensy-4 and the Pico
 #define isBOARD 1
 
-    #define MAX_LINES          64
+    #define MAX_LINES         100
     #define CODE_SZ            64*1024
-    #define VARS_SZ            64*1024
-    #define STK_SZ            256
+    #define VARS_SZ            96*1024
+    #define STK_SZ            128
     #define LSTK_SZ             3*25      // 25 nested loops
     #define REGS_SZ            10*25      // 25 nested +REGS
-    #define TIB_SZ            512
+    #define TIB_SZ            256
     #define NAME_LEN           17
     #define NEEDS_ALIGN
     #define __EDITOR__

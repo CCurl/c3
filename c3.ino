@@ -2,8 +2,7 @@
 
 #include "c3.h"
 
-// #define mySerial Serial // Teensy
-#define mySerial SerialUSB // Pico
+#define mySerial Serial // Teensy and Pico
 
 enum { xFOPEN=101, xFCLOSE, xFREAD, xFWRITE, FLOAD, BLOAD,
     OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
@@ -81,7 +80,7 @@ char *doUser(char *pc, int ir) {
 
 void setup() {
   serialInit();
-  printString("Hello ...");
+  printString("Hello.");
   fileInit();
   c3Init();
   printString(" ok\r\n");
