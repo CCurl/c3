@@ -165,11 +165,11 @@
   <ItemGroup>
     <ClInclude Include="c3.h" />
     <ClCompile Include="editor.cpp" />
+    <ClCompile Include="fs-pc.cpp" />
     <ClCompile Include="sys-load.cpp" />
     <ClCompile Include="sys-pc.cpp">
       <FileType>CppCode</FileType>
     </ClCompile>
-    <ClCompile Include="file.cpp" />
     <ClInclude Include="file.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
