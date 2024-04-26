@@ -65,14 +65,16 @@ typedef uint8_t  byte;
     #define NEEDS_ALIGN
     #define __EDITOR__
     #define _SYS_LOAD_
-    // #define _LITTLEFS_
+    // #define _TeensyFS_     // LittleFS for Teensy
+    #define _PicoFS_       // LittleFS for Pico
+    // #define _NoFS_         // No FS
 
 #endif
 
     enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240420 };
 
 #ifndef CODE_SZ
-    #define MAX_LINES     150
+    #define MAX_LINES         150
     #define CODE_SZ            96*1024
     #define VARS_SZ             4*1024*1024
     #define STK_SZ            256

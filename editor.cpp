@@ -125,7 +125,8 @@ static int toBlock() {
 }
 
 static void addLF(int l) {
-    char *ln = &EDCH(l, 0), x=0;
+    char *ln = &EDCH(l, 0);
+    int x=0;
     while (31 < ln[x]) { ++x; }
     ln[x++] = 10; ln[x] = 0;
 }

@@ -1,63 +1,10 @@
-// Support for files, either standard or LittleFS
+// Support for LittleFS on the Teensy
 
-#include "file.h"
+#include "c3.h"
 
-static char block_fn[16];
-CELL_T inputStk[ISTK_SZ+1], input_sp, input_fp;
+#ifdef _TeensyFS_
 
-void ipush(CELL_T x) { if (input_sp < ISTK_SZ) inputStk[++input_sp] = x; }
-CELL_T ipop() { return (0 < input_sp) ? inputStk[input_sp--] : 0; }
-
-void setBlockFN(const char *fn) {
-	strCpy(block_fn, fn);
-}
-
-#ifdef isPC
-
-    void   fileInit() { input_fp = input_sp = 0; }
-    CELL_T fOpen(const char *nm, const char *md) { return (CELL_T)fopen(nm, md); }
-    void   fClose(CELL_T fp) { fclose((FILE*)fp); }
-    
-	int fRead(char *buf, int sz, int num, CELL_T fp) {
-        return (int)fread(buf, sz, num, (FILE*)fp);
-    }
-
-    int fWrite(char *buf, int sz, int num, CELL_T fp) {
-        return (int)fwrite(buf, sz, num, (FILE*)fp);
-    }
-
-    int writeBlock(int num, char *blk, int sz) {
-        char fn[32];
-        sprintf(fn, block_fn, num);
-        num = 0;
-        FILE *x = fopen(fn, "wb");
-        if (x) {
-            num = (int)fwrite(blk, 1, sz, x);
-            fclose(x);
-        }
-        return num;
-    }
-
-    int readBlock(int num, char *blk, int sz) {
-        char fn[32];
-        sprintf(fn, block_fn, num);
-        num = 0;
-        FILE *x = fopen(fn, "rb");
-        if (x) {
-            num = (int)fread(blk, 1, sz, x);
-            fclose(x);
-        }
-        return num;
-    }
-
-	int fReadLine(CELL_T fh, char *buf, int sz) {
-		if (fgets(buf, sz, (FILE*)fh) == buf) { return strLen(buf); }
-		return -1;
-	}
-
-#elif defined (_LITTLEFS_)
-
-// LittleFS uses NEXT
+// The Teensy LittleFS uses NEXT
 #ifdef NEXT
     #undef NEXT
 #endif
@@ -132,7 +79,7 @@ int fWrite(char *buf, int num, int sz, CELL_T fh) {
 int readBlock(int blk, char *buf, int sz) {
 	char fn[32];
 	int num = 0;
-	sprintf(fn, block_fn, blk);
+	sprintf(fn, getBlockFN(), blk);
 	File x = myFS.open(fn, FILE_READ);
 	if ((bool)x) {
 		num = (int)x.read(buf, sz);
@@ -152,7 +99,7 @@ void readBlock1() {
 int writeBlock(int blk, char *buf, int sz) {
 	char fn[32];
 	int num = 0;
-	sprintf(fn, block_fn, blk);
+	sprintf(fn, getBlockFN(), blk);
 	File x = myFS.open(fn, FILE_WRITE_BEGIN);
 	if ((bool)x) {
         x.truncate();
@@ -184,7 +131,7 @@ int fReadLine(CELL_T fh, char *buf, int sz) {
 // bL - Block Load
 void blockLoad(int blk) {
 	char fn[32];
-	sprintf(fn, block_fn, blk);
+	sprintf(fn, getBlockFN(), blk);
 	CELL_T fh = fOpen(fn, "r");
 	if (files[fh].available()) {
 		if (input_fp) {
@@ -196,17 +143,5 @@ void blockLoad(int blk) {
 
 // bA - Block load Abort
 void loadAbort() {}
-
-#else
-
-  void   fileInit() { }
-  static void nf() { printString("-noFile-"); }
-  CELL_T fOpen(const char *nm, const char *md) { nf(); return 0; }
-  void   fClose(CELL_T fp) { nf(); }
-  int fRead(char *buf, int sz, int num, CELL_T fp) { nf(); return 0; }
-  int fWrite(char *buf, int sz, int num, CELL_T fp) { nf(); return 0; }
-  void blockLoad(int num) { nf(); }
-  int readBlock(int blk, char *buf, int sz) { nf(); return 0; }
-  int writeBlock(int blk, char *buf, int sz) { nf(); return 0; }
 
 #endif

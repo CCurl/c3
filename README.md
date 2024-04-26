@@ -128,13 +128,13 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
   - name:   char[NAME_LEN+1]     (NULL terminated)
 
 ## Default sizes for PC-based systems
-- The default NAME_LEN is 13.
+- The default NAME_LEN is 29.
 - The default CODE_SZ is 128K bytes (code and dictionary).
 - The default VARS_SZ is  4MB bytes (strings and variables).
-- The default STK_SZ  is   64 CELLS (data and return stacks).
-- The default LSTK_SZ is   30 CELLS (loop stack, multiple of 3).
-- The default REGS_SZ is  100 CELLS (register stack, multiple of 10).
-- These are defined in the sys-init.h file.
+- The default STK_SZ  is  256 CELLS (data and return stacks).
+- The default LSTK_SZ is  150 CELLS (loop stack, multiple of 3).
+- The default REGS_SZ is  500 CELLS (register stack, multiple of 10).
+- These are defined in the c3.h file.
 
 ## Building c3:
 - Windows: there is a c3.sln file for Visual Studio
@@ -146,15 +146,24 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 - Apple: I do not have an Apple, so I cannot build for Apples
   - But c3 is minimal enough that it should be easy to port to an Apple system
 - Arduino: there is a c3.ino file
-  - I use the Arduino IDE v2.0
-  - Edit the section where isBOARD is defined to set the configuration for the board
-  - For the RPI Pico and Teensy 4.0, I use:
-    - CODE_SZ:   64K
-    - VARS_SZ:   96K
-    - STK_SZ:    32
-    - LSTK_SZ:   30
-    - REGS_SZ;  100
-    - NAME_LEN:  13
+
+## Arduino boards:
+- I use the Arduino IDE v2.0
+- File `c3.h` controls parameters for the target board
+- Edit the section where isBOARD is defined to set the configuration for the board
+- For the RPI Pico and Teensy 4.x, I use:
+  - CODE_SZ:   64*1024
+  - VARS_SZ:   96*1024
+  - STK_SZ:    128
+  - LSTK_SZ:     3*25  // 25 nested loops
+  - REGS_SZ;    10*25  // 25 nested +REGS
+  - TIB_SZ;    128
+  - NAME_LEN:   17
+- For the RPI Pico:
+  - Use the arduino-pico from earlephilhower (https://github.com/earlephilhower/arduino-pico)
+  - Use `#define _PicoFS_` to include support for LittleFS
+- For the Teensy-4.x:
+  - Use `#define _TeensyFS_` to include support for LittleFS
 
 ## c3 Opcode / Word reference
 
