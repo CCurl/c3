@@ -34,6 +34,7 @@ CELL_T fOpen(const char *fn, const char *mode) {
 	int fh = freeFile();
 	if (0 < fh) {
 		files[fh] = myFS.open((char*)fn, mode);
+        if (files[fh].name() == nullptr) { return 0; }
         if (mode[0] == 'w') { files[fh].truncate(0); }
 	}
 	return fh;
@@ -63,14 +64,14 @@ void fDelete() {
 // fh: File handle, c: char read, n: num chars read
 // n=0: End of file or file error
 int fRead(char *buf, int num, int sz, CELL_T fh) {
-	return (BTW(fh, 1, NFILES)) ? (int)files[fh].read((uint8_t *)buf, num) : -1;
+	return (BTW(fh, 1, NFILES)) ? (int)files[fh].read((uint8_t*)buf, num*sz) : 0;
 }
 
 // fW (c fh--n) - File Write
 // fh: File handle, c: char to write, n: num chars written
 // n=0: File not open or error
 int fWrite(char *buf, int num, int sz, CELL_T fh) {
-	return (BTW(fh, 1, NFILES)) ? (int)files[fh].write(buf, num) : -1;
+	return (BTW(fh, 1, NFILES)) ? (int)files[fh].write(buf, num*sz) : 0;
 }
 
 int readBlock(int blk, char *buf, int sz) {
