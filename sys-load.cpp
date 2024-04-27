@@ -100,8 +100,8 @@
         ParseLine(": \" ( --SZ )  T3 state @ 0= IF DROP EXIT THEN (vhere) ! (lit) c, , ; IMMEDIATE");
         ParseLine(": .\" ( -- )   T3 state @ 0= IF DROP ztype EXIT THEN");
         ParseLine("    (vhere) ! (lit) c, , (ztype) c, ; IMMEDIATE");
-        ParseLine(": .word CELL + 2+ qtype ; INLINE");
-        ParseLine(": word-len ( a--n ) CELL + 2+ s-len ; INLINE");
+        ParseLine(": .word CELL + 2+ 1+ qtype ; INLINE");
+        ParseLine(": word-len ( a--n ) CELL + 2+ C@ ; INLINE");
         ParseLine(": words +regs 0 s1 0 s3 last s2 begin");
         ParseLine("        r2 code-end < while");
         ParseLine("        r1+ #9 > IF 0 s1 cr THEN");
@@ -124,8 +124,6 @@
         ParseLine(": forget 0 T1 @ (here) ! 1 T1 @ (vhere) ! 2 T1 @ (last) ! ;");
         ParseLine(": forget-1 last @ (here) ! last word-sz + (last) ! ;");
         ParseLine("marker");
-        ParseLine(": benches forget \" benches.c3\" (load) ;");
-        ParseLine(": sb forget \" sandbox.c3\" (load) ;");
     }
 
 #endif // _SYS_LOAD_
