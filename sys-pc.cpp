@@ -147,6 +147,7 @@ void loadUserWords() {
     parseF("-ML- LOAD   %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT   %d 3 -MLX- inline", EDIT_BLK);
     ParseLine(": isPC 1 ;");
+    parseF(": BYE %d STATE !  ;", ALL_DONE);
 }
 
 int main(int argc, char *argv[]) {

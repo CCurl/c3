@@ -576,11 +576,8 @@ void loadC3Words() {
     parseF(": STATE       $%lx ;", (cell_t)&state);
     parseF(": BASE        $%lx ;", (cell_t)&base);
     parseF(": WORD-SZ     $%lx ; INLINE", (cell_t)sizeof(dict_t));
-    parseF(": (LEXICON)   $%lx ;", (cell_t)&lexicon);
     parseF(": CELL         %d  ; INLINE", CELL_SZ);
-#ifdef isPC
-    parseF(": BYE %d STATE !  ;", ALL_DONE);
-#endif
+    parseF(": (LEXICON)   $%lx ;", (cell_t)&lexicon);
 }
 
 void c3Init() {
