@@ -1,6 +1,9 @@
 \ block-005.c3 - Words for screen handling
 
-' cls loaded?
+C3 ' SCREEN loaded?
+
+: SCREEN 5 LEXICON ;
+SCREEN
 
 : cur-on  ( -- )       ." %e[?25h" ;
 : cur-off ( -- )       ." %e[?25l" ;

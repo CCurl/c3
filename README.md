@@ -122,13 +122,23 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 ## The dictionary
 ### NOTE: c3 does NOT do a case-sensitive dictionary search.
 - A dictionary entry looks like this:
-  - xt:     cell_t               (either 32-bit or 64-bit)
-  - flags:  byte                 (IMMEDIATE=$01, INLINE=$02)
-  - len:    byte
-  - name:   char[NAME_LEN+1]     (NULL terminated)
+  - xt:       cell_t               (either 32-bit or 64-bit)
+  - flags:    byte                 (IMMEDIATE=$01, INLINE=$02)
+  - lexicon:  byte                 (the lexicon the word is in)
+  - len:      byte
+  - name:     char[NAME_LEN+1]     (NULL terminated)
+
+### Support for lexicons
+C3 supports a simple way to organize words using lexicons.
+- A lexicon identifier is a number between 0 and 255.
+- The current lexicon is set using `(LEXICON) !`.
+- Lexicons have no effect on the dictionary search.
+- When the lexicon <> 0, then `words` prints only the words in the current lexicon.
+- When the lexicon == 0, then `words` prints all the words in the dictionary.
+- The default/c3 lexicon is #0.
 
 ## Default sizes for PC-based systems
-- The default NAME_LEN is 29.
+- The default NAME_LEN is 28.
 - The default CODE_SZ is 128K bytes (code and dictionary).
 - The default VARS_SZ is  4MB bytes (strings and variables).
 - The default STK_SZ  is  256 CELLS (data and return stacks).
@@ -332,6 +342,7 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 | STATE         | (--A)    | A: Address of the STATE variable.|
 | TIB           | (--A)    | A: Address of TIB (text input buffer).|
 | >IN           | (--A)    | A: Address of >IN.|
+| (LEXICON)     | (--A)    | A: Address of the LEXICON variable.|
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 

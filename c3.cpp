@@ -49,7 +49,7 @@ enum { // Floating point opcdes
 
 stk_t ds, rs;
 cell_t lstk[LSTK_SZ+1], lsp, output_fp;
-cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
+cell_t state, base, reg[REGS_SZ], reg_base, t1, n1, lexicon;
 char code[CODE_SZ], vars[VARS_SZ], tib[TIB_SZ], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
@@ -161,6 +161,7 @@ void addWord() {
     last->len = l;
     last->xt = (cell_t)here;
     last->f = 0;
+    last->lex = (byte)lexicon;
 }
 
 // ( nm--xt flags | <null> )
@@ -575,10 +576,11 @@ void loadC3Words() {
     parseF(": STATE       $%lx ;", (cell_t)&state);
     parseF(": BASE        $%lx ;", (cell_t)&base);
     parseF(": WORD-SZ     $%lx ; INLINE", (cell_t)sizeof(dict_t));
+    parseF(": (LEXICON)   $%lx ;", (cell_t)&lexicon);
+    parseF(": CELL         %d  ; INLINE", CELL_SZ);
 #ifdef isPC
     parseF(": BYE %d STATE !  ;", ALL_DONE);
 #endif
-    parseF(": CELL         %d ; INLINE", CELL_SZ);
 }
 
 void c3Init() {
@@ -588,7 +590,7 @@ void c3Init() {
     while ((long)x & 0x03) { --x; }
     last = (dict_t*)x;
     base = 10;
-    DSP = RSP = reg_base = 0;
+    DSP = RSP = reg_base = lexicon = 0;
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }

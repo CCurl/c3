@@ -1,6 +1,9 @@
 \ block-002.c3 - File handling words
 
-' fopen-rt loaded?
+C3 ' FILES loaded?
+
+: FILES 2 LEXICON ;
+FILES
 
 : fopen-rt ( fn--fh ) " rt"  FOPEN ;
 : fopen-rb ( fn--fh ) " rb"  FOPEN ;

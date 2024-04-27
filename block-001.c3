@@ -47,13 +47,21 @@
 : space bl EMIT ;          INLINE
 : . (.) space ;            INLINE
 
-: .word     CELL+ 2+ QTYPE ; INLINE
-: word-len  CELL+ 1+ C@ ; INLINE
+: LEXICON  (LEXICON) ! ;
+: LEX@     (LEXICON) @ ;
+: C3       0 LEXICON ;
+
+: .word     CELL+ 1+ 2+ QTYPE ; INLINE
+: word-lex  CELL+ 1+ C@ ; INLINE
+: word-len  CELL+ 2+ C@ ; INLINE
+: lex-match?  word-lex LEX@ =  LEX@ 0= OR ;
 : WORDS +REGS 0 DUP s1 s3 LAST s2 BEGIN
         r2 code-end < WHILE
-        r1+ #9 > IF 0 s1 cr THEN
-        r2 word-len #7 > IF i1 THEN
-        i3 r2 .word tab
+        r2 lex-match? IF
+            r1+ #9 > IF 0 s1 cr THEN
+            r2 word-len #7 > IF i1 THEN
+            i3 r2 .word tab
+        THEN
         r2 WORD-SZ + s2
     REPEAT
     r3 ." (%d words)" -REGS ;
@@ -124,7 +132,7 @@
 VARIABLE T0 2 CELLS allot
 : T1 CELLS T0 + ;
 : MARKER HERE 0 T1 ! VHERE 1 T1 ! LAST 2 T1 ! ;
-: FORGET 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
+: FORGET C3 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
 : FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;
 
 MARKER
@@ -134,6 +142,4 @@ HERE CODE - ." %d code bytes used, " LAST HERE - ." %d bytes free.%n"
 CODE-END LAST - dup s0 ." %d dictionary bytes used, " r0 word-sz / ." %d words.%n"
 VHERE VARS - ." %d variable bytes used, " VARS-END VHERE - ." %d bytes free."
 
-: help 999 load ;
-: benches 200 load ;
-: sb 900 load ;
+cr 999 load

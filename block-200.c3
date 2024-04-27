@@ -1,6 +1,9 @@
 \ block-200.c3 - Some benchmarks
 
-: rl forget 200 load ; : ed 200 edit ;
+C3 ' BENCHES loaded?
+
+: BENCHES 200 LEXICON ;
+BENCHES
 
 : ms ." (%d usec)" ;
 : elapsed timer swap - ms ;
@@ -37,10 +40,13 @@
 : bm7 cr DUP ." Bench 7: Fibonacci number for: %d ... "
     timer swap fib . elapsed ;
 
-250 mil bm1
-250 mil bm2
-250 mil bm3
-250 mil bm4
-250 mil bm5
-  1 mil bm6
- 35     bm7
+: run-all
+    250 mil bm1
+    250 mil bm2
+    250 mil bm3
+    250 mil bm4
+    250 mil bm5
+    1 mil bm6
+    35     bm7 ;
+
+run-all

@@ -61,7 +61,7 @@ typedef uint8_t  byte;
     #define LSTK_SZ             3*25      // 25 nested loops
     #define REGS_SZ            10*25      // 25 nested +REGS
     #define TIB_SZ            256
-    #define NAME_LEN           17
+    #define NAME_LEN           16
     #define NEEDS_ALIGN
     #define __EDITOR__
     #define _SYS_LOAD_
@@ -71,7 +71,7 @@ typedef uint8_t  byte;
 
 #endif
 
-    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240420 };
+    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240427 };
 
 #ifndef CODE_SZ
     #define MAX_LINES         150
@@ -81,16 +81,16 @@ typedef uint8_t  byte;
     #define LSTK_SZ             3*50      // 50 nested loops
     #define REGS_SZ            10*50      // 50 nested +REGS
     #define TIB_SZ           1024
-    #define NAME_LEN           29
+    #define NAME_LEN           28
 #endif
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;
 typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
-typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
+typedef struct { cell_t xt; byte f, lex, len; char name[NAME_LEN+1]; } dict_t;
 
 // These are defined in the VM
 extern cell_t lstk[LSTK_SZ+1], lsp, output_fp;
-extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
+extern cell_t state, base, reg[REGS_SZ], reg_base, t1, n1, lexicon;
 extern char tib[TIB_SZ], *in, *y, *here;
 extern char vars[VARS_SZ];
 
