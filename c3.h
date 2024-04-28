@@ -82,6 +82,7 @@ typedef uint8_t  byte;
     #define REGS_SZ            10*50      // 50 nested +REGS
     #define TIB_SZ           1024
     #define NAME_LEN           28
+    // #define _SYS_LOAD_
 #endif
 
 typedef union { cell_t i; flt_t f; char *c; } se_t;

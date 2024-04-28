@@ -99,7 +99,7 @@ void printStringF(const char *fmt, ...) {
     if (buf<here) { buf=here+1; }
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buf, 250, fmt, args);
+    vsnprintf(buf, 255, fmt, args);
     va_end(args);
     printString(buf);
 }
@@ -425,6 +425,7 @@ int doWord(const char *w) {
 
 void ParseLine(const char *x) {
     if (DSP < 1) { DSP = 0; }
+    // printStringF("%s\r\n", x); // Debug
     if (state == ALL_DONE) { return; }
     in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
