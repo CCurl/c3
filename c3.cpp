@@ -128,16 +128,12 @@ int isTempWord(const char *w) {
 
 char isRegOp(const char *w) {
     if (!BTW(w[1],'0','9')) { return 0; }
-    if (w[0]=='r') { 
-        if (w[2]==0) { return REG_R; }
-        if ((w[2]=='-') && (w[3]==0))  { return REG_RD; }
-        if ((w[2]=='+') && (w[3]==0))  { return REG_RI; }
-        return 0;
-    }
-    if (w[2]) { return 0; }
-    if (w[0]=='s') { return REG_S; }
-    if (w[0]=='i') { return REG_I; }
-    if (w[0]=='d') { return REG_D; }
+    if ((w[0]=='r') && (w[2]==0)) return REG_R;
+    if ((w[0]=='s') && (w[2]==0)) return REG_S;
+    if ((w[0]=='i') && (w[2]==0)) return REG_I;
+    if ((w[0]=='d') && (w[2]==0)) return REG_D;
+    if ((w[0]=='r') && (w[2]=='+') && (w[3]==0)) return REG_RI;
+    if ((w[0]=='r') && (w[2]=='-') && (w[3]==0)) return REG_RD;
     return 0;
 }
 
@@ -168,9 +164,8 @@ void addWord() {
 int doFind(const char *nm) {
     if (nm == 0) { nextWord(); nm = WD; }
     if (isTempWord(nm)) {
-        n1 = nm[1]-'0';
-        push(tempWords[n1].xt);
-        push(tempWords[n1].f);
+        push(tempWords[nm[1]-'0'].xt);
+        push(tempWords[nm[1]-'0'].f);
         return 1;
     }
     int len = strLen(nm);
@@ -433,7 +428,7 @@ void ParseLine(const char *x) {
         if (doML(WD)) { continue; }
         if (doReg(WD)) { continue; }
         if (doWord(WD)) { continue; }
-        printStringF("-[word:%s](%s)?-", WD, x);
+        printStringF("-[word:%s]?-", WD);
         if (state) { here = ToCP((last++)->xt); state = 0; }
         while (input_fp) { fClose(input_fp); input_fp = ipop(); }
         return;
