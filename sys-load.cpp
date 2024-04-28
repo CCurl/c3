@@ -1,8 +1,11 @@
 // Load the base c3 system
 
+// Use this nimbleText script to convert block-001.c3
+// Don't forget to remove the '\' comments - they cause a crash.
+//   ParseLine("<%row.replace(/[\\]/ig,"\\\\").replace(/["]/ig,"\\\"")%>");
+
 #include "c3.h"
 
-// #define _SYS_LOAD_
 #ifndef _SYS_LOAD_
 
     void sysLoad() {}
@@ -122,7 +125,7 @@
         ParseLine("    THEN ')' EMIT ;");
         ParseLine(": BINARY  %10 BASE ! ;");
         ParseLine(": DECIMAL #10 BASE ! ;");
-        ParseLine(": HEX     $ BASE ! ;");
+        ParseLine(": HEX     $10 BASE ! ;");
         ParseLine(": ? @ . ;");
         ParseLine(": RSHIFT ( N1 S--N2 ) 0 DO 2/ LOOP ;");
         ParseLine(": LSHIFT ( N1 S--N2 ) 0 DO 2* LOOP ;");
