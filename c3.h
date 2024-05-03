@@ -74,14 +74,15 @@ typedef uint8_t  byte;
     enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240427 };
 
 #ifndef CODE_SZ
-    #define MAX_LINES         150
+    // Default for PCs
+    #define MAX_LINES         250
     #define CODE_SZ            96*1024
     #define VARS_SZ             4*1024*1024
     #define STK_SZ            256
-    #define LSTK_SZ             3*50      // 50 nested loops
-    #define REGS_SZ            10*50      // 50 nested +REGS
+    #define LSTK_SZ            50*3       // 50 nested loops
+    #define REGS_SZ            50*10      // 50 nested +REGS
     #define TIB_SZ           1024
-    #define NAME_LEN           28
+    #define NAME_LEN           20
     // #define _SYS_LOAD_
 #endif
 
