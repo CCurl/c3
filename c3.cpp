@@ -551,28 +551,28 @@ void loadC3Words() {
 
     // System information words
     parseF(lit, "VERSION", VERSION);
-    parseF(addrFMT, "(scr-h)",  &edScrH);
-    parseF(addrFMT, "(SP) ", &DSP);
-    parseF(addrFMT, "(RSP)", &RSP);
-    parseF(addrFMT, "(LSP)", &lsp);
-    parseF(addrFMT, "(HERE)", &here);
-    parseF(addrFMT, "(LAST)", &last);
-    parseF(addrFMT, "(STK) ", &ds.stk[0].i);
-    parseF(addrFMT, "(RSTK)", &rs.stk[0].c);
-    parseF(addrFMT, "CODE", &code[0]);
-    parseF(addrFMT, "CODE-SZ", CODE_SZ);
-    parseF(addrFMT, "VARS", &vars[0]);
-    parseF(addrFMT, "VARS-SZ", VARS_SZ);
-    parseF(addrFMT, "(VHERE)", &vhere);
-    parseF(addrFMT, "(REGS)", &reg[0]);
-    parseF(addrFMT, "(OUTPUT_FP)", &output_fp);
-    parseF(addrFMT, "(INPUT_FP)", &input_fp);
-    parseF(addrFMT, "(LEXICON)", &lexicon);
-    parseF(addrFMT, "TIB", &tib[0]);
-    parseF(addrFMT, ">IN", &in);
-    parseF(addrFMT, "STATE", &state);
-    parseF(addrFMT, "BASE", &base);
+    parseF(lit, "VARS-SZ", VARS_SZ);
+    parseF(lit, "CODE-SZ", CODE_SZ);
     parseF(lit, "WORD-SZ", sizeof(dict_t));
+    parseF(addrFMT, "(scr-h)",     &edScrH);
+    parseF(addrFMT, "(SP) ",       &DSP);
+    parseF(addrFMT, "(RSP)",       &RSP);
+    parseF(addrFMT, "(LSP)",       &lsp);
+    parseF(addrFMT, "(HERE)",      &here);
+    parseF(addrFMT, "(LAST)",      &last);
+    parseF(addrFMT, "(STK) ",      &ds.stk[0].i);
+    parseF(addrFMT, "(RSTK)",      &rs.stk[0].c);
+    parseF(addrFMT, "CODE",        &code[0]);
+    parseF(addrFMT, "VARS",        &vars[0]);
+    parseF(addrFMT, "(VHERE)",     &vhere);
+    parseF(addrFMT, "(REGS)",      &reg[0]);
+    parseF(addrFMT, "(OUTPUT_FP)", &output_fp);
+    parseF(addrFMT, "(INPUT_FP)",  &input_fp);
+    parseF(addrFMT, "(LEXICON)",   &lexicon);
+    parseF(addrFMT, "TIB",         &tib[0]);
+    parseF(addrFMT, ">IN",         &in);
+    parseF(addrFMT, "STATE",       &state);
+    parseF(addrFMT, "BASE",        &base);
     parseF(lit, "CELL", CELL_SZ);
 }
 
