@@ -346,8 +346,8 @@ static int processEditorChar(int c) {
         BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
         BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
-        BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0); line=off=0;
-        BCASE '-': edSvBlk(0); blkNum = MAX(0, blkNum-1); edRdBlk(0); line=off=0;
+        BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0); scrTop=line=off=0;
+        BCASE '-': edSvBlk(0); blkNum = MAX(0, blkNum-1); edRdBlk(0); scrTop=line=off=0;
         BCASE ':': edCommand();
     }
     return 1;
