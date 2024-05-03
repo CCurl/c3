@@ -1,14 +1,8 @@
 // c3 - a stack-based VM
 
-#include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
-
-#include "sys-init.h"
-
-typedef union { cell_t i; flt_t f; char *c; } se_t;
-typedef struct { cell_t sp; se_t stk[STK_SZ+1]; } stk_t;
-typedef struct { cell_t xt; byte f; byte len; char name[NAME_LEN+1]; } dict_t;
+#include "c3.h"
 
 enum {
     STOP = 0, LIT1, LIT, EXIT, CALL, JMP, JMPZ, JMPNZ,
@@ -29,7 +23,8 @@ enum { // System opcodes
 };
 
 enum { // String opcodes
-    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN, STREQ, STREQI, LTRIM, RTRIM
+    TRUNC=0, LCASE, UCASE, STRCPY=4, STRCAT, STRCATC, STRLEN,
+    STREQ, STREQI, STREQN, LTRIM, RTRIM, FINDC
 };
 
 enum { // Floating point opcdes
@@ -37,13 +32,7 @@ enum { // Floating point opcdes
     SQRT, TANH
 };
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
-
-#define BTW(a,b,c)    ((b<=a) && (a<=c))
-#define CELL_SZ       sizeof(cell_t)
 #define CpAt(x)       (char*)Fetch((char*)x)
-#define ToCP(x)       (char*)(x)
-#define ClearTib      fill(tib, 0, sizeof(tib))
 #define DSP           ds.sp
 #define TOS           (ds.stk[DSP].i)
 #define NOS           (ds.stk[DSP-1].i)
@@ -55,16 +44,13 @@ enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 99 };
 #define L0            lstk[lsp]
 #define L1            lstk[lsp-1]
 #define L2            lstk[lsp-2]
-#define IS_IMMEDIATE  1
-#define IS_INLINE     2
-#define NCASE         goto next; case
-#define RCASE         return pc; case
+#define IS_IMMEDIATE  0x01
+#define IS_INLINE     0x02
 
 stk_t ds, rs;
-cell_t lstk[LSTK_SZ+1], lsp;
-cell_t fileStk[10], fileSp, input_fp, output_fp;
-cell_t state, base, reg[REGS_SZ], reg_base, t1, n1;
-char code[CODE_SZ], vars[VARS_SZ], tib[256], WD[32];
+cell_t lstk[LSTK_SZ+1], lsp, output_fp;
+cell_t state, base, reg[REGS_SZ], reg_base, t1, n1, lexicon;
+char code[CODE_SZ], vars[VARS_SZ], tib[TIB_SZ], WD[32];
 char *here, *vhere, *in, *y;
 dict_t tempWords[10], *last;
 
@@ -86,28 +72,34 @@ char *strEnd(char *s) { while (*s) { ++s; } return s; }
 void strCat(char *d, const char *s) { d=strEnd(d); while (*s) { *(d++)=*(s++); } *d=0; }
 void strCatC(char *d, const char c) { d=strEnd(d); *(d++)=c; *d=0; }
 void strCpy(char *d, const char *s) { if (d != s) { *d = 0; strCat(d, s); } }
-int strLen(const char *d) { int len = 0; while (*d++) { ++len; } return len; }
+int strLen(const char *d) { return (int)(strEnd((char*)d)-d); }
 char *lTrim(char *d) { while (*d && (*d<33)) { ++d; } return d; }
-void rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) = 0; } }
+char *rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) = 0; } return d; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
-
-int strEqI(const char *s, const char *d) {
-    while (lower(*s++) == lower(*d++)) { if (*(s-1)==0) { return 1; } }
-    return 0;
-}
 
 int strEq(const char *d, const char *s) {
     while (*(s++) == *(d++)) { if (*(s-1)==0) { return 1; } }
     return 0;
 }
 
+int strEqI(const char *s, const char *d) {
+    while (lower(*s++) == lower(*d++)) { if (*(s-1)==0) { return 1; } }
+    return 0;
+}
+
+int strEqN(const char *s, const char *d, cell_t n) {
+    while (*(s++) == *(d++) && (n)) { --n; }
+    return (n==0) ? 1 : 0;
+}
+
 void printStringF(const char *fmt, ...) {
     char *buf = (char*)last;
     buf -= 256;
+    if (buf<here) { buf=here+1; }
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buf, 200, fmt, args);
+    vsnprintf(buf, 255, fmt, args);
     va_end(args);
     printString(buf);
 }
@@ -136,16 +128,12 @@ int isTempWord(const char *w) {
 
 char isRegOp(const char *w) {
     if (!BTW(w[1],'0','9')) { return 0; }
-    if (w[0]=='r') { 
-        if (w[2]==0) { return REG_R; }
-        if ((w[2]=='-') && (w[3]==0))  { return REG_RD; }
-        if ((w[2]=='+') && (w[3]==0))  { return REG_RI; }
-        return 0;
-    }
-    if (w[2]) { return 0; }
-    if (w[0]=='s') { return REG_S; }
-    if (w[0]=='i') { return REG_I; }
-    if (w[0]=='d') { return REG_D; }
+    if ((w[0]=='r') && (w[2]==0)) return REG_R;
+    if ((w[0]=='s') && (w[2]==0)) return REG_S;
+    if ((w[0]=='i') && (w[2]==0)) return REG_I;
+    if ((w[0]=='d') && (w[2]==0)) return REG_D;
+    if ((w[0]=='r') && (w[2]=='+') && (w[3]==0)) return REG_RI;
+    if ((w[0]=='r') && (w[2]=='-') && (w[3]==0)) return REG_RD;
     return 0;
 }
 
@@ -163,21 +151,21 @@ void addWord() {
     nextWord();
     if (isTempWord(WD)) { tempWords[WD[1]-'0'].xt = (cell_t)here; return; }
     int l = strLen(WD);
+    if (NAME_LEN < l) { printStringF("-nameTrunc:%s-", WD); l=NAME_LEN; WD[l]=0; }
     --last;
-    if (NAME_LEN < l) { l=NAME_LEN; WD[l]=0; printString("-nameTrunc-"); }
     strCpy(last->name, WD);
     last->len = l;
     last->xt = (cell_t)here;
     last->f = 0;
+    last->lex = (byte)lexicon;
 }
 
 // ( nm--xt flags | <null> )
 int doFind(const char *nm) {
     if (nm == 0) { nextWord(); nm = WD; }
     if (isTempWord(nm)) {
-        n1 = nm[1]-'0';
-        push(tempWords[n1].xt);
-        push(tempWords[n1].f);
+        push(tempWords[nm[1]-'0'].xt);
+        push(tempWords[nm[1]-'0'].f);
         return 1;
     }
     int len = strLen(nm);
@@ -195,8 +183,8 @@ int doFind(const char *nm) {
 
 // ( --n | <null> )
 int isBase10(const char *wd) {
-    cell_t x = 0, isNeg = (*wd == '-') ? 1 : 0;
-    if (isNeg && (*(++wd) == 0)) { return 0; }
+    cell_t x = 0, isNeg = 0;
+    if (*wd == '-') { isNeg=1; ++wd; }
     if (!BTW(*wd, '0', '9')) { return 0; }
     while (BTW(*wd, '0', '9')) { x = (x*10)+(*(wd++)-'0'); }
     if (*wd == 0) { push(isNeg ? -x : x); return 1; }
@@ -234,10 +222,10 @@ int isNum(const char *wd) {
 
 void doType(const char *str) {
     if (!str) { str=cpop(); }
-    for (int i = 0; i < str[i]; i++) {
-        char c = str[i];
+    while (*str) {
+        char c=*(str++);
         if (c == '%') {
-            c = str[++i];
+            c = *(str++);
             if (c == 0) { return; }
             else if (c=='b') { printString(iToA(pop(), 2)); }
             else if (c=='c') { printChar((char)pop()); }
@@ -259,7 +247,7 @@ void doType(const char *str) {
 }
 
 char *doStringOp(char *pc) {
-    char *d, *s;
+    char *d=NULL, *s=NULL;
     switch(*pc++) {
         case TRUNC:    d=cpop(); d[0] = 0;
         RCASE LCASE:   TOS = lower((int)TOS);
@@ -270,10 +258,12 @@ char *doStringOp(char *pc) {
         RCASE STRLEN:  TOS=strLen(CTOS);
         RCASE STREQ:   s=cpop(); d=CTOS; TOS=strEq(d, s);
         RCASE STREQI:  s=cpop(); d=CTOS; TOS=strEqI(d, s);
+        RCASE STREQN:  t1=pop(); s=cpop(); d=cpop(); push(strEqN(d, s, t1));
         RCASE LTRIM:   CTOS=lTrim(CTOS);
         RCASE RTRIM:   rTrim(CTOS);
-            return pc;
-        default: printStringF("-strOp:[%d]?-", *(pc-1));
+        RCASE FINDC:   s=cpop(); while (*s && (*s!=TOS)) { ++s; }
+                       TOS = (*s) ? (cell_t)s : 0;
+        return pc; default: printStringF("-strOp:[%d]?-", *(pc-1));
     }
     return pc;
 }
@@ -282,21 +272,21 @@ char *doSysOp(char *pc) {
     switch(*pc++) {
         case INLINE: last->f = IS_INLINE;
         RCASE IMMEDIATE: last->f = IS_IMMEDIATE;
-        RCASE DOT: printString(iToA(pop(), (int)base));
-        RCASE ITOA: TOS = (cell_t)iToA(TOS, (int)base);
-        RCASE ATOI: push(isNum(cpop()));
+        RCASE DOT:   printString(iToA(pop(), (int)base));
+        RCASE ITOA:  TOS = (cell_t)iToA(TOS, (int)base);
+        RCASE ATOI:  push(isNum(cpop()));
         RCASE COLONDEF: addWord(); state=1;
-        RCASE ENDWORD: state=0; CComma(EXIT);
-        RCASE CREATE: addWord(); CComma(LIT); Comma((cell_t)vhere);
-        RCASE FIND: push(doFind(ToCP(0)));
-        RCASE WORD: t1=nextWord(); push((cell_t)WD); push(t1);
-        RCASE TIMER: push(sysTime());
+        RCASE ENDWORD:  state=0; CComma(EXIT);
+        RCASE CREATE:   addWord(); CComma(LIT); Comma((cell_t)vhere);
+        RCASE FIND:   push(doFind(ToCP(0)));
+        RCASE WORD:   t1=nextWord(); push((cell_t)WD); push(t1);
+        RCASE TIMER:  push(sysTime());
         RCASE CCOMMA: CComma(pop());
-        RCASE COMMA: Comma(pop());
-        RCASE KEY:  push(key());
-        RCASE QKEY: push(qKey());
-        RCASE EMIT: printChar((char)pop());
-        RCASE QTYPE: printString(cpop());
+        RCASE COMMA:  Comma(pop());
+        RCASE KEY:    push(key());
+        RCASE QKEY:   push(qKey());
+        RCASE EMIT:   printChar((char)pop());
+        RCASE QTYPE:  printString(cpop());
             return pc; 
         default: printStringF("-sysOp:[%d]?-", *(pc-1));
     }
@@ -306,13 +296,13 @@ char *doSysOp(char *pc) {
 char *doFloatOp(char *pc) {
     flt_t x;
     switch(*pc++) {
-        case  FADD: x = fpop(); FTOS += x;
-        RCASE FSUB: x = fpop(); FTOS -= x;
-        RCASE FMUL: x = fpop(); FTOS *= x;
-        RCASE FDIV: x = fpop(); FTOS /= x;
-        RCASE FEQ:  x = fpop(); TOS = (x == FTOS);
-        RCASE FLT:  x = fpop(); TOS = (x > FTOS);
-        RCASE FGT:  x = fpop(); TOS = (x < FTOS);
+        case  FADD: x=fpop(); FTOS += x;
+        RCASE FSUB: x=fpop(); FTOS -= x;
+        RCASE FMUL: x=fpop(); FTOS *= x;
+        RCASE FDIV: x=fpop(); FTOS /= x;
+        RCASE FEQ:  x=fpop(); TOS = (x == FTOS);
+        RCASE FLT:  x=fpop(); TOS = (x > FTOS);
+        RCASE FGT:  x=fpop(); TOS = (x < FTOS);
         RCASE F2I:  TOS = (cell_t)FTOS;
         RCASE I2F:  FTOS = (flt_t)TOS;
         RCASE FDOT: printStringF("%g", fpop());
@@ -333,7 +323,7 @@ next:
         NCASE LIT: push(Fetch(pc)); pc += CELL_SZ;
         NCASE EXIT: if (RSP<1) { RSP=0; return; } pc=rpop();
         NCASE CALL: y=pc+CELL_SZ; if (*y!=EXIT) { rpush(y); }          // fall-thru
-        case  JMP: pc = CpAt(pc);
+        case  JMP:  pc = CpAt(pc);
         NCASE JMPZ:  if (pop()==0) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE JMPNZ: if (TOS) { pc=CpAt(pc); } else { pc+=CELL_SZ; }
         NCASE STORE:  Store(CTOS, NOS);  DSP-=2; if (DSP < 1) { DSP = 0; }
@@ -362,9 +352,9 @@ next:
         NCASE LOOP2: if (--L0>L1) { pc=ToCP(L2); } else { lsp-=3; };
         NCASE INDEX: push((cell_t)&L0);
         NCASE COM: TOS = ~TOS;
-        NCASE AND: t1=pop(); TOS = (TOS & t1);
-        NCASE OR:  t1=pop(); TOS = (TOS | t1);
-        NCASE XOR: t1=pop(); TOS = (TOS ^ t1);
+        NCASE AND: t1=pop(); TOS &= t1;
+        NCASE OR:  t1=pop(); TOS |= t1;
+        NCASE XOR: t1=pop(); TOS ^= t1;
         NCASE TYPE: t1=pop(); y=cpop(); for (int i=0; i<t1; i++) { printChar(*(y++)); }
         NCASE ZTYPE: doType(0);
         NCASE REG_I: reg[*(pc++)+reg_base]++;
@@ -409,7 +399,7 @@ int doReg(const char *w) {
     if (t == 0) { return 0; }
     if (state) { CComma(t); CComma(w[1]-'0'); }
     else {
-        int h=245;
+        int h=TIB_SZ-10;
         tib[h]=t; tib[h+1]=w[1]-'0'; tib[h+2]=EXIT;
         Run(&tib[h]);
     }
@@ -430,6 +420,8 @@ int doWord(const char *w) {
 
 void ParseLine(const char *x) {
     if (DSP < 1) { DSP = 0; }
+    // printStringF("%s\r\n", x); // Debug
+    if (state == ALL_DONE) { return; }
     in = (char *)x;
     while ((state != ALL_DONE) && nextWord()) {
         if (doNum(WD)) { continue; }
@@ -438,8 +430,7 @@ void ParseLine(const char *x) {
         if (doWord(WD)) { continue; }
         printStringF("-[word:%s]?-", WD);
         if (state) { here = ToCP((last++)->xt); state = 0; }
-        while (fileSp) { fclose((FILE*)fileStk[fileSp--]); }
-        input_fp = 0;
+        while (input_fp) { fClose(input_fp); input_fp = ipop(); }
         return;
     }
 }
@@ -450,32 +441,156 @@ void parseF(const char *fmt, ...) {
     va_start(args, fmt);
     vsnprintf(buf, 128, fmt, args);
     va_end(args);
-    // printStringF("line: [%s]\n", buf);
     ParseLine(buf);
 }
 
-#include "sys-load.h"
+void loadC3Words() {
+    const char *m2n = "-ML- %s %d %d 3 -MLX-";
+    const char *m2i = "-ML- %s %d %d 3 -MLX- INLINE";
+    const char *m1i = "-ML- %s %d    3 -MLX- INLINE";
+    const char *lit = ": %s %d ; INLINE";
+
+    // Bootstrap ...
+    parseF(m2n, "INLINE", SYS_OPS, INLINE); last->f = IS_INLINE;
+    parseF(m2i, "IMMEDIATE", SYS_OPS, IMMEDIATE);
+    parseF(m2i, ":", SYS_OPS, COLONDEF);
+    parseF(m2n, ";", SYS_OPS, ENDWORD); last->f = IS_IMMEDIATE;
+
+    // Opcodes ...
+    parseF(lit, "(LIT)", LIT);
+    parseF(lit, "(EXIT)", EXIT); last->f = 0;
+    parseF(lit, "(CALL)", CALL);
+    parseF(lit, "(JMP)", JMP);
+    parseF(lit, "(JMPZ)", JMPZ);
+    parseF(lit, "(JMPNZ)", JMPNZ);
+    parseF(lit, "(STORE)", STORE);
+    parseF(lit, "(FETCH)", FETCH);
+    parseF(lit, "(ZTYPE)", ZTYPE);
+    parseF(lit, "(-REGS)", REG_FREE);
+
+    parseF(m1i, "EXIT", EXIT);
+    parseF(m1i, "!", STORE);
+    parseF(m1i, "C!", CSTORE);
+    parseF(m1i, "@", FETCH);
+    parseF(m1i, "C@", CFETCH);
+    parseF(m1i, "DUP", DUP);
+    parseF(lit, "(DUP)", DUP);
+    parseF(m1i, "SWAP", SWAP);
+    parseF(m1i, "OVER", OVER);
+    parseF(m1i, "DROP", DROP);
+    parseF(m1i, "+", ADD);
+    parseF(m1i, "*", MULT);
+    parseF(m1i, "/MOD", SLMOD);
+    parseF(m1i, "-", SUB);
+    parseF(m1i, "1+", INC);
+    parseF(m1i, "1-", DEC);
+    parseF(m1i, "<", LT);
+    parseF(m1i, "=", EQ);
+    parseF(m1i, ">", GT);
+    parseF(m1i, "0=", EQ0);
+    parseF(m1i, ">R", RTO);
+    parseF(m1i, "R@", RFETCH);
+    parseF(m1i, "R>", RFROM);
+    parseF(m1i, "DO", DO);
+    parseF(m1i, "LOOP", LOOP);
+    parseF(m1i, "-LOOP", LOOP2);
+    parseF(m1i, "(I)", INDEX);
+    parseF(m1i, "INVERT", COM);
+    parseF(m1i, "AND", AND);
+    parseF(m1i, "OR", OR);
+    parseF(m1i, "XOR", XOR);
+    parseF(m1i, "TYPE", TYPE);
+    parseF(m1i, "ZTYPE", ZTYPE);
+    // rX, sX, iX, dX, iX+, dX+ are hard-coded in c3.c
+    parseF(m1i, "+REGS", REG_NEW);
+    parseF(m1i, "-REGS", REG_FREE);
+
+    // System opcodes ...(INLINE and IMMEDIATE) were defined above
+    parseF(m2i, "(.)",       SYS_OPS, DOT);
+    parseF(m2i, "ITOA",      SYS_OPS, ITOA);
+    parseF(m2i, "ATOI",      SYS_OPS, ATOI);
+    parseF(m2i, "CREATE",    SYS_OPS, CREATE);
+    parseF(m2i, "'",         SYS_OPS, FIND);
+    parseF(m2i, "NEXT-WORD", SYS_OPS, WORD);
+    parseF(m2i, "TIMER",     SYS_OPS, TIMER);
+    parseF(m2i, "C,",        SYS_OPS, CCOMMA);
+    parseF(m2i, ",",         SYS_OPS, COMMA);
+    parseF(m2i, "KEY",       SYS_OPS, KEY);
+    parseF(m2i, "?KEY",      SYS_OPS, QKEY);
+    parseF(m2i, "EMIT",      SYS_OPS, EMIT);
+    parseF(m2i, "QTYPE",     SYS_OPS, QTYPE);
+
+    // String opcodes ...
+    parseF(m2i, "S-TRUNC", STR_OPS, TRUNC);
+    parseF(m2i, "LCASE",   STR_OPS, LCASE);
+    parseF(m2i, "UCASE",   STR_OPS, UCASE);
+    parseF(m2i, "S-CPY",   STR_OPS, STRCPY);
+    parseF(m2i, "S-CAT",   STR_OPS, STRCAT);
+    parseF(m2i, "S-CATC",  STR_OPS, STRCATC);
+    parseF(m2i, "S-LEN",   STR_OPS, STRLEN);
+    parseF(m2i, "S-EQ",    STR_OPS, STREQ);
+    parseF(m2i, "S-EQI",   STR_OPS, STREQI);
+    parseF(m2i, "S-EQN",   STR_OPS, STREQN);
+    parseF(m2i, "S-LTRIM", STR_OPS, LTRIM);
+    parseF(m2i, "S-RTRIM", STR_OPS, RTRIM);
+    parseF(m2i, "S-FINDC", STR_OPS, FINDC);
+
+    // Float opcodes ...
+    parseF(m2i, "F+",    FLT_OPS, FADD);
+    parseF(m2i, "F-",    FLT_OPS, FSUB);
+    parseF(m2i, "F*",    FLT_OPS, FMUL);
+    parseF(m2i, "F/",    FLT_OPS, FDIV);
+    parseF(m2i, "F=",    FLT_OPS, FEQ);
+    parseF(m2i, "F<",    FLT_OPS, FLT);
+    parseF(m2i, "F>",    FLT_OPS, FGT);
+    parseF(m2i, "F>I",   FLT_OPS, F2I);
+    parseF(m2i, "I>F",   FLT_OPS, I2F);
+    parseF(m2i, "F.",    FLT_OPS, FDOT);
+    parseF(m2i, "FSQRT", FLT_OPS, SQRT);
+    parseF(m2i, "FTANH", FLT_OPS, TANH);
+
+    // System information words
+    parseF(": VERSION     #%d ;", VERSION);
+    parseF(": (scr-h)     $%lx ;", (cell_t)&edScrH);
+    parseF(": (SP)        $%lx ;", (cell_t)&DSP);
+    parseF(": (RSP)       $%lx ;", (cell_t)&RSP);
+    parseF(": (LSP)       $%lx ;", (cell_t)&lsp);
+    parseF(": (HERE)      $%lx ;", (cell_t)&here);
+    parseF(": (LAST)      $%lx ;", (cell_t)&last);
+    parseF(": (STK)       $%lx ;", (cell_t)&ds.stk[0].i);
+    parseF(": (RSTK)      $%lx ;", (cell_t)&rs.stk[0].c);
+    parseF(": TIB         $%lx ;", (cell_t)&tib[0]);
+    parseF(": >IN         $%lx ;", (cell_t)&in);
+    parseF(": CODE        $%lx ;", (cell_t)&code[0]);
+    parseF(": CODE-SZ     $%lx ;", (cell_t)CODE_SZ);
+    parseF(": VARS        $%lx ;", (cell_t)&vars[0]);
+    parseF(": VARS-SZ     $%lx ;", (cell_t)VARS_SZ);
+    parseF(": (VHERE)     $%lx ;", (cell_t)&vhere);
+    parseF(": (REGS)      $%lx ;", (cell_t)&reg[0]);
+    parseF(": (OUTPUT_FP) $%lx ;", (cell_t)&output_fp);
+    parseF(": (INPUT_FP)  $%lx ;", (cell_t)&input_fp);
+    parseF(": STATE       $%lx ;", (cell_t)&state);
+    parseF(": BASE        $%lx ;", (cell_t)&base);
+    parseF(": WORD-SZ     $%lx ; INLINE", (cell_t)sizeof(dict_t));
+    parseF(": CELL         %d  ; INLINE", CELL_SZ);
+    parseF(": (LEXICON)   $%lx ;", (cell_t)&lexicon);
+}
 
 void c3Init() {
     here = &code[0];
     vhere = &vars[0];
-    last = (dict_t*)&code[CODE_SZ];
+    cell_t x = (cell_t)&code[CODE_SZ];
+    while ((long)x & 0x03) { --x; }
+    last = (dict_t*)x;
     base = 10;
-    DSP = RSP = reg_base = 0;
+    DSP = RSP = reg_base = lexicon = 0;
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
-
+    
+    setBlockFN("block-%03d.c3");
+    loadC3Words();
+    loadUserWords();
     sysLoad();
-    ParseLine("marker");
-    ParseLine("version 100 /mod .\" c3 - v%d.%d - Chris Curl%n\"");
-    ParseLine("here code - .\" %d code bytes used, \" last here - .\" %d bytes free.%n\"");
-    ParseLine("vhere vars - .\" %d variable bytes used, \" vars-end vhere - .\" %d bytes free.\"");
-    ParseLine(": benches forget \" benches.c3\" (load) ;");
-    ParseLine(": sb forget \" sandbox.c3\" (load) ;");
 }
-
-#ifdef isPC
-#include "sys-pc.h"
-#endif
