@@ -12,11 +12,14 @@ enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240503 };
     #define CELL_T    int64_t
     #define UCELL_T   uint64_t
     #define CELL_SZ   8
+    #define addrFMT ": %s $%llx ;"
+#define is64BIT
 #else
     #define FLOAT_T   float
     #define CELL_T    int32_t 
     #define UCELL_T   uint32_t 
     #define CELL_SZ   4
+    #define addrFMT ": %s $%lx ;"
 #endif
 
 typedef CELL_T   cell_t;
