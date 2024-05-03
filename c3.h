@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240503 };
+
 #if (defined __x86_64 || defined _WIN64)
     #define FLOAT_T   double
     #define CELL_T    int64_t
@@ -70,8 +72,6 @@ typedef uint8_t  byte;
     // #define _NoFS_         // No FS
 
 #endif
-
-    enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240427 };
 
 #ifndef CODE_SZ
     #define MAX_LINES         150
