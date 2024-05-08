@@ -3,12 +3,12 @@
 3 load  \ String words
 5 load  \ Screen words
 
-C3 ' UTILS loaded?
+' UTILS loaded?
 
 marker
 
-: UTILS 6 LEXICON ;
-UTILS
+LEX-C3 : LEX-UTILS 6 LEXICON ;
+LEX-UTILS
 
 : p pad1 ;
 : ls   " ls -l"   system ;

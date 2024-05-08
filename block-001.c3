@@ -49,12 +49,12 @@
 
 : LEXICON  (LEXICON) ! ;
 : LEX@     (LEXICON) @ ;
-: C3       0 LEXICON ;
+: LEX-C3     0 LEXICON ;
 
 : .word     CELL+ 1+ 2+ QTYPE ; INLINE
 : word-lex  CELL+ 1+ C@ ; INLINE
 : word-len  CELL+ 2+ C@ ; INLINE
-: lex-match?  word-lex LEX@ =  LEX@ 0= OR ;
+: lex-match?  LEX@ >R  word-lex R@ =  R> 0= OR ;
 : WORDS +REGS 0 DUP s1 s3 LAST s2 BEGIN
         r2 code-end < WHILE
         r2 lex-match? IF
@@ -132,7 +132,7 @@
 VARIABLE T0 2 CELLS allot
 : T1 CELLS T0 + ;
 : MARKER HERE 0 T1 ! VHERE 1 T1 ! LAST 2 T1 ! ;
-: FORGET C3 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
+: FORGET LEX-C3 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;
 : FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;
 
 MARKER

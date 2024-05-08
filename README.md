@@ -300,14 +300,17 @@ C3 supports a simple way to organize words using lexicons.
 | 49,12 | TANH       | (F1--F2)     | F2: the hyperbolic tangent of F1
 
 ### Opcodes for PCs (Windows and Linux)
-|Opcode|Word    |Stack       |Description|
-| :--  | :--    | :--        | :-- |
-| 100  | SYSTEM | (A--)      | Call system(A)|
-| 101  | FOPEN  | (NM MD--H) | NM: FileName, MD: Mode (e.g. - "rt"), H: Handle|
-| 102  | FCLOSE | (H--)      | Close file with handle H|
-| 103  | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
-| 104  | FWRITE | (A N H--)  | Write N bytes to file H from address A|
-| 105  | (LOAD) | (NM--)     | Load from file NM|
+|Opcode|Word     |Stack       |Description|
+| :--  | :--     | :--        | :-- |
+| 100  | SYSTEM  | (A--)      | Call system(A)|
+| 101  | FOPEN   | (NM MD--H) | NM: FileName, MD: Mode (e.g. - "rt"), H: Handle|
+| 102  | FCLOSE  | (H--)      | Close file with handle H|
+| 103  | FREAD   | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
+| 104  | FWRITE  | (A N H--)  | Write N bytes to file H from address A|
+| 105  | FGETS   | (A N H--L) | Read one line from file H to address A, L: length, -1 if error or EOF|
+| 106  | (LOAD)  | (NM--)     | Load from file NM|
+| 107  | LOAD    | (NM--)     | Load from Block N|
+| 108  | EDIT    | (N--)      | Edit Block N|
 
 ### Opcodes for Development Boards
 |Opcode|Word        |Stack    |Description|

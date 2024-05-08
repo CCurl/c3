@@ -116,7 +116,7 @@ void writeBlock1() {
 }
 
 // fL - File readLine
-int fReadLine(CELL_T fh, char *buf, int sz) {
+int fGets(CELL_T fh, char *buf, int sz) {
 	int n = -1;
 	buf[0] = 0;
 	if (BTW(fh, 1, NFILES) && (0 < files[fh].available())) {

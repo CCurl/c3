@@ -589,7 +589,6 @@ void c3Init() {
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
     
-    setBlockFN("block-%03d.c3");
     loadC3Words();
     loadUserWords();
     sysLoad();

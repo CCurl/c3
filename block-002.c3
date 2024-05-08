@@ -1,9 +1,9 @@
 \ block-002.c3 - File handling words
 
-C3 ' FILES loaded?
+' LEX-FILES loaded?
 
-: FILES 2 LEXICON ;
-FILES
+LEX-C3 : LEX-FILES 2 LEXICON ;
+LEX-FILES
 
 : fopen-rt ( fn--fh ) " rt"  FOPEN ;
 : fopen-rb ( fn--fh ) " rb"  FOPEN ;
@@ -14,15 +14,6 @@ FILES
 VARIABLE T0
 : fgetc ( fh--ch num-read )
     0 T0 C! >R T0 1 R> FREAD T0 C@ SWAP ;
-
-: fgets ( a fh--eof )
-    +REGS  s2 s1  0 s4
-    BEGIN
-        0 r1 C!  r2 fgetc s5 s3
-        r5 0=    IF  r4 0= -REGS EXIT  THEN
-        r3 10 =  IF  0     -REGS EXIT  THEN
-        r3 13 <> IF  r3 r1+ C!  i4  THEN
-    AGAIN ;
 
 \ Words to redirect output
 : output-fp ( --H )  (output_fp) @ ;

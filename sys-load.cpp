@@ -1,8 +1,8 @@
 // Load the base c3 system
 
 // Use this nimbleText script to convert block-001.c3
-// Don't forget to remove the '\' comments - they cause a crash.
 //   ParseLine("<%row.replace(/[\\]/ig,"\\\\").replace(/["]/ig,"\\\"")%>");
+// Don't forget to remove the '\' comments - they cause a crash.
 
 #include "c3.h"
 
@@ -56,11 +56,11 @@
         ParseLine(": . (.) space ;            INLINE");
         ParseLine(": LEXICON  (LEXICON) ! ;");
         ParseLine(": LEX@     (LEXICON) @ ;");
-        ParseLine(": C3       0 LEXICON ;");
+        ParseLine(": LEX-C3     0 LEXICON ;");
         ParseLine(": .word     CELL+ 1+ 2+ QTYPE ; INLINE");
         ParseLine(": word-lex  CELL+ 1+ C@ ; INLINE");
         ParseLine(": word-len  CELL+ 2+ C@ ; INLINE");
-        ParseLine(": lex-match?  word-lex LEX@ =  LEX@ 0= OR ;");
+        ParseLine(": lex-match?  LEX@ >R  word-lex R@ =  R> 0= OR ;");
         ParseLine(": WORDS +REGS 0 DUP s1 s3 LAST s2 BEGIN");
         ParseLine("        r2 code-end < WHILE");
         ParseLine("        r2 lex-match? IF");

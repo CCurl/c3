@@ -29,12 +29,11 @@ extern CELL_T fOpen(const char *nm, const char *md);
 extern void   fClose(CELL_T fp);
 extern int    fRead(char *addr, int sz, int num, CELL_T fp);
 extern int    fWrite(char *addr, int sz, int num, CELL_T fp);
-extern void   setBlockFN(const char *fn);
-extern char  *getBlockFN();
+extern char  *getBlockFN(int num);
 extern int    readBlock(int num, char *blk, int sz);
 extern int    writeBlock(int num, char *blk, int sz);
 extern void   blockLoad(int num);
-extern int    fReadLine(CELL_T fh, char *buf, int sz);
+extern int    fGets(CELL_T fh, char *buf, int sz);
 
 extern void   ipush(CELL_T fh);
 extern CELL_T ipop();

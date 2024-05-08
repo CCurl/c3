@@ -1,9 +1,9 @@
 \ block-003.c3 - some string words
 
-C3 ' STRINGS loaded?
+' STRINGS loaded?
 
-: STRINGS 3 LEXICON ;
-STRINGS
+LEX-C3 : LEX-STRINGS 3 LEXICON ;
+LEX-STRINGS
 
 \ Some temp buffers
 : pad1 VHERE  256 + ;
