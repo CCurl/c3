@@ -393,6 +393,7 @@ C3 supports a simple way to organize words using lexicons.
 | REPEAT       | (--)           | Jump to BEGIN (resolves WHILE) |
 | FOR          | (N--)          | Begin a loop of N iterations |
 | NEXT         | (--)           | Next iteration |
+| -EXIT        | (--)           | Compile `-REGS` and `EXIT` |
 | -if          | (F--F)         | Non-destructive IF |
 | -until       | (F--F)         | Non-destructive UNTIL |
 | -while       | (F--F)         | Non-destructive WHILE |
