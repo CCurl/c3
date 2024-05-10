@@ -72,23 +72,28 @@ In c3, an "INLINE" word is like a macro. When compiling a word that is INLINE, c
 **Note that if a word might have an embedded 3 (EXIT) in its implementation (like an address for example), then it should not be marked as INLINE.**
 
 ## Notes on output formatting in ZTYPE and '."':
-- %b: output TOS as a binary number
-- %c: output TOS as a character
-- %d: output TOS as an integer (base 10)
-- %e: output an ESCAPE (27)
-- %f: output FTOS as a floating point number
-- %g: output FTOS as a scientific number
-- %i: output TOS as an integer (current base)
-- %n: output a CR/LF (13,10)
-- %q: output the quote (") character
-- %s: output TOS as a string (null terminated, no count byte)
-- %t: output a TAB (9)
-- %x: output TOS as a hex number
 
-For example: : ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;
+ZTYPE and ." support outputting values from the stack, similar to what `printf()` does in C.
+
+For example: `: ascii 127 32 DO I I I I ." %n%d: (%c) %x %b" LOOP ;`
+
+| Op | Stack | Description |
+|:-- |:--    |:--|
+| %b | (N--) | Output N as a binary number
+| %c | (C--) | Output C as a character
+| %d | (N--) | Output N as an integer (base 10)
+| %e | (--)  | Output an ESCAPE (27)
+| %f | (F--) | Output F as a floating point number
+| %g | (F--) | Output F as a scientific number
+| %i | (N--) | Output N as an integer (current base)
+| %n | (--)  | Output a CR/LF (13,10)
+| %q | (--)  | Output the quote character (")
+| %s | (S--) | Output S as a string (S is null terminated, not counted)
+| %t | (--)  | Output a TAB (9)
+| %x | (N--) | Output N as a hex number
 
 ## Bootstrapping c3
-When c3 starts, it defines aliases for the c3 VM opcodes.
+When c3 starts, it defines words for the c3 VM opcodes.
 
 c3 has a simple "machine language parser" that can create words in c3's "machine language". The keyword for that is "-ML-".
 
@@ -121,12 +126,14 @@ Note that this approach gives the user the maximum flexibility. Opcode 12 does n
 
 ## The dictionary
 ### NOTE: c3 does NOT do a case-sensitive dictionary search.
-- A dictionary entry looks like this:
-  - xt:       cell_t               (either 32-bit or 64-bit)
-  - flags:    byte                 (IMMEDIATE=$01, INLINE=$02)
-  - lexicon:  byte                 (the lexicon the word is in)
-  - len:      byte
-  - name:     char[NAME_LEN+1]     (NULL terminated)
+A dictionary entry looks like this:
+| Field     | Type             | Description |
+| :--       | :--              | :-- |
+| xt:       | cell_t           | either 32-bit or 64-bit
+| flags:    | byte             | IMMEDIATE=$01, INLINE=$02
+| lexicon:  | byte             | the lexicon the word is in
+| len:      | byte             | length of the name
+| name:     | char[NAME_LEN+1] | NULL terminated
 
 ### Support for lexicons
 C3 supports a simple way to organize words using lexicons.
@@ -307,7 +314,8 @@ C3 supports a simple way to organize words using lexicons.
 | 102  | FCLOSE  | (H--)      | Close file with handle H|
 | 103  | FREAD   | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
 | 104  | FWRITE  | (A N H--)  | Write N bytes to file H from address A|
-| 105  | FGETS   | (A N H--L) | Read one line from file H to address A, L: length, -1 if error or EOF|
+| 105  | FGETS   | (A N H--L) | Read one line from file H to address A|
+|      |         |            |   N: size of buffer, L: length, 0 means EOF|
 | 106  | (LOAD)  | (NM--)     | Load from file NM|
 | 107  | LOAD    | (NM--)     | Load from Block N|
 | 108  | EDIT    | (N--)      | Edit Block N|
@@ -385,6 +393,7 @@ C3 supports a simple way to organize words using lexicons.
 | REPEAT       | (--)           | Jump to BEGIN (resolves WHILE) |
 | FOR          | (N--)          | Begin a loop of N iterations |
 | NEXT         | (--)           | Next iteration |
+| -EXIT        | (--)           | Compile `-REGS` and `EXIT` |
 | -if          | (F--F)         | Non-destructive IF |
 | -until       | (F--F)         | Non-destructive UNTIL |
 | -while       | (F--F)         | Non-destructive WHILE |

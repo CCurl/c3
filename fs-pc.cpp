@@ -47,8 +47,9 @@ char* getBlockFN(int num) { sprintf(block_fn, "block-%03d.c3", num); return bloc
     }
 
     int fGets(CELL_T fh, char *buf, int sz) {
-        if (fgets(buf, sz, (FILE*)fh) == buf) { return strLen(buf); }
-        return -1;
+        buf[0] = 0;
+        fgets(buf, sz, (FILE*)fh);
+        return strLen(buf);
     }
 
 #elif defined (_NoFS_)
