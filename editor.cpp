@@ -37,7 +37,19 @@ static void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:4
 static void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
 static void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
 static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
-static int edKey() { return key(); }
+
+static int edKey() {
+    int x = key();
+    if (x == 224) {  // Windows: start char
+         x = (x << 5) ^ key();
+    } else if (x==27) {
+        CELL_T stopTime = sysTime() + 50;
+        while (sysTime() < stopTime) {
+            if (qKey()) { x = (x << 5) ^ key(); }
+        }
+    }
+    return x;
+}
 
 static void NormLO() {
     line = MIN(MAX(line, 0), SCR_LINES-1);
@@ -296,16 +308,27 @@ static int doCommon(int c) {
     if (((c == 8) || (c == 127)) && (0 < off)) {      // <backspace>
         mv(0, -1); if (edMode == INSERT) { deleteChar(); }
     }
-    else if (c ==  4) { scroll(SCR_LINES/2); }        // <ctrl-d>
-    else if (c ==  5) { scroll(1); }                  // <ctrl-e>
-    else if (c ==  9) { mv(0, 8); }                   // <tab>
-    else if (c == 10) { mv(1, 0); }                   // <ctrl-j>
-    else if (c == 11) { mv(-1, 0); }                  // <ctrl-k>
-    else if (c == 12) { mv(0, 1); }                   // <ctrl-l>
-    else if (c == 24) { edDelX('X'); }                // <ctrl-x>
-    else if (c == 21) { scroll(-SCR_LINES/2); }       // <ctrl-u>
-    else if (c == 25) { scroll(-1); }                 // <ctrl-y>
-    else if (c == 26) { edDelX('.'); }                // <ctrl-z>
+    else if (c ==  4) { scroll(SCR_LINES/2); }              // <ctrl-d>
+    else if (c ==  5) { scroll(1); }                        // <ctrl-e>
+    else if (c ==  9) { mv(0, 8); }                         // <tab>
+    else if (c == 10) { mv(1, 0); }                         // <ctrl-j>
+    else if (c == 11) { mv(-1, 0); }                        // <ctrl-k>
+    else if (c == 12) { mv(0, 1); }                         // <ctrl-l>
+    else if (c == 24) { edDelX('X'); return 1; }            // <ctrl-x>
+    else if (c == 21) { scroll(-SCR_LINES/2); }             // <ctrl-u>
+    else if (c == 25) { scroll(-1); }                       // <ctrl-y>
+    else if (c == 26) { edDelX('.'); return 1; }            // <ctrl-z>
+    else if (c == 7240) { mv(-1, 0); }                      // Windows: Left
+    else if (c == 7245) { mv(0, 1);   }                     // Windows: Right
+    else if (c == 7243) { mv(0, -1); }                      // Windows: Up
+    else if (c == 7248) { mv(1, 0);    }                    // Windows: Down
+    else if (c == 7239) { mv(0, -99);  }                    // Windows: Home
+    else if (c == 7247) { gotoEOL();  }                     // Windows: End
+    else if (c == 7241) { mv(-(SCR_LINES - 1), -99);   }    // Windows: PgUp
+    else if (c == 7249) { mv(SCR_LINES - 1, -99);         } // Windows: PgDn
+    else if (c == 7251) { edDelX('.'); return 1; }          // Windows: Delete
+    else if (c == 7250) { insertMode(); return 1; }         // Windows: Insert
+
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
 
