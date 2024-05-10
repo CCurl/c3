@@ -307,7 +307,8 @@ C3 supports a simple way to organize words using lexicons.
 | 102  | FCLOSE  | (H--)      | Close file with handle H|
 | 103  | FREAD   | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
 | 104  | FWRITE  | (A N H--)  | Write N bytes to file H from address A|
-| 105  | FGETS   | (A N H--L) | Read one line from file H to address A, L: length, -1 if error or EOF|
+| 105  | FGETS   | (A N H--L) | Read one line from file H to address A|
+|      |         |            |   N: size of buffer, L: length, 0 means EOF|
 | 106  | (LOAD)  | (NM--)     | Load from file NM|
 | 107  | LOAD    | (NM--)     | Load from Block N|
 | 108  | EDIT    | (N--)      | Edit Block N|
