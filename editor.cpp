@@ -37,6 +37,7 @@ static void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:4
 static void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
 static void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
 static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
+static void toggleInsert() { if (edMode!=INSERT) insertMode(); else normalMode(); }
 
 static int edKey() {
     int x = key();
@@ -327,7 +328,7 @@ static int doCommon(int c) {
     else if (c == 7241) { mv(-(SCR_LINES - 1), -99);   }    // Windows: PgUp
     else if (c == 7249) { mv(SCR_LINES - 1, -99);         } // Windows: PgDn
     else if (c == 7251) { edDelX('.'); return 1; }          // Windows: Delete
-    else if (c == 7250) { insertMode(); return 1; }         // Windows: Insert
+    else if (c == 7250) { toggleInsert(); return 1; }       // Windows: Insert
 
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
