@@ -166,6 +166,8 @@
     <ClInclude Include="c3.h" />
     <ClCompile Include="editor.cpp" />
     <ClCompile Include="fs-pc.cpp" />
+    <ClCompile Include="fs-pico.cpp" />
+    <ClCompile Include="fs-teensy.cpp" />
     <ClCompile Include="sys-load.cpp" />
     <ClCompile Include="sys-pc.cpp">
       <FileType>CppCode</FileType>

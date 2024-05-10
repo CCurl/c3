@@ -4,7 +4,7 @@
 
 #ifdef isPC
 
-enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FLOAD, BLOAD,
+enum { SYSTEM = 100, FOPEN, FCLOSE, FREAD, FWRITE, FGETS, FLOAD, BLOAD,
         EDIT_BLK
 };
 
@@ -130,6 +130,7 @@ char *doUser(char *pc, int ir) {
     RCASE FCLOSE: fClose(pop());
     RCASE FREAD:  t3=pop(); t2=pop(); t1=pop(); push(fRead((char*)t1, 1, (int)t2, t3));
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite((char*)t1, 1, (int)t2, t3));
+    RCASE FGETS:  t3=pop(); t2=pop(); t1=pop(); push(fGets(t3, (char*)t1, (int)t2));
     RCASE FLOAD:  LFF(cpop());
     RCASE BLOAD:  sprintf(fn, "block-%03d.c3", (int)pop()); lookForFile(fn);
     RCASE EDIT_BLK: t1=pop(); editBlock(t1);
@@ -143,6 +144,7 @@ void loadUserWords() {
     parseF("-ML- FCLOSE %d 3 -MLX- inline", FCLOSE);
     parseF("-ML- FREAD  %d 3 -MLX- inline", FREAD);
     parseF("-ML- FWRITE %d 3 -MLX- inline", FWRITE);
+    parseF("-ML- FGETS  %d 3 -MLX- inline", FGETS);
     parseF("-ML- (LOAD) %d 3 -MLX- inline", FLOAD);
     parseF("-ML- LOAD   %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT   %d 3 -MLX- inline", EDIT_BLK);

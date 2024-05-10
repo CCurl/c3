@@ -550,30 +550,30 @@ void loadC3Words() {
     parseF(m2i, "FTANH", FLT_OPS, TANH);
 
     // System information words
-    parseF(": VERSION     #%d ;", VERSION);
-    parseF(": (scr-h)     $%lx ;", (cell_t)&edScrH);
-    parseF(": (SP)        $%lx ;", (cell_t)&DSP);
-    parseF(": (RSP)       $%lx ;", (cell_t)&RSP);
-    parseF(": (LSP)       $%lx ;", (cell_t)&lsp);
-    parseF(": (HERE)      $%lx ;", (cell_t)&here);
-    parseF(": (LAST)      $%lx ;", (cell_t)&last);
-    parseF(": (STK)       $%lx ;", (cell_t)&ds.stk[0].i);
-    parseF(": (RSTK)      $%lx ;", (cell_t)&rs.stk[0].c);
-    parseF(": TIB         $%lx ;", (cell_t)&tib[0]);
-    parseF(": >IN         $%lx ;", (cell_t)&in);
-    parseF(": CODE        $%lx ;", (cell_t)&code[0]);
-    parseF(": CODE-SZ     $%lx ;", (cell_t)CODE_SZ);
-    parseF(": VARS        $%lx ;", (cell_t)&vars[0]);
-    parseF(": VARS-SZ     $%lx ;", (cell_t)VARS_SZ);
-    parseF(": (VHERE)     $%lx ;", (cell_t)&vhere);
-    parseF(": (REGS)      $%lx ;", (cell_t)&reg[0]);
-    parseF(": (OUTPUT_FP) $%lx ;", (cell_t)&output_fp);
-    parseF(": (INPUT_FP)  $%lx ;", (cell_t)&input_fp);
-    parseF(": STATE       $%lx ;", (cell_t)&state);
-    parseF(": BASE        $%lx ;", (cell_t)&base);
-    parseF(": WORD-SZ     $%lx ; INLINE", (cell_t)sizeof(dict_t));
-    parseF(": CELL         %d  ; INLINE", CELL_SZ);
-    parseF(": (LEXICON)   $%lx ;", (cell_t)&lexicon);
+    parseF(lit, "VERSION", VERSION);
+    parseF(lit, "VARS-SZ", VARS_SZ);
+    parseF(lit, "CODE-SZ", CODE_SZ);
+    parseF(lit, "WORD-SZ", sizeof(dict_t));
+    parseF(addrFMT, "(scr-h)",     &edScrH);
+    parseF(addrFMT, "(SP) ",       &DSP);
+    parseF(addrFMT, "(RSP)",       &RSP);
+    parseF(addrFMT, "(LSP)",       &lsp);
+    parseF(addrFMT, "(HERE)",      &here);
+    parseF(addrFMT, "(LAST)",      &last);
+    parseF(addrFMT, "(STK) ",      &ds.stk[0].i);
+    parseF(addrFMT, "(RSTK)",      &rs.stk[0].c);
+    parseF(addrFMT, "CODE",        &code[0]);
+    parseF(addrFMT, "VARS",        &vars[0]);
+    parseF(addrFMT, "(VHERE)",     &vhere);
+    parseF(addrFMT, "(REGS)",      &reg[0]);
+    parseF(addrFMT, "(OUTPUT_FP)", &output_fp);
+    parseF(addrFMT, "(INPUT_FP)",  &input_fp);
+    parseF(addrFMT, "(LEXICON)",   &lexicon);
+    parseF(addrFMT, "TIB",         &tib[0]);
+    parseF(addrFMT, ">IN",         &in);
+    parseF(addrFMT, "STATE",       &state);
+    parseF(addrFMT, "BASE",        &base);
+    parseF(lit, "CELL", CELL_SZ);
 }
 
 void c3Init() {
@@ -589,7 +589,6 @@ void c3Init() {
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }
     tempWords[9].f = IS_IMMEDIATE;
     
-    setBlockFN("block-%03d.c3");
     loadC3Words();
     loadUserWords();
     sysLoad();

@@ -1,9 +1,9 @@
 \ block-200.c3 - Some benchmarks
 
-C3 ' BENCHES loaded?
+' BENCHES loaded?
 
-: BENCHES 200 LEXICON ;
-BENCHES
+LEX-C3 : LEX-BENCHES 200 LEXICON ;
+LEX-BENCHES
 
 : ms ." (%d usec)" ;
 : elapsed timer swap - ms ;

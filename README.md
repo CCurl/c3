@@ -110,7 +110,7 @@ The above words are defined as follows:
   -ML- INLINE 47 0 3 -MLX-
   -ML- IMMEDIATE 47 1 3 -MLX-
   -ML- : 47 6 3 -MLX-
-  -ML- ; 47 7 3 -MLX-
+  -ML- ; 47 7 3 -MLX- IMMEDIATE
 ```
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
@@ -300,14 +300,17 @@ C3 supports a simple way to organize words using lexicons.
 | 49,12 | TANH       | (F1--F2)     | F2: the hyperbolic tangent of F1
 
 ### Opcodes for PCs (Windows and Linux)
-|Opcode|Word    |Stack       |Description|
-| :--  | :--    | :--        | :-- |
-| 100  | SYSTEM | (A--)      | Call system(A)|
-| 101  | FOPEN  | (NM MD--H) | NM: FileName, MD: Mode (e.g. - "rt"), H: Handle|
-| 102  | FCLOSE | (H--)      | Close file with handle H|
-| 103  | FREAD  | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
-| 104  | FWRITE | (A N H--)  | Write N bytes to file H from address A|
-| 105  | (LOAD) | (NM--)     | Load from file NM|
+|Opcode|Word     |Stack       |Description|
+| :--  | :--     | :--        | :-- |
+| 100  | SYSTEM  | (A--)      | Call system(A)|
+| 101  | FOPEN   | (NM MD--H) | NM: FileName, MD: Mode (e.g. - "rt"), H: Handle|
+| 102  | FCLOSE  | (H--)      | Close file with handle H|
+| 103  | FREAD   | (A N H--R) | Read N bytes from file H to address A, R: num-read, 0 means EOF|
+| 104  | FWRITE  | (A N H--)  | Write N bytes to file H from address A|
+| 105  | FGETS   | (A N H--L) | Read one line from file H to address A, L: length, -1 if error or EOF|
+| 106  | (LOAD)  | (NM--)     | Load from file NM|
+| 107  | LOAD    | (NM--)     | Load from Block N|
+| 108  | EDIT    | (N--)      | Edit Block N|
 
 ### Opcodes for Development Boards
 |Opcode|Word        |Stack    |Description|
@@ -479,13 +482,13 @@ For example, there might be some functionality in a library you want to make ava
 Here is the process:
 
 - For a global opcode:
-  - In c3.c, add the new opcode(s) to the appropriate enum.
-  - In c3.c, add a NCASE to run() to for each new opcode.
-  - In c3.c, add a "-ML-" line to LoadC3Words() for each new opcode.
+  - In c3.cpp, add the new opcode(s) to the appropriate enum.
+  - In c3.cpp, add a NCASE to run() to for each new opcode.
+  - In c3.cpp, add a "-ML-" line to LoadC3Words() for each new opcode.
   - Update your README.md.
 
 - For a target-specific opcode:
-  - All work is done in the target's *.c file (e.g. - sys-pc.c).
+  - All work is done in the target's *.cpp file (e.g. - sys-pc.cpp).
   - Add the new opcodes(s) to the enum.
   - Target-specific opcodes should have values above 100.
   - Edit LoadUserWords() and add a "-ML-" line for each new opcode.
