@@ -37,7 +37,7 @@ static void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:4
 static void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
 static void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
 static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
-static void toggleInsert() { if (edMode!=INSERT) insertMode(); else normalMode(); }
+static void toggleInsert() { (edMode==INSERT) ? normalMode() : insertMode(); }
 static int winKey() { return (224 << 5) ^ key(); }
 
 static int linKey() {
