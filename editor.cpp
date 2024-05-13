@@ -319,9 +319,9 @@ static int doCommon(int c) {
     else if (c == 21) { scroll(-SCR_LINES/2); }             // <ctrl-u>
     else if (c == 25) { scroll(-1); }                       // <ctrl-y>
     else if (c == 26) { edDelX('.'); return 1; }            // <ctrl-z>
-    else if (c == 7240) { mv(-1, 0); }                      // Windows: Left
+    else if (c == 7240) { mv(-1, 0); }                      // Windows: Up
+    else if (c == 7243) { mv(0, -1); }                      // Windows: Left
     else if (c == 7245) { mv(0, 1);   }                     // Windows: Right
-    else if (c == 7243) { mv(0, -1); }                      // Windows: Up
     else if (c == 7248) { mv(1, 0);    }                    // Windows: Down
     else if (c == 7239) { mv(0, -99);  }                    // Windows: Home
     else if (c == 7247) { gotoEOL();  }                     // Windows: End
@@ -329,6 +329,7 @@ static int doCommon(int c) {
     else if (c == 7249) { mv(SCR_LINES - 1, -99);         } // Windows: PgDn
     else if (c == 7251) { edDelX('.'); return 1; }          // Windows: Delete
     else if (c == 7250) { toggleInsert(); return 1; }       // Windows: Insert
+    else if (c == 7287) { mv(-999, -99); return 1; }        // Windows: <ctrl>-Home
 
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
