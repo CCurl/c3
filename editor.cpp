@@ -341,10 +341,10 @@ static int doCommon(int c) {
     else if (c == 10) { mv(1, 0); }                         // <ctrl-j>
     else if (c == 11) { mv(-1, 0); }                        // <ctrl-k>
     else if (c == 12) { mv(0, 1); }                         // <ctrl-l>
-    else if (c == 24) { edDelX('X'); return 1; }            // <ctrl-x>
+    else if (c == 24) { edDelX('X'); o++; }                 // <ctrl-x>
     else if (c == 21) { scroll(-SCR_LINES/2); }             // <ctrl-u>
     else if (c == 25) { scroll(-1); }                       // <ctrl-y>
-    else if (c == 26) { edDelX('.'); return 1; }            // <ctrl-z>
+    else if (c == 26) { edDelX('.'); o++; }                 // <ctrl-z>
     else if (c == Up) { mv(-1, 0); }                        // Up
     else if (c == Lt) { mv(0, -1); }                        // Left
     else if (c == Rt) { mv(0, 1);   }                       // Right
@@ -353,9 +353,11 @@ static int doCommon(int c) {
     else if (c == End)  { gotoEOL();  }                     // End
     else if (c == PgUp) { mv(-(SCR_LINES - 1), -99); }      // PgUp
     else if (c == PgDn) { mv(SCR_LINES - 1, -99); }         // PgDn
-    else if (c == 7251) { edDelX('.'); return 1; }          // Delete
-    else if (c == 7250) { toggleInsert(); return 1; }       // Insert
-    else if (c == 7287) { mv(-999, -99); return 1; }        // <ctrl>-Home
+    else if (c == 7251) { edDelX('.'); o++; }               // Delete
+    else if (c == 7250) { toggleInsert(); o++; }            // Insert
+    else if (c == 7287) { mv(-999, -99); }                  // <ctrl>-Home
+    else if (c == 7309) { scroll(-1); }                     // <ctrl>-Up
+    else if (c == 7313) { scroll( 1); }                     // <ctrl>-Dn
 
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
