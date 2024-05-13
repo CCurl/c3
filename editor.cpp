@@ -38,17 +38,38 @@ static void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
 static void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
 static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
 static void toggleInsert() { if (edMode!=INSERT) insertMode(); else normalMode(); }
+static int winKey() { return (224 << 5) ^ key(); }
+
+static int linKey() {
+    int y = key();
+    if (y != 91) { return 27; }
+    y = key();
+    if (BTW(y, 'A', 'D')) {
+        switch (y) {
+            case 'A': return 7243;
+            case 'B': return 7245;
+            case 'C': return 7240;
+            case 'D': return 7248;
+            default: return 27;
+        }
+    }
+    if (BTW(y, '0', '9')) {
+        switch (y) {
+        case 'A': return 7243;
+        case 'B': return 7245;
+        case 'C': return 7240;
+        case 'D': return 7248;
+        default: return 27;
+        }
+    }
+    return 27;
+}
 
 static int edKey() {
     int x = key();
-    if (x == 224) {  // Windows: start char
-         x = (x << 5) ^ key();
-    } else if (x==27) {
-        CELL_T stopTime = sysTime() + 50;
-        while (sysTime() < stopTime) {
-            if (qKey()) { x = (x << 5) ^ key(); }
-        }
-    }
+    if (x ==   3) { return 27; }  // ctrl-c => escape
+    if (x == 224) { return winKey(); }  // Windows: start char
+    if (x ==  27) { return linKey(); }  // Possible Linux start char
     return x;
 }
 
@@ -278,8 +299,9 @@ static int edReadLine(char *buf, int sz) {
     CursorOn();
     while (len<(sz-1)) {
         char c = key();
-        if (c==27) { len=0; break; }
-        if (c==13) { break; }
+        if (c ==  3) { len=0; break; }
+        if (c == 27) { len=0; break; }
+        if (c == 13) { break; }
         if ((c==127) || ((c==8) && (len))) { --len; printStringF("%c %c",8,8); }
         if (BTW(c,32,126)) { buf[len++]=c; printChar(c); }
     }
