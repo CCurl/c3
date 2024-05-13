@@ -18,7 +18,7 @@ CELL edScrH = 0;
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
 enum { NORMAL = 1, INSERT, REPLACE, QUIT, LLEN=100, SCR_HEIGHT=35 };
-enum { Up=7240, Dn=7248, Rt=7245, Lt=7243, Home=7238, PgUp=7241, PgDn=7249, End=7247, Del=7251 };
+enum { Up=7240, Dn=7248, Rt=7245, Lt=7243, Home=7239, PgUp=7241, PgDn=7249, End=7247, Del=7251 };
 static char theBlock[BLOCK_SZ];
 static int line, off, blkNum, edMode, scrTop;
 static int isDirty, lineShow[MAX_LINES];
@@ -351,8 +351,8 @@ static int doCommon(int c) {
     else if (c == Dn) { mv(1, 0);    }                      // Down
     else if (c == Home) { mv(0, -99);  }                    // Home
     else if (c == End)  { gotoEOL();  }                     // End
-    else if (c == PgUp) { mv(-(SCR_LINES - 1), -99);   }    // PgUp
-    else if (c == PgDn) { mv(SCR_LINES - 1, -99);         } // PgDn
+    else if (c == PgUp) { mv(-(SCR_LINES - 1), -99); }      // PgUp
+    else if (c == PgDn) { mv(SCR_LINES - 1, -99); }         // PgDn
     else if (c == 7251) { edDelX('.'); return 1; }          // Delete
     else if (c == 7250) { toggleInsert(); return 1; }       // Insert
     else if (c == 7287) { mv(-999, -99); return 1; }        // <ctrl>-Home
