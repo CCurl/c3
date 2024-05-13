@@ -10,9 +10,6 @@ void editBlock(CELL Blk) { printString("-noEdit-"); }
 CELL edScrH = 0;
 #else
 
-#define LLEN          100
-#define SCR_HEIGHT     35
-
 #define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)
 #define EDCHAR(l,o)   edBuf[((l)*LLEN)+(o)]
@@ -20,7 +17,8 @@ CELL edScrH = 0;
 #define SHOW(l,v)     lineShow[(scrTop+l)]=v
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
-enum { NORMAL = 1, INSERT, REPLACE, QUIT };
+enum { NORMAL = 1, INSERT, REPLACE, QUIT, LLEN=100, SCR_HEIGHT=35 };
+enum { Up=7240, Dn=7248, Rt=7245, Lt=7243, Home=7238, PgUp=7241, PgDn=7249, End=7247, Del=7251 };
 static char theBlock[BLOCK_SZ];
 static int line, off, blkNum, edMode, scrTop;
 static int isDirty, lineShow[MAX_LINES];
@@ -40,25 +38,31 @@ static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
 static void toggleInsert() { (edMode==INSERT) ? normalMode() : insertMode(); }
 static int winKey() { return (224 << 5) ^ key(); }
 
-static int linKey() {
+static int vtKey() {
     int y = key();
-    if (y != 91) { return 27; }
+    if (y != '[') { return 27; }
     y = key();
-    if (BTW(y, 'A', 'D')) {
+    if (BTW(y, 'A', 'T')) {
         switch (y) {
-            case 'A': return 7243;
-            case 'B': return 7245;
-            case 'C': return 7240;
-            case 'D': return 7248;
+            case 'A': return Up;
+            case 'B': return Dn;
+            case 'C': return Rt;
+            case 'D': return Lt;
+            case 'H': return Home;
+            case 'S': return PgUp;
+            case 'T': return PgDn;
             default: return 27;
         }
     }
-    if (BTW(y, '0', '9')) {
+    if (BTW(y, '3', '8')) {
+        int z = key();
+        if (z!='~') { return 27; }
         switch (y) {
-        case 'A': return 7243;
-        case 'B': return 7245;
-        case 'C': return 7240;
-        case 'D': return 7248;
+        case '3': return Del;
+        case '5': return PgUp;
+        case '6': return PgDn;
+        case '7': return Home;
+        case '8': return End;
         default: return 27;
         }
     }
@@ -67,9 +71,9 @@ static int linKey() {
 
 static int edKey() {
     int x = key();
-    if (x ==   3) { return 27; }  // ctrl-c => escape
-    if (x == 224) { return winKey(); }  // Windows: start char
-    if (x ==  27) { return linKey(); }  // Possible Linux start char
+    if (x ==   3) { return 27; }         // ctrl-c => escape
+    if (x ==  27) { return vtKey(); }    // Possible VT control sequence
+    if (x == 224) { return winKey(); }   // Windows: start char
     return x;
 }
 
@@ -341,17 +345,17 @@ static int doCommon(int c) {
     else if (c == 21) { scroll(-SCR_LINES/2); }             // <ctrl-u>
     else if (c == 25) { scroll(-1); }                       // <ctrl-y>
     else if (c == 26) { edDelX('.'); return 1; }            // <ctrl-z>
-    else if (c == 7240) { mv(-1, 0); }                      // Windows: Up
-    else if (c == 7243) { mv(0, -1); }                      // Windows: Left
-    else if (c == 7245) { mv(0, 1);   }                     // Windows: Right
-    else if (c == 7248) { mv(1, 0);    }                    // Windows: Down
-    else if (c == 7239) { mv(0, -99);  }                    // Windows: Home
-    else if (c == 7247) { gotoEOL();  }                     // Windows: End
-    else if (c == 7241) { mv(-(SCR_LINES - 1), -99);   }    // Windows: PgUp
-    else if (c == 7249) { mv(SCR_LINES - 1, -99);         } // Windows: PgDn
-    else if (c == 7251) { edDelX('.'); return 1; }          // Windows: Delete
-    else if (c == 7250) { toggleInsert(); return 1; }       // Windows: Insert
-    else if (c == 7287) { mv(-999, -99); return 1; }        // Windows: <ctrl>-Home
+    else if (c == Up) { mv(-1, 0); }                        // Up
+    else if (c == Lt) { mv(0, -1); }                        // Left
+    else if (c == Rt) { mv(0, 1);   }                       // Right
+    else if (c == Dn) { mv(1, 0);    }                      // Down
+    else if (c == Home) { mv(0, -99);  }                    // Home
+    else if (c == End)  { gotoEOL();  }                     // End
+    else if (c == PgUp) { mv(-(SCR_LINES - 1), -99);   }    // PgUp
+    else if (c == PgDn) { mv(SCR_LINES - 1, -99);         } // PgDn
+    else if (c == 7251) { edDelX('.'); return 1; }          // Delete
+    else if (c == 7250) { toggleInsert(); return 1; }       // Insert
+    else if (c == 7287) { mv(-999, -99); return 1; }        // <ctrl>-Home
 
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
