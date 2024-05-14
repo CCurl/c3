@@ -332,33 +332,36 @@ static void edCommand() {
 }
 
 static int doCommon(int c) {
-    int l = line, o = off, st = scrTop;
     if (((c == 8) || (c == 127)) && (0 < off)) {      // <backspace>
         mv(0, -1); if (edMode == INSERT) { deleteChar(); }
+        return 1;
     }
-    else if (c ==  4) { scroll(SCR_LINES/2); }              // <ctrl-d>
-    else if (c ==  5) { scroll(1); }                        // <ctrl-e>
-    else if (c ==  9) { mv(0, 8); }                         // <tab>
-    else if (c == 10) { mv(1, 0); }                         // <ctrl-j>
-    else if (c == 11) { mv(-1, 0); }                        // <ctrl-k>
-    else if (c == 12) { mv(0, 1); }                         // <ctrl-l>
-    else if (c == 24) { edDelX('X'); o++; }                 // <ctrl-x>
-    else if (c == 21) { scroll(-SCR_LINES/2); }             // <ctrl-u>
-    else if (c == 25) { scroll(-1); }                       // <ctrl-y>
-    else if (c == 26) { edDelX('.'); o++; }                 // <ctrl-z>
-    else if (c == Up) { mv(-1, 0); }                        // Up
-    else if (c == Lt) { mv(0, -1); }                        // Left
-    else if (c == Rt) { mv(0, 1);   }                       // Right
-    else if (c == Dn) { mv(1, 0);    }                      // Down
-    else if (c == Home) { mv(0, -99);  }                    // Home
-    else if (c == End)  { gotoEOL();  }                     // End
-    else if (c == PgUp) { mv(-(SCR_LINES - 1), -99); }      // PgUp
-    else if (c == PgDn) { mv(SCR_LINES - 1, -99); }         // PgDn
-    else if (c == 7251) { edDelX('.'); o++; }               // Delete
-    else if (c == 7250) { toggleInsert(); o++; }            // Insert
-    else if (c == 7287) { mv(-999, -99); }                  // <ctrl>-Home
-    else if (c == 7309) { scroll(-1); }                     // <ctrl>-Up
-    else if (c == 7313) { scroll( 1); }                     // <ctrl>-Dn
+    int l = line, o = off, st = scrTop;
+    switch (c) {
+        case   4:   scroll(SCR_LINES/2);             // <ctrl-d>
+        BCASE  5:   scroll(1);                       // <ctrl-e>
+        BCASE  9:   mv(0, 8);                        // <tab>
+        BCASE 10:   mv(1, 0);                        // <ctrl-j>
+        BCASE 11:   mv(-1, 0);                       // <ctrl-k>
+        BCASE 12:   mv(0, 1);                        // <ctrl-l>
+        BCASE 24:   edDelX('X'); o++;                // <ctrl-x>
+        BCASE 21:   scroll(-SCR_LINES/2);            // <ctrl-u>
+        BCASE 25:   scroll(-1);                      // <ctrl-y>
+        BCASE 26:   edDelX('.'); o++;                // <ctrl-z>
+        BCASE Up:   mv(-1, 0);                       // Up
+        BCASE Lt:   mv(0, -1);                       // Left
+        BCASE Rt:   mv(0, 1);                        // Right
+        BCASE Dn:   mv(1, 0);                        // Down
+        BCASE Home: mv(0, -99);                      // Home
+        BCASE End:  gotoEOL();                       // End
+        BCASE PgUp: mv(-(SCR_LINES - 1), -99);       // PgUp
+        BCASE PgDn: mv(SCR_LINES - 1, -99);          // PgDn
+        BCASE 7251: edDelX('.'); o++;                // Delete
+        BCASE 7250: toggleInsert(); o++;             // Insert
+        BCASE 7287: mv(-999, -99);                   // <ctrl>-Home
+        BCASE 7309: scroll(-1);                      // <ctrl>-Up
+        BCASE 7313: scroll( 1);                      // <ctrl>-Dn
+    }
 
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }
