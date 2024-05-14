@@ -48,6 +48,7 @@ static int vtKey() {
             case 'B': return Dn;
             case 'C': return Rt;
             case 'D': return Lt;
+            case 'F': return End;
             case 'H': return Home;
             case 'S': return PgUp;
             case 'T': return PgDn;
