@@ -16,7 +16,9 @@ CELL_T edScrH = 0;
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
 enum { NORMAL = 1, INSERT, REPLACE, QUIT, LLEN=100, SCR_HEIGHT=35 };
-enum { Up=7240, Dn=7248, Rt=7245, Lt=7243, Home=7239, PgUp=7241, PgDn=7249, End=7247, Del=7251 };
+enum { Up=7240, Dn=7248, Rt=7245, Lt=7243, Home=7239, PgUp=7241, PgDn=7249,
+    End=7247, Ins=7250, Del=7251 };
+
 static char theBlock[BLOCK_SZ];
 static int line, off, blkNum, edMode, scrTop;
 static int isDirty, lineShow[MAX_LINES];
@@ -53,10 +55,11 @@ static int vtKey() {
             default: return 27;
         }
     }
-    if (BTW(y, '3', '8')) {
+    if (BTW(y, '2', '8')) {
         int z = key();
         if (z!='~') { return 27; }
         switch (y) {
+        case '2': return Ins;
         case '3': return Del;
         case '5': return PgUp;
         case '6': return PgDn;
