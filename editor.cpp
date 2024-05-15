@@ -3,11 +3,9 @@
 #include "c3.h"
 #include <string.h>
 
-#define CELL          cell_t
-
 #ifndef __EDITOR__
-void editBlock(CELL Blk) { printString("-noEdit-"); }
-CELL edScrH = 0;
+void editBlock(CELL_T Blk) { printString("-noEdit-"); }
+CELL_T edScrH = 0;
 #else
 
 #define SCR_LINES     (int)edScrH
@@ -24,7 +22,7 @@ static int line, off, blkNum, edMode, scrTop;
 static int isDirty, lineShow[MAX_LINES];
 static char edBuf[BLOCK_SZ], tBuf[LLEN], mode[32], *msg = NULL;
 static char yanked[LLEN];
-CELL edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
+CELL_T edScrH = SCR_HEIGHT; // can be set from c3 using '50 (scr-h) !'
 
 static void GotoXY(int x, int y) { printStringF("\x1B[%d;%dH", y, x); }
 static void CLS() { printString("\x1B[2J"); GotoXY(1, 1); }
@@ -277,8 +275,8 @@ static void replaceChar(char c, int force, int mov) {
 
 static int doInsertReplace(char c) {
     if (c==13) {
-        if (edMode == REPLACE) { mv(1, -999); }
-        else { insertLine(); mv(1,-99); }
+        if (edMode == REPLACE) { mv(1, -LLEN); }
+        else { insertLine(); mv(1,-LLEN); }
         return 1;
     }
     if (!BTW(c,32,126)) { return 1; }
@@ -324,6 +322,7 @@ static void edCommand() {
     if (strEq(buf,"w")) { edSvBlk(0); }
     else if (strEq(buf,"w!")) { edSvBlk(1); }
     else if (strEq(buf,"wq")) { edSvBlk(0); edMode=QUIT; }
+    else if (strEq(buf,"rl")) { edRdBlk(1); }
     else if (strEq(buf,"q!")) { edMode=QUIT; }
     else if (strEq(buf,"q")) {
         if (isDirty) { printString("(use 'q!' to quit without saving)"); }
@@ -352,13 +351,13 @@ static int doCommon(int c) {
         BCASE Lt:   mv(0, -1);                       // Left
         BCASE Rt:   mv(0, 1);                        // Right
         BCASE Dn:   mv(1, 0);                        // Down
-        BCASE Home: mv(0, -99);                      // Home
+        BCASE Home: mv(0, -LLEN);                    // Home
         BCASE End:  gotoEOL();                       // End
-        BCASE PgUp: mv(-(SCR_LINES - 1), -99);       // PgUp
-        BCASE PgDn: mv(SCR_LINES - 1, -99);          // PgDn
+        BCASE PgUp: mv(-(SCR_LINES-1), -LLEN);       // PgUp
+        BCASE PgDn: mv(SCR_LINES-1, -LLEN);          // PgDn
         BCASE 7251: edDelX('.'); o++;                // Delete
         BCASE 7250: toggleInsert(); o++;             // Insert
-        BCASE 7287: mv(-999, -99);                   // <ctrl>-Home
+        BCASE 7287: mv(-MAX_LINES, -LLEN);           // <ctrl>-Home
         BCASE 7309: scroll(-1);                      // <ctrl>-Up
         BCASE 7313: scroll( 1);                      // <ctrl>-Dn
     }
@@ -374,23 +373,23 @@ static int processEditorChar(int c) {
     }
 
     switch (c) {
-        case   13: mv(1,-99);
+        case   13: mv(1,-LLEN);
         BCASE ' ': mv(0, 1);
         BCASE 'h': mv(0,-1);
         BCASE 'l': mv(0, 1);
         BCASE 'j': mv(1, 0);
         BCASE 'k': mv(-1,0);
-        BCASE '_': mv(0,-99);
+        BCASE '_': mv(0,-LLEN);
         BCASE 'a': mv(0, 1); insertMode();
         BCASE 'A': gotoEOL(); insertMode();
         BCASE 'J': joinLines();
         BCASE '$': gotoEOL();
-        BCASE 'g': mv(-(SCR_LINES-1),-99);
-        BCASE 'G': mv(SCR_LINES-1,-99);
+        BCASE 'g': mv(-(SCR_LINES-1),-LLEN);
+        BCASE 'G': mv(SCR_LINES-1,-LLEN);
         BCASE 'i': insertMode();
-        BCASE 'I': mv(0, -99); insertMode();
-        BCASE 'o': mv(1, -99); insertLine(); insertMode();
-        BCASE 'O': mv(0, -99); insertLine(); insertMode();
+        BCASE 'I': mv(0, -LLEN); insertMode();
+        BCASE 'o': mv(1, -LLEN); insertLine(); insertMode();
+        BCASE 'O': mv(0, -LLEN); insertLine(); insertMode();
         BCASE 'r': replaceChar(edKey(), 0, 1);
         BCASE 'R': replaceMode();
         BCASE 'c': edDelX('.'); insertMode();
@@ -399,10 +398,9 @@ static int processEditorChar(int c) {
         BCASE 'D': edDelX('$');
         BCASE 'x': edDelX('.');
         BCASE 'X': edDelX('X');
-        BCASE 'L': edRdBlk(1);
         BCASE 'Y': strCpy(yanked, &EDCH(line, 0));
-        BCASE 'p': mv(1,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
-        BCASE 'P': mv(0,-99); insertLine(); strCpy(&EDCH(line,0), yanked);
+        BCASE 'p': mv(1,-LLEN); insertLine(); strCpy(&EDCH(line,0), yanked);
+        BCASE 'P': mv(0,-LLEN); insertLine(); strCpy(&EDCH(line,0), yanked);
         BCASE '+': edSvBlk(0); ++blkNum; edRdBlk(0); scrTop=line=off=0;
         BCASE '-': edSvBlk(0); blkNum = MAX(0, blkNum-1); edRdBlk(0); scrTop=line=off=0;
         BCASE ':': edCommand();
@@ -410,7 +408,7 @@ static int processEditorChar(int c) {
     return 1;
 }
 
-void editBlock(CELL Blk) {
+void editBlock(CELL_T Blk) {
     blkNum = MAX((int)Blk, 0);
     line = off = scrTop = 0;
     msg = NULL;

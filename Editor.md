@@ -26,6 +26,7 @@ There are 4 modes in the c3 editor:
 | [ctrl]+u | Scroll up 1/2 screen |
 | [ctrl]+x | Delete the char to the left of the cursor |
 | [ctrl]+z | Delete the char under the cursor |
+| [ctrl]+c | Change to NORMAL mode |
 | [escape] | Change to NORMAL mode |
 
 ### NORMAL mode
@@ -56,7 +57,6 @@ The movement keys are similar to those in VI:
 | i    | Insert: change to INSERT mode |
 | I    | Insert: goto the beginning of the line and change to INSERT mode |
 | J    | Join the current and next lines together |
-| L    | Load: discard all changes and reload the current block |
 | o    | Insert an empty line BELOW the current line and change to INSERT mode |
 | O    | Insert an empty line ABOVE the current line and change to INSERT mode |
 | p    | Paste the YANK buffer into a new line BELOW the current line |
@@ -88,6 +88,7 @@ COMMAND mode is invoked when pressing ':' in NORMAL mode.
 
 | Command | Action|
 | :--     | :-- |
+| rl      | ReLoad: discard all changes and reload the current block |
 | w       | Write the current block if it has changed |
 | w!      | Write the current block, even if it has NOT changed |
 | q       | Quit, if the current block has NOT changed |
