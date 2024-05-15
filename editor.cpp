@@ -158,6 +158,8 @@ static int toBlock() {
         char *y = &EDCHAR(i,0);
         strCat(theBlock, y);
     }
+    rTrim(theBlock);
+    strCatC(theBlock, 10);
     return strLen(theBlock);
 }
 
@@ -199,10 +201,6 @@ static void edRdBlk(int force) {
 static void edSvBlk(int force) {
     if (isDirty || force) {
         int len = toBlock();
-        while (1<len) {
-            if (theBlock[len-2] == 10) { theBlock[len-1]=0; --len; }
-            else { break; }
-        }
         writeBlock(blkNum, theBlock, len);
         sprintf(tBuf, " - %d bytes ", (int)len);
         msg = &tBuf[0];
