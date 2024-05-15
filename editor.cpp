@@ -10,9 +10,6 @@ void editBlock(CELL Blk) { printString("-noEdit-"); }
 CELL edScrH = 0;
 #else
 
-#define LLEN          100
-#define SCR_HEIGHT     35
-
 #define SCR_LINES     (int)edScrH
 #define BLOCK_SZ      (MAX_LINES*LLEN)
 #define EDCHAR(l,o)   edBuf[((l)*LLEN)+(o)]
@@ -20,7 +17,8 @@ CELL edScrH = 0;
 #define SHOW(l,v)     lineShow[(scrTop+l)]=v
 #define DIRTY(l)      isDirty=1; SHOW(l,1)
 
-enum { NORMAL = 1, INSERT, REPLACE, QUIT };
+enum { NORMAL = 1, INSERT, REPLACE, QUIT, LLEN=100, SCR_HEIGHT=35 };
+enum { Up=7240, Dn=7248, Rt=7245, Lt=7243, Home=7239, PgUp=7241, PgDn=7249, End=7247, Del=7251 };
 static char theBlock[BLOCK_SZ];
 static int line, off, blkNum, edMode, scrTop;
 static int isDirty, lineShow[MAX_LINES];
@@ -37,17 +35,46 @@ static void Color(int fg, int bg) { printStringF("\x1B[%d;%dm", (30+fg), bg?bg:4
 static void normalMode() { edMode=NORMAL; strCpy(mode, "normal"); }
 static void insertMode()  { edMode=INSERT;  strCpy(mode, "insert"); }
 static void replaceMode() { edMode=REPLACE; strCpy(mode, "replace"); }
+static void toggleInsert() { (edMode==INSERT) ? normalMode() : insertMode(); }
+static int winKey() { return (224 << 5) ^ key(); }
+
+static int vtKey() {
+    int y = key();
+    if (y != '[') { return 27; }
+    y = key();
+    if (BTW(y, 'A', 'T')) {
+        switch (y) {
+            case 'A': return Up;
+            case 'B': return Dn;
+            case 'C': return Rt;
+            case 'D': return Lt;
+            case 'F': return End;
+            case 'H': return Home;
+            case 'S': return PgUp;
+            case 'T': return PgDn;
+            default: return 27;
+        }
+    }
+    if (BTW(y, '3', '8')) {
+        int z = key();
+        if (z!='~') { return 27; }
+        switch (y) {
+        case '3': return Del;
+        case '5': return PgUp;
+        case '6': return PgDn;
+        case '7': return Home;
+        case '8': return End;
+        default: return 27;
+        }
+    }
+    return 27;
+}
 
 static int edKey() {
     int x = key();
-    if (x == 224) {  // Windows: start char
-         x = (x << 5) ^ key();
-    } else if (x==27) {
-        CELL_T stopTime = sysTime() + 50;
-        while (sysTime() < stopTime) {
-            if (qKey()) { x = (x << 5) ^ key(); }
-        }
-    }
+    if (x ==   3) { return 27; }         // ctrl-c => escape
+    if (x ==  27) { return vtKey(); }    // Possible VT control sequence
+    if (x == 224) { return winKey(); }   // Windows: start char
     return x;
 }
 
@@ -277,8 +304,9 @@ static int edReadLine(char *buf, int sz) {
     CursorOn();
     while (len<(sz-1)) {
         char c = key();
-        if (c==27) { len=0; break; }
-        if (c==13) { break; }
+        if (c ==  3) { len=0; break; }
+        if (c == 27) { len=0; break; }
+        if (c == 13) { break; }
         if ((c==127) || ((c==8) && (len))) { --len; printStringF("%c %c",8,8); }
         if (BTW(c,32,126)) { buf[len++]=c; printChar(c); }
     }
@@ -304,30 +332,36 @@ static void edCommand() {
 }
 
 static int doCommon(int c) {
-    int l = line, o = off, st = scrTop;
     if (((c == 8) || (c == 127)) && (0 < off)) {      // <backspace>
         mv(0, -1); if (edMode == INSERT) { deleteChar(); }
+        return 1;
     }
-    else if (c ==  4) { scroll(SCR_LINES/2); }              // <ctrl-d>
-    else if (c ==  5) { scroll(1); }                        // <ctrl-e>
-    else if (c ==  9) { mv(0, 8); }                         // <tab>
-    else if (c == 10) { mv(1, 0); }                         // <ctrl-j>
-    else if (c == 11) { mv(-1, 0); }                        // <ctrl-k>
-    else if (c == 12) { mv(0, 1); }                         // <ctrl-l>
-    else if (c == 24) { edDelX('X'); return 1; }            // <ctrl-x>
-    else if (c == 21) { scroll(-SCR_LINES/2); }             // <ctrl-u>
-    else if (c == 25) { scroll(-1); }                       // <ctrl-y>
-    else if (c == 26) { edDelX('.'); return 1; }            // <ctrl-z>
-    else if (c == 7240) { mv(-1, 0); }                      // Windows: Left
-    else if (c == 7245) { mv(0, 1);   }                     // Windows: Right
-    else if (c == 7243) { mv(0, -1); }                      // Windows: Up
-    else if (c == 7248) { mv(1, 0);    }                    // Windows: Down
-    else if (c == 7239) { mv(0, -99);  }                    // Windows: Home
-    else if (c == 7247) { gotoEOL();  }                     // Windows: End
-    else if (c == 7241) { mv(-(SCR_LINES - 1), -99);   }    // Windows: PgUp
-    else if (c == 7249) { mv(SCR_LINES - 1, -99);         } // Windows: PgDn
-    else if (c == 7251) { edDelX('.'); return 1; }          // Windows: Delete
-    else if (c == 7250) { insertMode(); return 1; }         // Windows: Insert
+    int l = line, o = off, st = scrTop;
+    switch (c) {
+        case   4:   scroll(SCR_LINES/2);             // <ctrl-d>
+        BCASE  5:   scroll(1);                       // <ctrl-e>
+        BCASE  9:   mv(0, 8);                        // <tab>
+        BCASE 10:   mv(1, 0);                        // <ctrl-j>
+        BCASE 11:   mv(-1, 0);                       // <ctrl-k>
+        BCASE 12:   mv(0, 1);                        // <ctrl-l>
+        BCASE 24:   edDelX('X'); o++;                // <ctrl-x>
+        BCASE 21:   scroll(-SCR_LINES/2);            // <ctrl-u>
+        BCASE 25:   scroll(-1);                      // <ctrl-y>
+        BCASE 26:   edDelX('.'); o++;                // <ctrl-z>
+        BCASE Up:   mv(-1, 0);                       // Up
+        BCASE Lt:   mv(0, -1);                       // Left
+        BCASE Rt:   mv(0, 1);                        // Right
+        BCASE Dn:   mv(1, 0);                        // Down
+        BCASE Home: mv(0, -99);                      // Home
+        BCASE End:  gotoEOL();                       // End
+        BCASE PgUp: mv(-(SCR_LINES - 1), -99);       // PgUp
+        BCASE PgDn: mv(SCR_LINES - 1, -99);          // PgDn
+        BCASE 7251: edDelX('.'); o++;                // Delete
+        BCASE 7250: toggleInsert(); o++;             // Insert
+        BCASE 7287: mv(-999, -99);                   // <ctrl>-Home
+        BCASE 7309: scroll(-1);                      // <ctrl>-Up
+        BCASE 7313: scroll( 1);                      // <ctrl>-Dn
+    }
 
     return ((l != line) || (o != off) || (st != scrTop)) ? 1 : 0;
 }

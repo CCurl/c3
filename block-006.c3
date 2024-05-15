@@ -17,4 +17,6 @@ LEX-UTILS
 : rl   forget 6 load ;
 : ed   35 (scr-h) ! 6 edit ;
 
+: vt 10 0 do key . loop ;
+
 ." words added: %n" words
