@@ -1,9 +1,9 @@
 \ block-003.c3 - some string words
 
-' LEX-STRINGS loaded?
+' LEX-STRING loaded?
 
-LEX-C3 : LEX-STRINGS 3 LEXICON ;
-LEX-STRINGS
+LEX-C3 : LEX-STRING 3 LEXICON ;
+LEX-STRING
 
 \ Some temp buffers
 : pad1 VHERE  256 + ;
@@ -18,9 +18,7 @@ LEX-STRINGS
 : S-SCATC ( ch dst -- )   SWAP S-CATC  ; INLINE
 : S-END   ( str -- end )  DUP  S-LEN + ; INLINE
 
-: FILL ( DST NUM CH -- ) +REGS s3 s2 s1
-    r2 0 DO  r3 r1+ C!  LOOP
-    -REGS ;
+: FILL ( DST NUM CH-- ) >R 0 DO R@ OVER C! 1+ LOOP R> 2DROP ;
 
 : CMOVE ( SRC DST NUM -- )
     +REGS  s3 s2 s1
@@ -49,8 +47,8 @@ LEX-STRINGS
      AGAIN ;
 
 \ Words for Counted strings
+: COUNT   ( sc -- a n )   1+ DUP 1- C@ ; INLINE
 : sc-len  ( str -- len )  C@ ; INLINE
-: COUNT   ( sc -- a n )   1+ DUP 1- sc-len ; INLINE
 : sc->sz  ( sc sz -- )    SWAP 1+ S-CPY ; INLINE
 : sz->sc  ( sz sc -- )    +REGS s2 s1
     r1 S-LEN r2+ C!    r2 r1 S-CPY

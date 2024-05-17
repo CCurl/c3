@@ -1,9 +1,9 @@
 \ block-002.c3 - File handling words
 
-' LEX-FILES loaded?
+' LEX-FILE loaded?
 
-LEX-C3 : LEX-FILES 2 LEXICON ;
-LEX-FILES
+LEX-C3 : LEX-FILE 2 LEXICON ;
+LEX-FILE
 
 : fopen-rt  ( fn--fh ) " rt"  FOPEN ;
 : fopen-rb  ( fn--fh ) " rb"  FOPEN ;

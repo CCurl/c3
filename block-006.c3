@@ -1,14 +1,13 @@
 \ block 006 - utility words
 
+2 load  \ File words
 3 load  \ String words
 5 load  \ Screen words
 
-' LEX-UTILS loaded?
+' LEX-UTIL loaded?
 
-marker
-
-LEX-C3 : LEX-UTILS 6 LEXICON ;
-LEX-UTILS
+LEX-C3 : LEX-UTIL 6 LEXICON ;
+LEX-UTIL
 
 : p pad1 ;
 : ls   " ls -l"   system ;
