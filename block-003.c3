@@ -1,6 +1,6 @@
 \ block-003.c3 - some string words
 
-' STRINGS loaded?
+' LEX-STRINGS loaded?
 
 LEX-C3 : LEX-STRINGS 3 LEXICON ;
 LEX-STRINGS

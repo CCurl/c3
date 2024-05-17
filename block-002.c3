@@ -11,7 +11,8 @@ LEX-FILES
 : fopen-wb  ( fn--fh ) " wb"  FOPEN ;
 : fopen-rw  ( fn--fh ) " r+b" FOPEN ;
 
-VARIABLE T0
+VHERE CONSTANT T0
+1 ALLOT
 : fgetc ( fh--ch num-read )
     0 T0 C! >R T0 1 R> FREAD T0 C@ SWAP ;
 

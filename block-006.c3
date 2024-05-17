@@ -3,7 +3,7 @@
 3 load  \ String words
 5 load  \ Screen words
 
-' UTILS loaded?
+' LEX-UTILS loaded?
 
 marker
 

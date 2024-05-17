@@ -4,7 +4,7 @@
 
 #define mySerial Serial // Teensy and Pico
 
-enum { xFOPEN=101, xFCLOSE, xFREAD, xFWRITE, FLOAD, BLOAD,
+enum { xFOPEN=101, xFCLOSE, xFREAD, xFWRITE, xFGETS, FLOAD, BLOAD,
     OPEN_INPUT=110, OPEN_OUTPUT, OPEN_PULLUP,
     PIN_READ, PIN_READA, PIN_WRITE, PIN_WRITEA,
     EDIT_BLK
@@ -47,6 +47,7 @@ void loadUserWords() {
     parseF("-ML- FCLOSE      %d 3 -MLX- inline", xFCLOSE);
     parseF("-ML- FREAD       %d 3 -MLX- inline", xFREAD);
     parseF("-ML- FWRITE      %d 3 -MLX- inline", xFWRITE);
+    parseF("-ML- FGETS       %d 3 -MLX- inline", xFGETS);
     parseF("-ML- (LOAD)      %d 3 -MLX- inline", FLOAD);
     parseF("-ML- BLOAD       %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT        %d 3 -MLX- inline", EDIT_BLK);
@@ -54,25 +55,26 @@ void loadUserWords() {
 }
 
 char *doUser(char *pc, int ir) {
-  cell_t t, n;
+  cell_t t, n, x;
   switch (ir) {
-    case OPEN_INPUT:   t = pop(); pinMode(t, INPUT);
-    RCASE OPEN_OUTPUT: t = pop(); pinMode(t, OUTPUT);
-    RCASE OPEN_PULLUP: t = pop(); pinMode(t, INPUT_PULLUP);
-    RCASE PIN_READ:    t = pop(); push(digitalRead(t));
-    RCASE PIN_READA:   t = pop(); push(analogRead(t));
-    RCASE PIN_WRITE:   t = pop(); n = pop(); digitalWrite(t,n);
-    RCASE PIN_WRITEA:  t = pop(); n = pop(); analogWrite(t,n);
+    case OPEN_INPUT:   t=pop(); pinMode(t, INPUT);
+    RCASE OPEN_OUTPUT: t=pop(); pinMode(t, OUTPUT);
+    RCASE OPEN_PULLUP: t=pop(); pinMode(t, INPUT_PULLUP);
+    RCASE PIN_READ:    t=pop(); push(digitalRead(t));
+    RCASE PIN_READA:   t=pop(); push(analogRead(t));
+    RCASE PIN_WRITE:   t=pop(); n=pop(); digitalWrite(t, n);
+    RCASE PIN_WRITEA:  t=pop(); n=pop(); analogWrite(t, n);
 
     RCASE xFOPEN:  t=pop(); n=pop(); push(fOpen((char*)n, (char*)t));
     RCASE xFCLOSE: t=pop(); fClose(t);
-    RCASE xFREAD:  t=pop(); n=pop(); push(fRead((char*)pop(), 1, (int)n, t));
-    RCASE xFWRITE: t=pop(); n=pop(); push(fWrite((char*)pop(), 1, (int)n, t));
-    RCASE FLOAD:  n=pop(); t=fOpen((char*)n, "rt");
+    RCASE xFREAD:  t=pop(); n=pop(); x=pop(); push(fRead((char*)x, 1, (int)n, t));
+    RCASE xFWRITE: t=pop(); n=pop(); x=pop(); push(fWrite((char*)x, 1, (int)n, t));
+    RCASE xFGETS:  t=pop(); n=pop(); x=pop(); push(fGets(t, (char*)x, (int)n));
+    RCASE FLOAD:   n=pop(); t=fOpen((char*)n, "rt");
             if (t && input_fp) { ipush(input_fp); }
             if (t) { input_fp = t; *in = 0; in = (char*)0; }
             else { printStringF("-noFile[%s]-", (char*)n); }
-    RCASE BLOAD:  blockLoad((int)pop());
+    RCASE BLOAD:    t=pop(); blockLoad((int)t);
     RCASE EDIT_BLK: t=pop(); editBlock(t);
     return pc; default: return 0;
   }

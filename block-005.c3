@@ -1,6 +1,6 @@
 \ block-005.c3 - Words for screen handling
 
-' SCREEN loaded?
+' LEX-SCREEN loaded?
 
 LEX-C3 : LEX-SCREEN 5 LEXICON ;
 LEX-SCREEN
