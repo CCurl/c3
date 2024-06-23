@@ -26,7 +26,7 @@ The goals for c3 are:
 
 ## Registers
 c3 exposes 10 "virtual registers", r0 thru r9. There are 8 register operations: +regs, rX, rX+, rX-, sX, iX, dX, -regs.
-The names of the register words are case-sensitive: (r0-r9, not R0-R9).
+The names of the register words are case-sensitive: (r0-r9, not R0-R9). They can be used as local or global variables.
 
 **Note:** The support for registers is built into c3, so they do NOT show up in "WORDS".
 

@@ -74,7 +74,7 @@ void strCatC(char *d, const char c) { d=strEnd(d); *(d++)=c; *d=0; }
 void strCpy(char *d, const char *s) { if (d != s) { *d = 0; strCat(d, s); } }
 int strLen(const char *d) { return (int)(strEnd((char*)d)-d); }
 char *lTrim(char *d) { while (*d && (*d<33)) { ++d; } return d; }
-char *rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s< 33)) { *(s--) = 0; } return d; }
+char *rTrim(char *d) { char *s=strEnd(d)-1; while ((d<=s) && (*s<33)) { *(s--)=0; } return d; }
 int lower(int x) { return BTW(x,'A','Z') ? x+32: x; }
 int upper(int x) { return BTW(x,'a','z') ? x-32: x; }
 

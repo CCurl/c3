@@ -77,10 +77,8 @@ int fWrite(char *buf, int num, int sz, CELL_T fh) {
 }
 
 int readBlock(int blk, char *buf, int sz) {
-	char fn[32];
 	int num = 0;
-	sprintf(fn, getBlockFN(), blk);
-	File x = myFS.open(fn, FILE_READ);
+	File x = myFS.open(getBlockFN(blk), FILE_READ);
 	if ((bool)x) {
 		num = (int)x.read(buf, sz);
 		x.close();
@@ -97,10 +95,8 @@ void readBlock1() {
 }
 
 int writeBlock(int blk, char *buf, int sz) {
-	char fn[32];
 	int num = 0;
-	sprintf(fn, getBlockFN(), blk);
-	File x = myFS.open(fn, FILE_WRITE_BEGIN);
+	File x = myFS.open(getBlockFN(blk), FILE_WRITE_BEGIN);
 	if ((bool)x) {
         x.truncate();
         num = x.write(buf, sz);
@@ -130,9 +126,7 @@ int fGets(CELL_T fh, char *buf, int sz) {
 
 // bL - Block Load
 void blockLoad(int blk) {
-	char fn[32];
-	sprintf(fn, getBlockFN(), blk);
-	CELL_T fh = fOpen(fn, "r");
+	CELL_T fh = fOpen(getBlockFN(blk), "r");
 	if (files[fh].available()) {
 		if (input_fp) {
 			fpush(input_fp);
