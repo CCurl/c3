@@ -15,8 +15,8 @@ void fileInit() {
 	printString("\r\nLittleFS: begin ...");
 	myFS.begin();
 	printString("done.");
-    FSInfo64 fsinfo;
-    LittleFS.info64(fsinfo);
+    FSInfo fsinfo;
+    LittleFS.info(fsinfo);
 	printString("\r\nLittleFS: initialized");
 	//printStringF("\r\nBytes total: %llu, used: %llu", fsinfo.totalBytes, fsinfo.usedBytes);
 	input_fp = input_sp = 0;
