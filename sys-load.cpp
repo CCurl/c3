@@ -1,6 +1,6 @@
 // Load the base c3 system
 
-// Use this nimbleText script to convert block-001.c3
+// Use this nimbleText script to convert block-001.fth
 //   ParseLine("<%row.replace(/[\\]/ig,"\\\\").replace(/["]/ig,"\\\"")%>");
 // Don't forget to remove the '\' comments - they cause a crash.
 

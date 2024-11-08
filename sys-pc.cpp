@@ -132,7 +132,7 @@ char *doUser(char *pc, int ir) {
     RCASE FWRITE: t3=pop(); t2=pop(); t1=pop(); push(fWrite((char*)t1, 1, (int)t2, t3));
     RCASE FGETS:  t3=pop(); t2=pop(); t1=pop(); push(fGets(t3, (char*)t1, (int)t2));
     RCASE FLOAD:  LFF(cpop());
-    RCASE BLOAD:  sprintf(fn, "block-%03d.c3", (int)pop()); lookForFile(fn);
+    RCASE BLOAD:  sprintf(fn, "block-%03d.fth", (int)pop()); lookForFile(fn);
     RCASE EDIT_BLK: t1=pop(); editBlock(t1);
     return pc; default: return 0;
     }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
         else { reg[i] = (cell_t)argv[i]; }
     }
 #ifndef _SYS_LOAD_
-    lookForFile("block-001.c3");
+    lookForFile("block-001.fth");
 #endif
     while (state != ALL_DONE) {
         getInput();

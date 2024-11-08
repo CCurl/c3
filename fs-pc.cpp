@@ -9,7 +9,7 @@ void ipush(CELL_T x) { if (input_sp < ISTK_SZ) inputStk[++input_sp] = x; }
 CELL_T ipop() { return (0 < input_sp) ? inputStk[input_sp--] : 0; }
 
 static char block_fn[16];
-char* getBlockFN(int num) { sprintf(block_fn, "block-%03d.c3", num); return block_fn; }
+char* getBlockFN(int num) { sprintf(block_fn, "block-%03d.fth", num); return block_fn; }
 // END: These are shared for all file system versions
 
 #ifdef isPC

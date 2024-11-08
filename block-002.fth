@@ -1,4 +1,4 @@
-\ block-002.c3 - File handling words
+\ block-002 - File handling words
 
 ' LEX-FILE loaded?
 
