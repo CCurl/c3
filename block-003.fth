@@ -1,4 +1,4 @@
-\ block-003.c3 - some string words
+\ block-003 - some string words
 
 ' LEX-STRING loaded?
 

@@ -1,4 +1,4 @@
-\ block-200.c3 - Some benchmarks
+\ block-200 - Some benchmarks
 
 ' BENCHES loaded?
 

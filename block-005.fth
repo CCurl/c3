@@ -1,4 +1,4 @@
-\ block-005.c3 - Words for screen handling
+\ block-005 - Words for screen handling
 
 ' LEX-SCREEN loaded?
 
