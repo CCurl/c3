@@ -179,6 +179,8 @@ C3 supports a simple way to organize words using lexicons.
   - NAME_LEN:   17
 - For the RPI Pico:
   - Use the arduino-pico from earlephilhower (https://github.com/earlephilhower/arduino-pico)
+  - The version must be 4.2.0 or later. Versions older than 4.0.0 do not support boards using
+    the RP2350 microcontroller.
   - Use `#define _PicoFS_` to include support for LittleFS
 - For the Teensy-4.x:
   - Use `#define _TeensyFS_` to include support for LittleFS
