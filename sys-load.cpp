@@ -54,9 +54,9 @@
         ParseLine(": cr   #13 EMIT #10 EMIT ; INLINE");
         ParseLine(": space bl EMIT ;          INLINE");
         ParseLine(": . (.) space ;            INLINE");
-        ParseLine(": LEXICON  (LEXICON) ! ;");
+        ParseLine(": LEX!  (LEXICON) ! ;");
         ParseLine(": LEX@     (LEXICON) @ ;");
-        ParseLine(": LEX-C3     0 LEXICON ;");
+        ParseLine(": LEX-C3     0 LEX! ;");
         ParseLine(": .word     CELL+ 1+ 2+ QTYPE ; INLINE");
         ParseLine(": word-lex  CELL+ 1+ C@ ; INLINE");
         ParseLine(": word-len  CELL+ 2+ C@ ; INLINE");

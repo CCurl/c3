@@ -2,7 +2,7 @@
 
 ' LEX-STRING loaded?
 
-LEX-C3 : LEX-STRING 3 LEXICON ;
+LEX-C3 : LEX-STRING 3 LEX! ;
 LEX-STRING
 
 \ Some temp buffers

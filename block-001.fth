@@ -47,9 +47,9 @@
 : space bl EMIT ;          INLINE
 : . (.) space ;            INLINE
 
-: LEXICON  (LEXICON) ! ;
+: LEX!     (LEXICON) ! ;
 : LEX@     (LEXICON) @ ;
-: LEX-C3     0 LEXICON ;
+: LEX-C3     0 LEX! ;
 
 : .word     CELL+ 1+ 2+ QTYPE ; INLINE
 : word-lex  CELL+ 1+ C@ ; INLINE

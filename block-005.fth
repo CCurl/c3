@@ -2,7 +2,7 @@
 
 ' LEX-SCREEN loaded?
 
-LEX-C3 : LEX-SCREEN 5 LEXICON ;
+LEX-C3 : LEX-SCREEN 5 LEX! ;
 LEX-SCREEN
 
 : cur-on  ( -- )       ." %e[?25h" ;
