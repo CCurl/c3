@@ -19,8 +19,8 @@ File files[NFILES+1];
 void fileInit() {
 	myFS.begin(1 * 1024 * 1024);
 	// myFS.quickFormat();
-	printString("\r\nLittleFS: initialized");
-	printStringF("\r\nBytes total: %llu, used: %llu", myFS.totalSize(), myFS.usedSize());
+	printString("\nLittleFS: initialized\n");
+	//printStringF("\r\nBytes total: %llu, used: %llu", myFS.totalSize(), myFS.usedSize());
 	input_fp = input_sp = 0;
 	for (int i=0;i<=NFILES;i++) { files[i] = File(); }
 }
