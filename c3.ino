@@ -49,7 +49,7 @@ void loadUserWords() {
     parseF("-ML- FWRITE      %d 3 -MLX- inline", xFWRITE);
     parseF("-ML- FGETS       %d 3 -MLX- inline", xFGETS);
     parseF("-ML- (LOAD)      %d 3 -MLX- inline", FLOAD);
-    parseF("-ML- BLOAD       %d 3 -MLX- inline", BLOAD);
+    parseF("-ML- LOAD        %d 3 -MLX- inline", BLOAD);
     parseF("-ML- EDIT        %d 3 -MLX- inline", EDIT_BLK);
     parseF(": isPC 0 ;");
 }
@@ -82,7 +82,7 @@ char *doUser(char *pc, int ir) {
 
 void setup() {
   serialInit();
-  printString("Hello.");
+  // printString("Hello.");
   fileInit();
   c3Init();
   printString(" ok\r\n");
@@ -90,7 +90,7 @@ void setup() {
 }
 
 void idle() {
-  // TODO
+  // Fill this in as desired
 }
 
 void loop() {

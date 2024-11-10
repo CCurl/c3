@@ -2,7 +2,7 @@
 
 ' LEX-FILE loaded?
 
-LEX-C3 : LEX-FILE 2 LEXICON ;
+LEX-C3 : LEX-FILE 2 LEX! ;
 LEX-FILE
 
 : fopen-rt  ( fn--fh ) " rt"  FOPEN ;
