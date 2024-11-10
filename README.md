@@ -132,18 +132,18 @@ A dictionary entry looks like this:
 | :--       | :--              | :-- |
 | xt:       | cell_t           | either 32-bit or 64-bit
 | flags:    | byte             | IMMEDIATE=$01, INLINE=$02
-| lexicon:  | byte             | the LEX! the word is in
+| lexicon:  | byte             | the lexicon the word is in
 | len:      | byte             | length of the name
 | name:     | char[NAME_LEN+1] | NULL terminated
 
 ### Support for lexicons
 C3 supports a simple way to organize words using lexicons.
-- A LEX! identifier is a number between 0 and 255.
-- The current LEX! is set using `LEXICON`.
+- A lexicon identifier is a number between 0 and 255.
+- The current lexicon is set using `LEX!`.
 - Lexicons have no effect on the dictionary search.
-- When the LEX! <> 0, then `words` prints only the words in the current lexicon.
-- When the LEX! == 0, then `words` prints all the words in the dictionary.
-- The default/c3 LEX! is #0.
+- When the lexicon <> 0, then `words` prints only the words in the current lexicon.
+- When the lexicon == 0, then `words` prints all the words in the dictionary.
+- The default/c3 lexicon is #0.
 
 ## Default sizes for PC-based systems
 - The default NAME_LEN is 28.
@@ -356,7 +356,7 @@ C3 supports a simple way to organize words using lexicons.
 | STATE         | (--A)    | A: Address of the STATE variable.|
 | TIB           | (--A)    | A: Address of TIB (text input buffer).|
 | >IN           | (--A)    | A: Address of >IN.|
-| (LEXICON)     | (--A)    | A: Address of the LEX! variable.|
+| (LEXICON)     | (--A)    | A: Address of the lexicon variable.|
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 
