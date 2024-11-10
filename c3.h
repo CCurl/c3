@@ -42,14 +42,14 @@ typedef uint8_t  byte;
     #define isPC
     #define IS_WINDOWS
     #define __EDITOR__
-    #define _SYS_LOAD_
+    // #define _SYS_LOAD_
 #elif (defined __i386 || defined __x86_64 || defined IS_LINUX)
     #define isPC
     #ifndef IS_LINUX
     #define IS_LINUX
     #endif
     #define __EDITOR__
-    #define _SYS_LOAD_
+    // #define _SYS_LOAD_
 #else
 
     // Not a PC, must be a development board
