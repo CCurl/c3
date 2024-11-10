@@ -583,7 +583,7 @@ void c3Init() {
     while ((long)x & 0x03) { --x; }
     last = (dict_t*)x;
     base = 10;
-    DSP = RSP = reg_base = LEX! = 0;
+    DSP = RSP = reg_base = lexicon = 0;
 
     for (int i=0; i<6; i++) { tempWords[i].f = 0; }
     for (int i=6; i<9; i++) { tempWords[i].f = IS_INLINE; }

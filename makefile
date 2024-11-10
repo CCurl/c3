@@ -1,22 +1,19 @@
-app := c3
-
-CXX := clang++
-CXXFLAGS := -m64 -O3 -DIS_LINUX
-
+ARCH ?= 64
+CFLAGS = -O3 -m$(ARCH)
 srcfiles := $(shell find . -name "*.cpp")
 incfiles := $(shell find . -name "*.h")
-LDLIBS   := -lm
 
-all: $(app)
+c3: $(srcfiles) $(incfiles)
+	$(CC) $(CFLAGS) $(srcfiles) -o $@ -lm
 
-$(app): $(srcfiles) $(incfiles)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(app) $(srcfiles) $(LDLIBS)
-	ls -l $(app)
+run: c3
+	./c3
 
 clean:
-	rm -f $(app)
+	rm -f c3
 
-rebuild: clean all
+test: c3
+	./c3 block-200.c3
 
-bin: $(app)
-	cp -u -p $(app) ~/bin/
+bin: c3
+	cp -u -p c3 ~/bin/

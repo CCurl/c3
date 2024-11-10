@@ -136,7 +136,7 @@
         ParseLine("VARIABLE T0 2 CELLS allot");
         ParseLine(": T1 CELLS T0 + ;");
         ParseLine(": MARKER HERE 0 T1 ! VHERE 1 T1 ! LAST 2 T1 ! ;");
-        ParseLine(": FORGET C3 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;");
+        ParseLine(": FORGET LEX-C3 0 T1 @ (HERE) ! 1 T1 @ (VHERE) ! 2 T1 @ (LAST) ! ;");
         ParseLine(": FORGET-1 LAST @ (HERE) ! LAST WORD-SZ + (LAST) ! ;");
         ParseLine("MARKER");
         ParseLine(".\" c3 - \"  version 10000 /mod s0 100 /mod r0  .\" v%d.%d.%d - Chris Curl%n\"");

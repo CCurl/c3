@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240517 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20241110 };
 
 #if (defined __x86_64 || defined _WIN64)
     #define CELL_T    int64_t
@@ -42,14 +42,14 @@ typedef uint8_t  byte;
     #define isPC
     #define IS_WINDOWS
     #define __EDITOR__
-    // #define _SYS_LOAD_
+    #define _SYS_LOAD_
 #elif (defined __i386 || defined __x86_64 || defined IS_LINUX)
     #define isPC
     #ifndef IS_LINUX
     #define IS_LINUX
     #endif
     #define __EDITOR__
-    // #define _SYS_LOAD_
+    #define _SYS_LOAD_
 #else
 
     // Not a PC, must be a development board
