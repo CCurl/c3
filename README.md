@@ -1,9 +1,10 @@
-# c3 - A stack-based VM written in C.
+# c3 - A stack-based Forth VM written in C.
 
 ## What is c3?
-- c3 is a stack-based, byte-coded VM.
+- c3 implements a stack-based, byte-coded Forth VM.
 - c3's opcodes implement many of the standard Forth operations.
-- c3 supports IEEE-754 double-precision (64-bit) floating point numbers.
+- On 64-bit systems, c3 supports IEEE-754 double-precision (64-bit) floating point numbers.
+- On 32-bit systems, c3 supports IEEE-754 single-precision (32-bit) floating point numbers.
 - c3 provides 10 "virtual registers", r0 thru r9.
   - Each register has 6 operations: rX, sX, iX, dX, rX+, and rX-.
 - c3 provides 10 temporary words, T0 thru T9.
@@ -120,7 +121,7 @@ The above words are defined as follows:
 
 c3 also defines some 'system-info' words (the addresses of system variables and sizes of buffers).
 
-Everything else can be defined from those. See file 'block-001.c3' for details.
+Everything else can be defined from those. See file 'block-001.fth' for details.
 
 Note that this approach gives the user the maximum flexibility. Opcode 12 does not have to be called "DUP", it could just as easily be "(N--NN)" (or "foo--foo/foo", or whatever). But DUP is clear and concise, so that its default name. :)
 
@@ -138,7 +139,7 @@ A dictionary entry looks like this:
 ### Support for lexicons
 C3 supports a simple way to organize words using lexicons.
 - A lexicon identifier is a number between 0 and 255.
-- The current lexicon is set using `(LEXICON) !`.
+- The current lexicon is set using `LEX!`.
 - Lexicons have no effect on the dictionary search.
 - When the lexicon <> 0, then `words` prints only the words in the current lexicon.
 - When the lexicon == 0, then `words` prints all the words in the dictionary.
@@ -178,13 +179,15 @@ C3 supports a simple way to organize words using lexicons.
   - NAME_LEN:   17
 - For the RPI Pico:
   - Use the arduino-pico from earlephilhower (https://github.com/earlephilhower/arduino-pico)
+  - The version must be 4.2.0 or later. Versions older than 4.0.0 do not support boards using
+    the RP2350 microcontroller.
   - Use `#define _PicoFS_` to include support for LittleFS
 - For the Teensy-4.x:
   - Use `#define _TeensyFS_` to include support for LittleFS
 
 ## c3 Opcode / Word reference
 
-### NOTE: See file 'block-001.c3' for the implementation of the words defined in the base c3 system.
+### Opcodes and their words
 
 |Opcode |Word        |Stack         |Description|
 | :--   | :--        | :--          | :-- |
@@ -353,11 +356,14 @@ C3 supports a simple way to organize words using lexicons.
 | STATE         | (--A)    | A: Address of the STATE variable.|
 | TIB           | (--A)    | A: Address of TIB (text input buffer).|
 | >IN           | (--A)    | A: Address of >IN.|
-| (LEXICON)     | (--A)    | A: Address of the LEXICON variable.|
+| (LEXICON)     | (--A)    | A: Address of the lexicon variable.|
 | WORD-SZ       | (--N)    | N: size of a dictionary entry in bytes.|
 | CELL          | (--N)    | N: size of a CELL in bytes.|
 
-### Words defined in block-001.c3
+### NOTE: If _SYS_LOAD_ is defined, see (and modify if desired) 'sys-load.cpp' for built-in words.
+### NOTE: Else, C3 tries to load 'block-001.fth' on startup to load the initial system.
+
+### Words defined in block-001.fth
 | WORD         | STACK          | Description|
 | :--          | :--            | :--|
 | \\           | (--)           | Line comment |
@@ -367,7 +373,7 @@ C3 supports a simple way to organize words using lexicons.
 | HERE         | (--A)          | Address of the next free byte in the CODE area |
 | code-end     | (--A)          | Address of the end of the CODE area |
 | vars-end     | (--A)          | Address of the end of the VARS area |
-| ++           | (A--)          | Invrement CELL at A |
+| ++           | (A--)          | Increment CELL at A |
 | --           | (A--)          | Decrement CELL At A |
 | VHERE        | (--A)          | Address of the next free byte in the VARS area |
 | ALLOT        | (N--)          | Add N to VHERE |
@@ -457,7 +463,8 @@ On startup, c3 does the following to bootstrap itself:
 - The first parameter (if provided) is assumed to be the root folder for searching.
 1. Create words to define its primitives.
 2. Create system-information words.
-3. Try to load block-001.c3 from the following locations (in order):
+3. If _SYS_LOAD_ is defined, load the words defind in 'sys-load.cpp'.
+4. If _SYS_LOAD_ is not defined, try to load block-001.fth from the following locations (in order):
     - The current folder, "."
     - On Windows:
       - (root)\c3
@@ -484,7 +491,7 @@ Running this (under Windows): "c3 e: $100 test.txt" will:
 ```
 
 ## Adding new opcodes to c3
-If for some reason, there is a need/desire to add more opcodes to c3, this section describes how it can be accomplished. 
+If for any reason, there is a need/desire to add more opcodes to c3, this section describes how it can be accomplished. 
 
 For example, there might be some functionality in a library you want to make available, or maybe there is a bottleneck in performance you want to improve.
 
@@ -497,10 +504,10 @@ Here is the process:
   - Update your README.md.
 
 - For a target-specific opcode:
-  - All work is done in the target's *.cpp file (e.g. - sys-pc.cpp).
-  - Add the new opcodes(s) to the enum.
+  - All work is done in the target's *.cpp file (e.g. - sys-pc.cpp or c3.ino).
+  - Add the new opcodes(s) to the enum near the beginning of the file.
   - Target-specific opcodes should have values above 100.
-  - Edit LoadUserWords() and add a "-ML-" line for each new opcode.
-  - For example: to define opcode 120 as "NEWOP" ... ParseLine("-ML- NEWOP 120 3 -MLX- INLINE");
+  - Edit function 'loadUserWords()' and add a "-ML-" line for each new opcode.
+  - For example: to define opcode 120 as "NEWOP" ... parseF("-ML- NEWOP   %d 3 -MLX- inline", NEWOP);
   - In doUser(), add cases for the new opcode(s).
   - Update your README.md.

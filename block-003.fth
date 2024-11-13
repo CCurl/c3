@@ -1,8 +1,8 @@
-\ block-003.c3 - some string words
+\ block-003 - some string words
 
 ' LEX-STRING loaded?
 
-LEX-C3 : LEX-STRING 3 LEXICON ;
+LEX-C3 : LEX-STRING 3 LEX! ;
 LEX-STRING
 
 \ Some temp buffers

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20240517 };
+enum { STOP_LOAD = 99, ALL_DONE = 999, VERSION = 20241110 };
 
 #if (defined __x86_64 || defined _WIN64)
     #define CELL_T    int64_t

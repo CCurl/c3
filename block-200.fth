@@ -1,8 +1,8 @@
-\ block-200.c3 - Some benchmarks
+\ block-200 - Some benchmarks
 
 ' BENCHES loaded?
 
-LEX-C3 : LEX-BENCHES 200 LEXICON ;
+LEX-C3 : LEX-BENCHES 200 LEX! ;
 LEX-BENCHES
 
 : ms ." (%d usec)" ;

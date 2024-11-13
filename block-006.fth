@@ -6,7 +6,7 @@
 
 ' LEX-UTIL loaded?
 
-LEX-C3 : LEX-UTIL 6 LEXICON ;
+LEX-C3 : LEX-UTIL 6 LEX! ;
 LEX-UTIL
 
 : p pad1 ;
