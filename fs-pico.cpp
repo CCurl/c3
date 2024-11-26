@@ -14,10 +14,10 @@ File files[NFILES+1];
 void fileInit() {
 	printString("\r\nLittleFS: begin ...");
 	myFS.begin();
-	printString("done.");
+	printString("done.\r\n");
     FSInfo fsinfo;
     LittleFS.info(fsinfo);
-	printString("\nLittleFS: initialized\n");
+	printString("LittleFS: initialized\r\n");
 	//printStringF("\r\nBytes total: %llu, used: %llu", fsinfo.totalBytes, fsinfo.usedBytes);
 	input_fp = input_sp = 0;
 	for (int i=0;i<=NFILES;i++) { files[i] = File(); }
