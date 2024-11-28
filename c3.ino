@@ -104,6 +104,7 @@ void loop() {
   if (c==9) { c = 32; }
   if (c==13) {
       *(in) = 0;
+      PC(32);
       ParseLine(tib);
       printString(" ok\r\n");
       in = 0;
