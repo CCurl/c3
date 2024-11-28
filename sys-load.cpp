@@ -53,7 +53,7 @@
         ParseLine(": tab   #9 EMIT ;          INLINE");
         ParseLine(": cr   #13 EMIT #10 EMIT ; INLINE");
         ParseLine(": space bl EMIT ;          INLINE");
-        ParseLine(": . space (.) space ;      INLINE");
+        ParseLine(": . (.) space ;      INLINE");
         ParseLine(": LEX!  (LEXICON) ! ;");
         ParseLine(": LEX@     (LEXICON) @ ;");
         ParseLine(": LEX-C3     0 LEX! ;");
